@@ -142,6 +142,8 @@ The voice pipeline itself is not part of this repository: there is no speech rec
 | `tools/mochi-soul-engine/engine.py` | 4D homeostasis engine, 21-emotion router, SQLite WAL memory, and benchmark suite. |
 | `tools/mochi-soul-engine/bridge.py` | Proactive robot bridge, 240×320 HUD renderer, and `ota_1` protocol validator. |
 | `tools/mochi-soul-engine/reflex_60fps.py` | 60 fps spring-damper face engine, audio RMS lip-sync, and C++17 header generator. |
+| `tools/mochi-soul-engine/app.py` | Spec 05 Live Companion Studio server, local `ota_1` / MCP protocol hub, workspace symbiosis runtime, and `--benchmark` suite (`plans/reports/benchmark-live-companion-app.json`, single run). |
+| `tools/mochi-soul-engine/studio.html` | Operate-mode browser companion studio for the 240×240 Mochi-21 OLED face, 4D homeostasis register, custom DS sensor scrubbers, and 6-DOF Otto MCP deck. |
 
 ## Repository map
 

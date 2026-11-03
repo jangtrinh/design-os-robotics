@@ -1,0 +1,31 @@
+{
+  "spec": "05-mochi-soul-live-companion-app",
+  "port": 4185,
+  "ac01_unified_pipeline": {
+    "events_dispatched": 500,
+    "valid_events": 500,
+    "total_packets_emitted": 1500,
+    "valid_packets": 1500,
+    "mean_latency_us": 37.39,
+    "p50_latency_us": 40.87,
+    "p99_latency_us": 78.79,
+    "throughput_events_per_sec": 26745.0,
+    "pass": true
+  },
+  "ac02_http_and_local_ota": {
+    "http_requests_total": 145,
+    "http_200_valid": 145,
+    "mean_json_rtt_ms": 0.66,
+    "mean_hud_png_rtt_ms": 2.455,
+    "pass": true
+  },
+  "ac03_reflex_and_mcp_suite": {
+    "startled_5cm_zone": "startled_back",
+    "curious_18cm_zone": "curious_greet",
+    "ambient_80cm_zone": "ambient_idle",
+    "mcp_tools_tested": 20,
+    "mcp_tools_valid": 20,
+    "pass": true
+  },
+  "all_passed": true
+}

@@ -1,0 +1,1057 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DESIGN:OS Robotics — Mochi-Soul Live Companion Studio</title>
+  <meta name="description" content="Operate-mode companion studio for ESP32-S3 RB5320XZ78AI: Procedural Mochi-21 240x240 OLED face, 60fps spring solver, 4D homeostasis register, workspace symbiosis, and 6-DOF quadruped MCP dispatch.">
+  <link rel="stylesheet" href="../../docs/assets/site.css">
+  <style>
+    :root {
+      --w-container: 1080px;
+    }
+    [hidden] {
+      display: none !important;
+    }
+    .eyebrow,
+    .ds-table thead th,
+    .ds-shell-footer-inner,
+    .wordmark span {
+      color: var(--c-gray-1100);
+    }
+    .ds-btn-pill[data-tone="solid"] {
+      background: var(--c-accent);
+      color: var(--c-accent-fg);
+    }
+    @media (hover: hover) {
+      .ds-btn-pill[data-tone="solid"]:hover {
+        background: var(--c-accent);
+        opacity: 0.92;
+      }
+    }
+    .ds-shell-main {
+      padding-block: var(--s-8) var(--s-24);
+    }
+    .ds-shell-main > section:first-child {
+      margin-top: var(--s-4);
+    }
+    .lede {
+      margin-bottom: var(--s-6);
+    }
+    .studio-workbench {
+      margin-top: var(--s-6);
+      display: grid;
+      grid-template-columns: 288px minmax(0, 1fr);
+      gap: var(--s-12);
+      align-items: start;
+    }
+    .viewport-figure {
+      margin: 0;
+      background: var(--c-gray-200);
+      border: 1px solid var(--c-gray-400);
+      border-radius: var(--r-5);
+      padding: var(--s-10);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--s-6);
+    }
+    .mochi-face-tile {
+      display: block;
+      width: 240px;
+      height: 240px;
+      background: #000000;
+      border: 1px solid var(--c-gray-400);
+      border-radius: var(--r-5);
+      image-rendering: pixelated;
+      object-fit: contain;
+    }
+    .st7789-canvas {
+      display: block;
+      width: 240px;
+      height: 320px;
+      background: #000000;
+      border: 1px solid var(--c-gray-400);
+      border-radius: var(--r-5);
+    }
+    .stage-caption {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--s-4);
+      font-family: var(--stack-mono);
+      font-size: var(--t-13);
+      color: var(--c-gray-1100);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .register-panel {
+      display: flex;
+      flex-direction: column;
+      gap: var(--s-8);
+      min-width: 0;
+    }
+    .register-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--s-6);
+      flex-wrap: wrap;
+      margin-bottom: var(--s-4);
+    }
+    .register-head .ds-heading {
+      margin-bottom: 0;
+    }
+    .register-sub {
+      color: var(--c-gray-1100);
+      font-size: var(--t-13);
+    }
+    .metric-list {
+      margin: 0;
+      border-top: 1px solid var(--c-gray-400);
+    }
+    .metric-item {
+      display: grid;
+      grid-template-columns: 148px minmax(0, 1fr) 76px;
+      align-items: center;
+      gap: var(--s-8);
+      padding: var(--s-5) 0;
+      border-bottom: 1px solid var(--c-gray-300);
+      font-size: var(--t-13);
+    }
+    .metric-key {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--s-4);
+      font-family: var(--stack-mono);
+      font-size: var(--t-13);
+      font-weight: var(--fw-medium);
+      color: var(--c-gray-1200);
+    }
+    .metric-key .ph {
+      color: var(--c-gray-1000);
+    }
+    .meter-track {
+      margin: 0;
+      height: 6px;
+      background: var(--c-gray-400);
+      border-radius: var(--r-pill);
+      overflow: hidden;
+      position: relative;
+      display: block;
+    }
+    .meter-fill {
+      display: block;
+      height: 100%;
+      background: var(--c-gray-1200);
+      border-radius: var(--r-pill);
+      transition: width var(--dur-fast) var(--ease-out);
+    }
+    .metric-val {
+      margin: 0;
+      text-align: right;
+      font-family: var(--stack-mono);
+      font-size: var(--t-13);
+      font-variant-numeric: tabular-nums;
+      color: var(--c-gray-1200);
+    }
+    .scrubber-item {
+      display: grid;
+      grid-template-columns: 168px minmax(0, 1fr) 88px;
+      align-items: center;
+      gap: var(--s-8);
+      padding: var(--s-4) 0;
+      border-bottom: 1px solid var(--c-gray-300);
+    }
+    .ds-slider {
+      margin: 0;
+      position: relative;
+      height: 36px;
+      min-width: 44px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      touch-action: none;
+    }
+    .ds-slider-rail {
+      display: block;
+      width: 100%;
+      height: 6px;
+      background: var(--c-gray-400);
+      border-radius: var(--r-pill);
+      position: relative;
+      overflow: hidden;
+    }
+    .ds-slider-fill {
+      display: block;
+      height: 100%;
+      background: var(--c-gray-1200);
+      border-radius: var(--r-pill);
+    }
+    .ds-slider-thumb {
+      display: block;
+      position: absolute;
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      margin-left: -8px;
+      margin-top: -8px;
+      border-radius: var(--r-pill);
+      background: var(--c-gray-100);
+      border: 2px solid var(--c-gray-1200);
+      pointer-events: none;
+      transition: transform var(--dur-fast) var(--ease-out);
+    }
+    .ds-slider:focus-visible .ds-slider-thumb {
+      transform: scale(1.12);
+      border-color: var(--c-accent);
+    }
+    @media (hover: hover) {
+      .ds-slider:hover .ds-slider-thumb {
+        transform: scale(1.12);
+        border-color: var(--c-accent);
+      }
+    }
+    .deck-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-4);
+      padding-top: var(--s-3);
+    }
+    .emotion-matrix {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-3);
+      padding-top: var(--s-4);
+    }
+    .act-pill-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-4);
+      margin-top: var(--s-6);
+      padding-top: var(--s-6);
+      border-top: 1px solid var(--c-gray-400);
+    }
+    .telemetry-split {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: var(--s-16);
+      align-items: start;
+    }
+    .telemetry-split > article {
+      min-width: 0;
+    }
+    .ds-table td:first-child,
+    .ds-table td:last-child {
+      white-space: nowrap;
+    }
+    .ds-table td:nth-child(2),
+    .ds-table td code {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: var(--r-pill);
+      background: var(--c-gray-1200);
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .status-dot[data-state="standby"] {
+      background: var(--c-gray-900);
+    }
+    .nav-cluster {
+      display: flex;
+      align-items: center;
+      gap: var(--s-4);
+      flex-wrap: wrap;
+    }
+    .ds-chip {
+      font-size: var(--t-13);
+      min-height: 28px;
+      border: 1px solid var(--c-gray-400);
+    }
+    .ds-btn-pill,
+    .ds-tab {
+      border: 1px solid var(--c-gray-400);
+    }
+    .ds-btn-pill[data-tone="solid"] {
+      border-color: var(--c-accent);
+    }
+    @media (max-width: 1024px), (pointer: coarse) {
+      .wordmark,
+      .ds-slider {
+        min-height: 44px;
+        min-width: 44px;
+      }
+      .ds-tab,
+      .ds-btn-pill {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 10px 22px;
+      }
+      .studio-workbench,
+      .telemetry-split {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 640px) {
+      .metric-item {
+        grid-template-columns: 116px minmax(0, 1fr) 64px;
+        gap: var(--s-5);
+      }
+      .scrubber-item {
+        grid-template-columns: 1fr;
+        gap: var(--s-3);
+      }
+      .scrubber-item .metric-val {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="ds-skip-link" href="#main">Skip to studio instruments</a>
+  <div class="ds-shell">
+    <nav class="ds-shell-nav" aria-label="Studio telemetry and navigation">
+      <a class="wordmark" href="#main">JANG<span>®</span></a>
+      <div class="nav-cluster" aria-label="Hardware bus status">
+        <span class="ds-chip" data-variant="mono" id="usb-chip">
+          <span class="status-dot" id="usb-dot"></span>
+          <span id="usb-text">USB-JTAG: Ready</span>
+        </span>
+        <span class="ds-chip" data-variant="mono" id="lan-chip">
+          <span class="status-dot" id="lan-dot"></span>
+          <span id="lan-text">Wi-Fi LAN: Ready</span>
+        </span>
+        <span class="ds-chip" data-variant="mono" id="stage-chip">Stage 1 · 120 XP</span>
+        <button class="ds-btn-pill" type="button" id="btn-probe-hw">
+          <svg class="ph" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M224,128a96,96,0,0,1-94.71,96H128A95.38,95.38,0,0,1,62.1,197.8a8,8,0,0,1,11-11.63A80,80,0,1,0,71.43,71.39a3.07,3.07,0,0,1-.26.25L44.59,96H72a8,8,0,0,1,0,16H24a8,8,0,0,1-8-8V56a8,8,0,0,1,16,0V85.8L60.25,60A96,96,0,0,1,224,128Z"/></svg>
+          <span>Probe Bus</span>
+        </button>
+      </div>
+    </nav>
+
+    <main id="main" class="ds-shell-main">
+      <!-- 1. PRIMARY HARDWARE VIEWPORT & 4D HOMEOSTASIS REGISTER -->
+      <section aria-labelledby="studio-title">
+        <span class="ds-heading eyebrow" data-level="3">SPEC 05 · STUDIO</span>
+        <h1 id="studio-title" class="ds-heading" data-level="1">Mochi-Soul Live Companion Studio &amp; Local OTA/MCP Hub.</h1>
+        <p class="lede">Procedural Mochi-21 OLED face (<code>240×240</code>), 60fps 10-DOF spring physics viewport (<code>ST7789 240×320</code>), 4D biological homeostasis register, developer workspace symbiosis triggers, and <code>Application::OnIncomingJson</code> packet synthesis for <code>RB5320XZ78AI</code>.</p>
+
+        <div class="studio-workbench">
+          <!-- Left: Physical 240x240 Procedural Mochi-21 OLED Face + 60fps Spring / HUD Modes -->
+          <figure class="viewport-figure">
+            <figcaption class="stage-caption">
+              <span>240×240 OLED</span>
+              <span id="fps-counter">60.0 fps · 10-DOF</span>
+            </figcaption>
+            <img class="mochi-face-tile" id="mochi-gif" src="../../themes/procedural-mochi/happy.gif" width="240" height="240" alt="Procedural Mochi-21 240x240 OLED expression preview" onerror="this.onerror=null;this.hidden=true">
+            <canvas class="st7789-canvas" id="lcd-canvas" width="240" height="320" hidden aria-label="Live 240x320 ST7789 Mochi-Soul 60fps spring companion display"></canvas>
+            <img class="st7789-canvas" id="hud-img" src="/api/hud.png" width="240" height="320" alt="240x320 Mochi-Soul 4D Homeostasis PNG HUD status card" hidden onerror="this.onerror=null;this.hidden=true">
+            <div class="stage-caption">
+              <span id="emo-readout">happy</span>
+              <span id="zone-readout">idle · 65 cm</span>
+            </div>
+            <button class="ds-btn-pill" type="button" id="btn-hud-toggle" aria-pressed="false">
+              <svg class="ph" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,16V158.75l-26.07-26.06a16,16,0,0,0-22.63,0l-20,20-44-44a16,16,0,0,0-22.62,0L40,149.37V56ZM40,172l52-52,80,80H40Zm176,28H194.63l-36-36,20-20L216,181.38V200Z"/></svg>
+              <span id="hud-toggle-label">60fps Spring Canvas</span>
+            </button>
+          </figure>
+
+          <!-- Right: 4D Homeostasis Instrument Register & Custom DS Sensor Scrubbers -->
+          <aside class="register-panel" aria-label="Homeostasis register and reflex controls">
+            <section aria-labelledby="homeo-h">
+              <header class="register-head">
+                <h2 id="homeo-h" class="ds-heading" data-level="2">4D Homeostasis &amp; Reflex Register</h2>
+                <span class="register-sub mono" id="valence-arousal-readout">Valence +0.420 · Arousal +0.180</span>
+              </header>
+              <dl class="metric-list">
+                <div class="metric-item">
+                  <dt class="metric-key">
+                    <svg class="ph" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M215.79,118.17a8,8,0,0,0-5-5.66L153.18,90.9l14.66-73.33a8,8,0,0,0-13.69-7l-112,120a8,8,0,0,0,3,13l57.63,21.61L88.16,238.43a8,8,0,0,0,13.69,7l112-120A8,8,0,0,0,215.79,118.17ZM109.37,214l10.47-52.38a8,8,0,0,0-5-9.06L62,132.71l84.62-90.66L136.16,94.43a8,8,0,0,0,5,9.06l52.8,19.8Z"/></svg>
+                    Energy
+                  </dt>
+                  <dd class="meter-track"><span class="meter-fill" id="bar-energy" style="width: 92%"></span></dd>
+                  <dd class="metric-val" id="val-energy">92.0%</dd>
+                </div>
+                <div class="metric-item">
+                  <dt class="metric-key">
+                    <svg class="ph" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M208,88H40a8,8,0,0,0-8,8,96.11,96.11,0,0,0,88,95.66V216H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16H136V191.66A96.11,96.11,0,0,0,224,96,8,8,0,0,0,208,88Zm-80,88a80.11,80.11,0,0,1-79.6-72H207.6A80.11,80.11,0,0,1,128,176Z"/></svg>
+                    Satiety
+                  </dt>
+                  <dd class="meter-track"><span class="meter-fill" id="bar-satiety" style="width: 86%"></span></dd>
+                  <dd class="metric-val" id="val-satiety">86.0%</dd>
+                </div>
+                <div class="metric-item">
+                  <dt class="metric-key">
+                    <svg class="ph" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a62.07,62.07,0,0,0-62,62c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,228.66,240,172,240,102A62.07,62.07,0,0,0,178,40ZM128,214.8C109.74,204.16,32,155.69,32,102A46.06,46.06,0,0,1,78,56c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,155.61,146.24,204.15,128,214.8Z"/></svg>
+                    Bond
+                  </dt>
+                  <dd class="meter-track"><span class="meter-fill" id="bar-bond" style="width: 64%"></span></dd>
+                  <dd class="metric-val" id="val-bond">64.0%</dd>
+                </div>
+                <div class="metric-item">
+                  <dt class="metric-key">
+                    <svg class="ph" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM80,108a12,12,0,1,1,12,12A12,12,0,0,1,80,108Zm96,0a12,12,0,1,1-12-12A12,12,0,0,1,176,108Zm-1.07,48c-10.29,17.79-27.4,28-46.93,28s-36.63-10.2-46.92-28a8,8,0,1,1,13.84-8c7.47,12.91,19.21,20,33.08,20s25.61-7.09,33.07-20a8,8,0,0,1,13.86,8Z"/></svg>
+                    Mood Valence
+                  </dt>
+                  <dd class="meter-track"><span class="meter-fill" id="bar-mood" style="width: 71%"></span></dd>
+                  <dd class="metric-val" id="val-mood">71.0%</dd>
+                </div>
+              </dl>
+            </section>
+
+            <!-- Custom DS Interactive Sensor Scrubbers (HC-SR04 + 16kHz Audio RMS) -->
+            <section aria-labelledby="scrub-h">
+              <header class="register-head">
+                <h2 id="scrub-h" class="ds-heading" data-level="2">Embodied Sensor Reflex Scrubbers</h2>
+                <span class="register-sub">Drag or use Arrow keys to simulate proximity and PCM lip-sync</span>
+              </header>
+              <dl class="metric-list">
+                <div class="scrubber-item">
+                  <dt class="metric-key" id="lbl-dist">HC-SR04 Distance</dt>
+                  <dd class="ds-slider" id="slider-dist" role="slider" tabindex="0"
+                      aria-labelledby="lbl-dist" aria-valuemin="3" aria-valuemax="150" aria-valuenow="65"
+                      data-min="3" data-max="150" data-step="1" data-value="65">
+                    <span class="ds-slider-rail">
+                      <span class="ds-slider-fill" id="fill-dist" style="width: 42.18%"></span>
+                    </span>
+                    <span class="ds-slider-thumb" id="thumb-dist" style="left: 42.18%"></span>
+                  </dd>
+                  <dd class="metric-val" id="val-dist">65.0 cm</dd>
+                </div>
+                <div class="scrubber-item">
+                  <dt class="metric-key" id="lbl-rms">16kHz Audio RMS</dt>
+                  <dd class="ds-slider" id="slider-rms" role="slider" tabindex="0"
+                      aria-labelledby="lbl-rms" aria-valuemin="0" aria-valuemax="12000" aria-valuenow="0"
+                      data-min="0" data-max="12000" data-step="100" data-value="0">
+                    <span class="ds-slider-rail">
+                      <span class="ds-slider-fill" id="fill-rms" style="width: 0%"></span>
+                    </span>
+                    <span class="ds-slider-thumb" id="thumb-rms" style="left: 0%"></span>
+                  </dd>
+                  <dd class="metric-val" id="val-rms">0 RMS</dd>
+                </div>
+              </dl>
+            </section>
+
+            <!-- Workspace Symbiosis Care Deck (1 primary solid orange CTA + monochrome hairline peers) -->
+            <section aria-labelledby="symbiosis-h">
+              <header class="register-head">
+                <h2 id="symbiosis-h" class="ds-heading" data-level="2">Developer Workspace Symbiosis &amp; Care</h2>
+                <span class="register-sub">Events nourish homeostasis, log to SQLite WAL, and emit <code>ota_1</code> packets</span>
+              </header>
+              <div class="deck-grid" role="group" aria-label="Workspace symbiosis triggers">
+                <button class="ds-btn-pill" data-tone="solid" type="button" onclick="sendWorkspace('git_commit')">
+                  <svg class="ph" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M248,120H183.42a56,56,0,0,0-110.84,0H8a8,8,0,0,0,0,16H72.58a56,56,0,0,0,110.84,0H248a8,8,0,0,0,0-16ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z"/></svg>
+                  <span>Git Commit (+15E)</span>
+                </button>
+                <button class="ds-btn-pill" type="button" onclick="sendWorkspace('test_pass')">
+                  <svg class="ph" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>
+                  <span>Test Suite Pass</span>
+                </button>
+                <button class="ds-btn-pill" type="button" onclick="sendWorkspace('test_fail')">
+                  <svg class="ph" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM222.93,203.8a8.5,8.5,0,0,1-7.48,4.2H40.55a8.5,8.5,0,0,1-7.48-4.2,7.59,7.59,0,0,1,0-7.72L120.52,44.21a8.75,8.75,0,0,1,15,0l87.45,151.87A7.59,7.59,0,0,1,222.93,203.8ZM120,144V104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,180Z"/></svg>
+                  <span>Build Alert</span>
+                </button>
+                <button class="ds-btn-pill" type="button" onclick="sendWorkspace('pomodoro_complete')">
+                  <svg class="ph" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M128,40a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,40Zm0,176a80,80,0,1,1,80-80A80.09,80.09,0,0,1,128,216ZM173.66,90.34a8,8,0,0,1,0,11.32l-40,40a8,8,0,0,1-11.32-11.32l40-40A8,8,0,0,1,173.66,90.34ZM96,16a8,8,0,0,1,8-8h48a8,8,0,0,1,0,16H104A8,8,0,0,1,96,16Z"/></svg>
+                  <span>Pomodoro Break</span>
+                </button>
+                <button class="ds-btn-pill" type="button" onclick="sendWorkspace('agent_approval_needed')">
+                  <svg class="ph" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M208,40H48A16,16,0,0,0,32,56v56c0,52.72,25.52,84.67,46.93,102.19,23.06,18.86,46,25.26,47,25.53a8,8,0,0,0,4.2,0c1-.27,23.91-6.67,47-25.53C198.48,196.67,224,164.72,224,112V56A16,16,0,0,0,208,40Zm0,72c0,37.07-13.66,67.16-40.6,89.42A129.3,129.3,0,0,1,128,223.62a128.25,128.25,0,0,1-38.92-21.81C61.82,179.51,48,149.3,48,112l0-56,160,0Z"/></svg>
+                  <span>Socratic Gate</span>
+                </button>
+                <button class="ds-btn-pill" type="button" onclick="sendWorkspace('voice_wake')">
+                  <svg class="ph" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M128,176a48.05,48.05,0,0,0,48-48V64a48,48,0,0,0-96,0v64A48.05,48.05,0,0,0,128,176ZM96,64a32,32,0,0,1,64,0v64a32,32,0,0,1-64,0Zm40,143.6V232a8,8,0,0,1-16,0V207.6A80.11,80.11,0,0,1,48,128a8,8,0,0,1,16,0,64,64,0,0,0,128,0,8,8,0,0,1,16,0A80.11,80.11,0,0,1,136,207.6Z"/></svg>
+                  <span>Voice Wake</span>
+                </button>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <!-- 2. PROCEDURAL MOCHI-21 EMOTION MATRIX & 6-DOF OTTO QUADRUPED MCP DECK -->
+      <section class="telemetry-split" aria-labelledby="control-title">
+        <article>
+          <h2 id="control-title" class="ds-heading" data-level="2">21 Procedural Emotions (ωn = 18 rad/s, ζ = 0.65)</h2>
+          <p class="register-sub">Select any canonical emotion to update the 240×240 Mochi-21 OLED face, transition the 60fps spring solver, and emit the matching <code>llm</code> packet.</p>
+          <div class="emotion-matrix" id="emo-grid" role="group" aria-label="21 Procedural Mochi emotions"></div>
+        </article>
+
+        <article>
+          <h2 class="ds-heading" data-level="2">6-DOF Otto Action Deck &amp; Peripheral Actuators</h2>
+          <p class="register-sub">Dispatches validated JSON-RPC 2.0 <code>mcp</code> tool invocations matching the 32 tools in <code>ota_1</code>.</p>
+          <div class="deck-grid" role="group" aria-label="Otto quadruped MCP tools">
+            <button class="ds-btn-pill" type="button" onclick="sendMcp('self.Otto.walk_forward', {steps:2, speed:700})"><span>Walk Forward</span></button>
+            <button class="ds-btn-pill" type="button" onclick="sendMcp('self.Otto.turn_left', {steps:2, speed:700})"><span>Turn Left</span></button>
+            <button class="ds-btn-pill" type="button" onclick="sendMcp('self.Otto.moonwalk', {steps:2, speed:650})"><span>Moonwalk</span></button>
+            <button class="ds-btn-pill" type="button" onclick="sendMcp('self.Otto.jump', {steps:1, speed:600})"><span>Jump</span></button>
+            <button class="ds-btn-pill" type="button" onclick="sendMcp('self.Otto.swing', {steps:2, speed:800})"><span>Swing Dance</span></button>
+            <button class="ds-btn-pill" type="button" onclick="sendMcp('self.Otto.hand_wave', {steps:2})"><span>Wave Greeting</span></button>
+            <button class="ds-btn-pill" type="button" onclick="sendMcp('self.Otto.stop', {})"><span>Home / Stop</span></button>
+            <button class="ds-btn-pill" type="button" onclick="sendMcp('self.screen.set_brightness', {brightness:95})"><span>Screen 95%</span></button>
+          </div>
+          <p class="act-pill-bar">
+            <span class="ds-chip" data-variant="mono" id="act-otto">Otto: idle</span>
+            <span class="ds-chip" data-variant="mono" id="act-led">WS2812: rgb(252, 168, 73)</span>
+            <span class="ds-chip" data-variant="mono" id="act-screen">Backlight: 85% · Vol 75%</span>
+          </p>
+        </article>
+      </section>
+
+      <!-- 3. OUTBOUND OTA_1 PACKET REGISTER & SQLITE WAL EPISODIC MEMORY -->
+      <section class="telemetry-split" aria-labelledby="telemetry-title">
+        <article>
+          <h2 id="telemetry-title" class="ds-heading" data-level="2">Outbound ota_1 Packet Register</h2>
+          <table class="ds-table" aria-label="Outbound ota_1 packets">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Payload (JSON-RPC / Control)</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="packet-tbody"></tbody>
+          </table>
+        </article>
+
+        <article>
+          <h2 class="ds-heading" data-level="2">SQLite WAL Episodic Memory Log</h2>
+          <table class="ds-table" aria-label="SQLite WAL episodic memory log">
+            <thead>
+              <tr>
+                <th>Event</th>
+                <th>Detail</th>
+                <th>Emotion</th>
+              </tr>
+            </thead>
+            <tbody id="memory-tbody"></tbody>
+          </table>
+        </article>
+      </section>
+    </main>
+
+    <footer class="ds-shell-footer">
+      <div class="ds-shell-footer-inner">
+        <span>DESIGN:OS Robotics · Spec 05 Live Companion Studio</span>
+        <span class="mono">RB5320XZ78AI · ESP32-S3 N16R8 · ST7789 240×320</span>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const ALL_EMOTIONS = [
+      "neutral","happy","laughing","funny","sad","angry","crying",
+      "loving","embarrassed","surprised","shocked","thinking","winking","cool",
+      "relaxed","delicious","kissy","confident","sleepy","silly","confused"
+    ];
+
+    const POSES = {
+      neutral:     [0, 0, 1.0, 1.0, 0.0, 0.0, 0.25, 0.15, 0.15, 0.0],
+      happy:       [0, -2, 0.35, 0.35, 0.1, -0.1, 0.85, 0.30, 0.65, 0.0],
+      laughing:    [0, -3, 0.22, 0.22, 0.15, -0.15, 1.00, 0.85, 0.80, 0.0],
+      funny:       [4, -1, 0.95, 0.35, -0.2, 0.25, 0.70, 0.55, 0.45, 5.0],
+      sad:         [0, 5, 0.70, 0.70, -0.45, 0.45, -0.65, 0.10, 0.10, -3.0],
+      angry:       [0, 1, 0.65, 0.65, 0.55, -0.55, -0.75, 0.25, 0.05, 0.0],
+      crying:      [0, 6, 0.40, 0.40, -0.50, 0.50, -0.80, 0.50, 0.20, -4.0],
+      loving:      [0, -2, 0.85, 0.85, -0.10, 0.10, 0.90, 0.35, 0.95, 3.0],
+      embarrassed: [-5, 3, 0.55, 0.55, -0.30, 0.30, 0.10, 0.15, 1.00, -4.0],
+      surprised:   [0, -3, 1.30, 1.30, -0.25, 0.25, 0.00, 0.80, 0.25, 0.0],
+      shocked:     [0, -4, 1.45, 1.45, -0.35, 0.35, -0.20, 0.95, 0.10, 0.0],
+      thinking:    [8, -6, 0.80, 1.05, -0.15, 0.35, 0.05, 0.10, 0.15, 6.0],
+      winking:     [2, -1, 1.00, 0.12, -0.10, 0.20, 0.75, 0.25, 0.55, 4.0],
+      cool:        [0, 0, 0.55, 0.55, 0.15, -0.15, 0.50, 0.10, 0.10, 2.0],
+      relaxed:     [0, 2, 0.25, 0.25, -0.10, 0.10, 0.60, 0.10, 0.45, 0.0],
+      delicious:   [0, -2, 0.45, 0.45, -0.15, 0.15, 0.95, 0.60, 0.75, 3.0],
+      kissy:       [0, -1, 0.30, 0.30, -0.15, 0.15, 0.40, 0.35, 0.85, 2.0],
+      confident:   [2, -2, 0.90, 0.80, 0.20, -0.10, 0.70, 0.20, 0.30, 4.0],
+      sleepy:      [0, 6, 0.12, 0.12, -0.20, 0.20, 0.10, 0.25, 0.20, -5.0],
+      silly:       [-6, 2, 1.15, 0.65, -0.25, 0.30, 0.80, 0.70, 0.50, -6.0],
+      confused:    [-5, -2, 1.10, 0.75, -0.35, 0.40, -0.25, 0.20, 0.15, -5.0]
+    };
+
+    const FALLBACK_STATE = {
+      energy: 92.0,
+      satiety: 86.0,
+      bond: 64.0,
+      valence: 0.42,
+      arousal: 0.18,
+      mood_pct: 71.0,
+      emotion: "happy",
+      stage: 1,
+      stage_name: "Mochi-Sprout",
+      xp: 120,
+      distance_cm: 65.0,
+      reflex_zone: "ambient_idle",
+      lip_aperture: 0.0,
+      hardware: { usb_connected: true, lan_reachable: true },
+      actuators: { servo_action: "self.Otto.updown", led_rgb: [252, 168, 73], brightness: 85, volume: 75 },
+      packets: [
+        { ts: "09:42:10", source: "workspace:git_commit", raw_json: '{"type":"llm","emotion":"delicious","text":"happy"}' },
+        { ts: "09:42:10", source: "mcp:self.Otto.updown", raw_json: '{"type":"mcp","payload":{"jsonrpc":"2.0","method":"tools/call","params":{"name":"self.Otto.updown"}}}' },
+        { ts: "09:41:55", source: "interact:chat_hello", raw_json: '{"type":"alert","status":"Mochi · HAPPY","emotion":"happy"}' }
+      ],
+      memories: [
+        { event_type: "feed_knowledge", detail: "Ingested fresh git commit (+15 Energy) — homeostasis recharged.", emotion: "delicious" },
+        { event_type: "solve_problem", detail: "All CI verification gates passed 100% (+8 Energy).", emotion: "confident" },
+        { event_type: "gentle_pet", detail: "Deep-work Pomodoro complete (+12 Energy) — stretch break active.", emotion: "relaxed" }
+      ]
+    };
+
+    let currentState = FALLBACK_STATE;
+    let springX = [...POSES.happy];
+    let springV = new Array(10).fill(0);
+    let targetPose = [...POSES.happy];
+    let lipOverride = 0;
+    /* viewMode: 0 = 240x240 Procedural GIF (canonical), 1 = 60fps Spring Canvas, 2 = 240x320 HUD PNG */
+    let viewMode = 0;
+    let lastFrameTs = performance.now();
+    let fpsSmoothed = 60.0;
+
+    /* Populate 21 Emotion Buttons */
+    const emoGrid = document.getElementById("emo-grid");
+    ALL_EMOTIONS.forEach((emo) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ds-tab";
+      btn.id = `emo-btn-${emo}`;
+      btn.setAttribute("aria-pressed", emo === "happy" ? "true" : "false");
+      btn.textContent = emo;
+      btn.onclick = () => selectEmotion(emo);
+      emoGrid.appendChild(btn);
+    });
+
+    /* Custom DS Interactive Sliders (Pointer + Keyboard) */
+    function initCustomSlider(sliderId, fillId, thumbId, valId, formatFn, onCommitFn) {
+      const el = document.getElementById(sliderId);
+      const fill = document.getElementById(fillId);
+      const thumb = document.getElementById(thumbId);
+      const valEl = document.getElementById(valId);
+      const min = parseFloat(el.dataset.min);
+      const max = parseFloat(el.dataset.max);
+      const step = parseFloat(el.dataset.step || "1");
+
+      function setVal(raw, commit) {
+        const clamped = Math.max(min, Math.min(max, Math.round(raw / step) * step));
+        const pct = ((clamped - min) / (max - min)) * 100;
+        el.dataset.value = String(clamped);
+        el.setAttribute("aria-valuenow", String(clamped));
+        fill.style.width = `${pct.toFixed(2)}%`;
+        thumb.style.left = `${pct.toFixed(2)}%`;
+        valEl.textContent = formatFn(clamped);
+        if (commit) onCommitFn(clamped);
+      }
+
+      function updateFromPointer(clientX, commit) {
+        const rect = el.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / Math.max(1, rect.width)));
+        setVal(min + ratio * (max - min), commit);
+      }
+
+      let dragging = false;
+      el.addEventListener("pointerdown", (e) => {
+        dragging = true;
+        el.setPointerCapture(e.pointerId);
+        updateFromPointer(e.clientX, true);
+      });
+      el.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        updateFromPointer(e.clientX, true);
+      });
+      el.addEventListener("pointerup", () => { dragging = false; });
+      el.addEventListener("keydown", (e) => {
+        const cur = parseFloat(el.dataset.value);
+        if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+          e.preventDefault();
+          setVal(cur + step * 5, true);
+        } else if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+          e.preventDefault();
+          setVal(cur - step * 5, true);
+        } else if (e.key === "Home") {
+          e.preventDefault();
+          setVal(min, true);
+        } else if (e.key === "End") {
+          e.preventDefault();
+          setVal(max, true);
+        }
+      });
+
+      return { setVal };
+    }
+
+    let reflexTimer = null;
+    function scheduleReflexUpdate() {
+      if (reflexTimer) clearTimeout(reflexTimer);
+      reflexTimer = setTimeout(async () => {
+        const dist = parseFloat(document.getElementById("slider-dist").dataset.value);
+        const rms = parseFloat(document.getElementById("slider-rms").dataset.value);
+        try {
+          const res = await fetch("/api/reflex", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({distance_cm: dist, audio_rms: rms})
+          });
+          if (res.ok) applyState(await res.json());
+        } catch (_) {
+          currentState.distance_cm = dist;
+          currentState.reflex_zone = dist < 8 ? "startled_back" : dist < 25 ? "curious_greet" : "ambient_idle";
+          applyState(currentState);
+        }
+      }, 24);
+    }
+
+    initCustomSlider(
+      "slider-dist", "fill-dist", "thumb-dist", "val-dist",
+      (v) => `${v.toFixed(1)} cm`,
+      () => scheduleReflexUpdate()
+    );
+    initCustomSlider(
+      "slider-rms", "fill-rms", "thumb-rms", "val-rms",
+      (v) => `${Math.round(v)} RMS`,
+      (v) => {
+        lipOverride = Math.min(1.0, (v / 9500.0) * 1.15);
+        scheduleReflexUpdate();
+      }
+    );
+
+    async function fetchStatus() {
+      try {
+        const res = await fetch("/api/status");
+        if (res.ok) {
+          applyState(await res.json());
+          return;
+        }
+      } catch (_) {}
+      applyState(FALLBACK_STATE);
+    }
+
+    async function selectEmotion(emo) {
+      try {
+        const res = await fetch("/api/interact", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({event_type: "chat_hello", emotion: emo, detail: `Studio Emotion -> ${emo}`})
+        });
+        if (res.ok) {
+          applyState(await res.json());
+          return;
+        }
+      } catch (_) {}
+      currentState.emotion = emo;
+      applyState(currentState);
+    }
+
+    async function sendWorkspace(wsEvent) {
+      try {
+        const res = await fetch("/api/workspace-event", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({workspace_event: wsEvent})
+        });
+        if (res.ok) {
+          applyState(await res.json());
+          return;
+        }
+      } catch (_) {}
+    }
+
+    async function sendMcp(toolName, args) {
+      try {
+        const res = await fetch("/api/mcp", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({tool: toolName, arguments: args})
+        });
+        if (res.ok) {
+          applyState(await res.json());
+          return;
+        }
+      } catch (_) {}
+    }
+
+    document.getElementById("btn-probe-hw").addEventListener("click", async () => {
+      try { await fetch("/api/hardware"); } catch (_) {}
+      await fetchStatus();
+    });
+
+    document.getElementById("btn-hud-toggle").addEventListener("click", () => {
+      viewMode = (viewMode + 1) % 3;
+      const gif = document.getElementById("mochi-gif");
+      const canvas = document.getElementById("lcd-canvas");
+      const img = document.getElementById("hud-img");
+      const btn = document.getElementById("btn-hud-toggle");
+      const lbl = document.getElementById("hud-toggle-label");
+      btn.setAttribute("aria-pressed", viewMode !== 0 ? "true" : "false");
+      if (viewMode === 0) {
+        gif.hidden = false;
+        canvas.hidden = true;
+        img.hidden = true;
+        lbl.textContent = "60fps Spring Canvas";
+      } else if (viewMode === 1) {
+        gif.hidden = true;
+        canvas.hidden = false;
+        img.hidden = true;
+        lbl.textContent = "240×320 HUD PNG";
+      } else {
+        gif.hidden = true;
+        canvas.hidden = true;
+        img.src = `/api/hud.png?t=${Date.now()}`;
+        img.hidden = false;
+        lbl.textContent = "240×240 OLED GIF";
+      }
+    });
+
+    function applyState(payload) {
+      const st = Object.assign({}, currentState, payload.state || payload);
+      currentState = st;
+      const emo = st.emotion || "happy";
+      const basePose = POSES[emo] || POSES.neutral;
+      targetPose = [...basePose];
+      lipOverride = st.lip_aperture || 0;
+
+      const gifEl = document.getElementById("mochi-gif");
+      const targetSrc = `../../themes/procedural-mochi/${emo}.gif`;
+      if (gifEl && gifEl.getAttribute("src") !== targetSrc) {
+        gifEl.setAttribute("src", targetSrc);
+      }
+
+      if (typeof st.energy === "number") {
+        document.getElementById("bar-energy").style.width = `${st.energy}%`;
+        document.getElementById("val-energy").textContent = `${st.energy.toFixed(1)}%`;
+      }
+      if (typeof st.satiety === "number") {
+        document.getElementById("bar-satiety").style.width = `${st.satiety}%`;
+        document.getElementById("val-satiety").textContent = `${st.satiety.toFixed(1)}%`;
+      }
+      if (typeof st.bond === "number") {
+        document.getElementById("bar-bond").style.width = `${st.bond}%`;
+        document.getElementById("val-bond").textContent = `${st.bond.toFixed(1)}%`;
+      }
+      if (typeof st.mood_pct === "number") {
+        document.getElementById("bar-mood").style.width = `${st.mood_pct}%`;
+        document.getElementById("val-mood").textContent = `${st.mood_pct.toFixed(1)}%`;
+      }
+
+      if (typeof st.valence === "number" && typeof st.arousal === "number") {
+        const vSign = st.valence >= 0 ? "+" : "";
+        const aSign = st.arousal >= 0 ? "+" : "";
+        document.getElementById("valence-arousal-readout").textContent =
+          `Valence ${vSign}${st.valence.toFixed(3)} · Arousal ${aSign}${st.arousal.toFixed(3)}`;
+      }
+
+      const cleanStage = String(st.stage_name || "Mochi-Sprout").replace(/^Stage\s*\d+:\s*/i, "");
+      const shortZone = String(st.reflex_zone || "ambient_idle").replace(/^ambient_/, "");
+      document.getElementById("stage-chip").textContent = `Stage ${st.stage ?? 1} (${cleanStage}) · ${st.xp ?? 120} XP`;
+      document.getElementById("emo-readout").textContent = `${emo}`;
+      document.getElementById("zone-readout").textContent = `${shortZone} · ${(st.distance_cm ?? 65).toFixed(0)} cm`;
+
+      ALL_EMOTIONS.forEach((k) => {
+        const b = document.getElementById(`emo-btn-${k}`);
+        if (b) b.setAttribute("aria-pressed", k === emo ? "true" : "false");
+      });
+
+      if (st.hardware) {
+        const usbDot = document.getElementById("usb-dot");
+        const lanDot = document.getElementById("lan-dot");
+        usbDot.dataset.state = st.hardware.usb_connected ? "online" : "standby";
+        lanDot.dataset.state = st.hardware.lan_reachable ? "online" : "standby";
+        document.getElementById("usb-text").textContent = st.hardware.usb_connected
+          ? "USB-JTAG: Ready"
+          : "USB-JTAG: Standby";
+        document.getElementById("lan-text").textContent = st.hardware.lan_reachable
+          ? "Wi-Fi LAN: Ready"
+          : "Wi-Fi LAN: Standby";
+      }
+
+      if (st.actuators) {
+        const a = st.actuators;
+        const servoName = String(a.servo_action || "idle").replace("self.Otto.", "");
+        const rgb = Array.isArray(a.led_rgb) ? a.led_rgb.join(", ") : "252, 168, 73";
+        document.getElementById("act-otto").textContent = `Otto: ${servoName}`;
+        document.getElementById("act-led").textContent = `WS2812: rgb(${rgb})`;
+        document.getElementById("act-screen").textContent = `Backlight: ${a.brightness ?? 85}% · Vol ${a.volume ?? 75}%`;
+      }
+
+      const pktTbody = document.getElementById("packet-tbody");
+      pktTbody.innerHTML = (st.packets || []).slice(0, 6).map((p) => {
+        const rawType = String((p.parsed && p.parsed.type) || p.source || "json");
+        const pType = rawType.startsWith("mcp") ? "mcp" : rawType;
+        const bodyStr = String(p.raw_json || JSON.stringify(p.parsed || {}));
+        return `<tr>
+          <td class="mono">${pType}</td>
+          <td><code>${bodyStr.length > 84 ? bodyStr.slice(0, 84) + "…" : bodyStr}</code></td>
+          <td class="mono">${p.ts || ""}</td>
+        </tr>`;
+      }).join("");
+
+      const memTbody = document.getElementById("memory-tbody");
+      memTbody.innerHTML = (st.memories || []).slice(0, 6).map((m) => {
+        const evName = String(m.event_type || "").replace(/^set_emotion:/, "emo:");
+        return `<tr>
+          <td class="mono">${evName}</td>
+          <td>${m.detail}</td>
+          <td class="mono">${m.emotion || "neutral"}</td>
+        </tr>`;
+      }).join("");
+
+      if (viewMode === 2) {
+        document.getElementById("hud-img").src = `/api/hud.png?t=${Date.now()}`;
+      }
+    }
+
+    /* 60fps Second-Order Differential Spring Renderer on 240x320 ST7789 Canvas */
+    const canvas = document.getElementById("lcd-canvas");
+    const ctx = canvas.getContext("2d");
+
+    function renderLoop(now) {
+      const dt = Math.min(0.05, Math.max(0.001, (now - lastFrameTs) / 1000));
+      lastFrameTs = now;
+      fpsSmoothed = fpsSmoothed * 0.92 + (1 / dt) * 0.08;
+      document.getElementById("fps-counter").textContent = `${fpsSmoothed.toFixed(1)} fps · 10-DOF`;
+
+      const wn = 18.0;
+      const zeta = 0.65;
+      const c = 2.0 * zeta * wn;
+      const k = wn * wn;
+
+      for (let i = 0; i < 10; i++) {
+        const goal = (i === 7 && lipOverride > 0.05) ? Math.max(targetPose[7], lipOverride) : targetPose[i];
+        const acc = k * (goal - springX[i]) - c * springV[i];
+        springV[i] += acc * dt;
+        springX[i] += springV[i] * dt;
+      }
+
+      /* Pure #000000 OLED Framebuffer */
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, 240, 320);
+
+      /* Top Status Strip inside ST7789 */
+      ctx.fillStyle = "#09090b";
+      ctx.fillRect(0, 0, 240, 26);
+      ctx.strokeStyle = "#27272a";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, 26.5);
+      ctx.lineTo(240, 26.5);
+      ctx.stroke();
+
+      ctx.fillStyle = "#fca849";
+      ctx.font = "500 10px ui-monospace, SFMono-Regular, Menlo, monospace";
+      const shortStage = currentState
+        ? String(currentState.stage_name || "Mochi-Sprout").replace(/^Stage\s*\d+:\s*/i, "")
+        : "Mochi-Sprout";
+      const stgTxt = currentState ? `S${currentState.stage ?? 1}:${shortStage}` : "S1:Mochi-Sprout";
+      ctx.fillText(stgTxt, 10, 17);
+      ctx.fillStyle = "#f4f4f5";
+      const eTxt = currentState ? `E:${Math.round(currentState.energy ?? 92)}% B:${Math.round(currentState.bond ?? 64)}%` : "E:92% B:64%";
+      ctx.fillText(eTxt, 140, 17);
+
+      /* Mochi-21 Procedural Face (10-DOF Spring State) */
+      const [gx, gy, lOpen, rOpen, lBrow, rBrow, mSmile, mOpen, blush, tilt] = springX;
+      ctx.save();
+      ctx.translate(120 + gx * 0.6, 152 + gy * 0.6);
+      ctx.rotate((tilt * Math.PI) / 180);
+
+      /* Squircle Mochi Body Contour */
+      ctx.fillStyle = "#09090b";
+      ctx.strokeStyle = "#27272a";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(-86, -78, 172, 156, 48);
+      ctx.fill();
+      ctx.stroke();
+
+      /* Warm Amber Blush Cheeks */
+      if (blush > 0.05) {
+        ctx.fillStyle = `rgba(252, 168, 73, ${Math.min(0.65, blush * 0.55)})`;
+        ctx.beginPath();
+        ctx.ellipse(-54, 22, 16, 9, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(54, 22, 16, 9, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      /* Left & Right Eyes */
+      function drawEye(cx, cy, openVal, browTilt) {
+        const h = Math.max(3, 34 * Math.max(0.08, openVal));
+        const w = 28;
+        ctx.fillStyle = "#f4f4f5";
+        ctx.beginPath();
+        ctx.roundRect(cx - w / 2, cy - h / 2, w, h, Math.min(14, h / 2));
+        ctx.fill();
+
+        if (openVal > 0.35) {
+          ctx.fillStyle = "#09090b";
+          ctx.beginPath();
+          ctx.arc(cx + gx * 0.25, cy + gy * 0.25, 6.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#f4f4f5";
+          ctx.beginPath();
+          ctx.arc(cx - 4 + gx * 0.15, cy - 5 + gy * 0.15, 3.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        /* Eyebrow */
+        ctx.save();
+        ctx.translate(cx, cy - h / 2 - 10);
+        ctx.rotate(browTilt);
+        ctx.strokeStyle = "#d4d4d8";
+        ctx.lineWidth = 3.2;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(-13, 0);
+        ctx.lineTo(13, 0);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      drawEye(-38 + gx * 0.35, -8 + gy * 0.35, lOpen, lBrow);
+      drawEye(38 + gx * 0.35, -8 + gy * 0.35, rOpen, rBrow);
+
+      /* Mouth (Smile curvature + Lip-Sync Aperture) */
+      const my = 32 + gy * 0.25;
+      const mx = gx * 0.25;
+      if (mOpen > 0.22) {
+        const mw = 24 + mOpen * 16;
+        const mh = 6 + mOpen * 22;
+        ctx.fillStyle = "#fca849";
+        ctx.strokeStyle = "#f4f4f5";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.roundRect(mx - mw / 2, my - mh / 2, mw, mh, Math.min(12, mh / 2));
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.strokeStyle = "#f4f4f5";
+        ctx.lineWidth = 3.5;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(mx - 18, my);
+        ctx.quadraticCurveTo(mx, my + mSmile * 18, mx + 18, my);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      /* Bottom Telemetry Footer inside ST7789 */
+      ctx.fillStyle = "#a1a1aa";
+      ctx.font = "500 10px ui-monospace, SFMono-Regular, Menlo, monospace";
+      const footerTxt = currentState
+        ? `${(currentState.emotion || "happy").toUpperCase()} · ${(currentState.distance_cm ?? 65).toFixed(0)}CM · ${(currentState.reflex_zone || "idle").toUpperCase()}`
+        : "HAPPY · 65CM · IDLE";
+      ctx.fillText(footerTxt, 10, 308);
+
+      requestAnimationFrame(renderLoop);
+    }
+
+    fetchStatus();
+    requestAnimationFrame(renderLoop);
+  </script>
+</body>
+</html>

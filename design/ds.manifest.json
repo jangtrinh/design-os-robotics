@@ -1,0 +1,65 @@
+{
+  "changelog": [
+    {
+      "by": "ui ds set-role",
+      "kind": "set-role",
+      "path": "color.c-gray-100",
+      "to": "background",
+      "ts": "2026-11-03T09:10:12.698Z"
+    },
+    {
+      "by": "ui ds set-role",
+      "kind": "set-role",
+      "path": "color.c-gray-1200",
+      "to": "foreground",
+      "ts": "2026-11-03T09:10:12.752Z"
+    },
+    {
+      "by": "ui ds set-role",
+      "kind": "set-role",
+      "path": "color.c-gray-200",
+      "to": "secondary",
+      "ts": "2026-11-03T09:10:12.807Z"
+    },
+    {
+      "by": "ui ds set-role",
+      "kind": "set-role",
+      "path": "color.c-gray-900",
+      "to": "muted",
+      "ts": "2026-11-03T09:10:12.864Z"
+    },
+    {
+      "by": "ui ds set-role",
+      "kind": "set-role",
+      "path": "color.c-gray-1100",
+      "to": "neutral",
+      "ts": "2026-11-03T09:10:12.924Z"
+    },
+    {
+      "by": "ui ds set-role",
+      "from": "accent",
+      "kind": "set-role",
+      "path": "color.c-accent",
+      "to": "primary",
+      "ts": "2026-11-03T09:10:12.978Z"
+    },
+    {
+      "by": "ui ds set-role",
+      "kind": "set-role",
+      "path": "color.c-sky-600",
+      "to": "ring",
+      "ts": "2026-11-03T09:10:13.032Z"
+    }
+  ],
+  "compiledHash": "sha256-c-EBxKRH79_7NkOH87SbFMSpeaX8J4Ub509ttXc0JLw",
+  "createdAt": "2026-11-03T09:10:12.642Z",
+  "generation": 8,
+  "intent": "imported from design/tokens.json",
+  "name": "design-os-robotics",
+  "persona": {
+    "family": "imported",
+    "slug": "imported"
+  },
+  "registryHash": "sha256-SSt6U5_2txSLRWCLIhVJ2XMsW2WODUBMKGFj44qhvZI",
+  "version": "1.0.0"
+}
