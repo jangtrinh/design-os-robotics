@@ -24,7 +24,6 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
 FACTORY_BIN = ROOT / "profiles/example-esp32s3-n16r8/partitions/08-assets-0xAA0000.bin"
-VIDEO_REF_BIN = ROOT / "themes/video-ref-240x320.bin"
 PROCEDURAL_BIN = ROOT / "themes/procedural-mochi-fullvien-240x320.bin"
 PARTITION_MAX_BYTES = 0x540000  # 5,505,024 bytes (5.25 MB)
 
@@ -151,8 +150,7 @@ def main() -> None:
 
     packs = [
         ("1. Factory Default (21 GIFs)", FACTORY_BIN),
-        ("2. Video-Cut Pack (6 GIFs -> 21)", VIDEO_REF_BIN),
-        ("3. Procedural Mochi-21 (Code)", PROCEDURAL_BIN),
+        ("2. Procedural Mochi-21 (Code)", PROCEDURAL_BIN),
     ]
 
     summary_rows = []
@@ -229,16 +227,16 @@ def main() -> None:
             },
         }
 
-    print("\n[1] 3-WAY ARCHITECTURE & PERFORMANCE COMPARISON")
+    print("\n[1] 2-WAY ARCHITECTURE & PERFORMANCE COMPARISON")
     print("-" * 110)
-    print(
-        f"{'Metric':38s} | {'1. Factory (21 GIFs)':21s} | {'2. Video-Cut (6->21)':23s} | {'3. Procedural Mochi-21':22s}"
-    )
+    heads = ["1. Factory (21 GIFs)", "2. Procedural Mochi-21"]
+    shown = [heads[0] if r["label"].startswith("1.") else heads[1] for r in summary_rows]
+    print(f"{'Metric':38s} | " + " | ".join(f"{h:22s}" for h in shown))
     print("-" * 110)
 
     def fmt_row(title: str, key: str, fmt: str, unit: str = "") -> None:
         vals = [f"{r[key]:{fmt}}{unit}" for r in summary_rows]
-        print(f"{title:38s} | {vals[0]:21s} | {vals[1]:23s} | {vals[2]:22s}")
+        print(f"{title:38s} | " + " | ".join(f"{v:22s}" for v in vals))
 
     fmt_row("Unique Emotion Animations", "unique_emotions", "d", " / 21")
     fmt_row("Total 21-GIF Payload Size", "total_gif_kb", ",.2f", " KB")
@@ -255,7 +253,7 @@ def main() -> None:
     fmt_row("ESP32-S3 Est. CPU Load @ 12.5 FPS", "avg_esp32_cpu_pct", ".1f", " %")
     print("-" * 110)
 
-    proc_label = "3. Procedural Mochi-21 (Code)"
+    proc_label = "2. Procedural Mochi-21 (Code)"
     if proc_label in detailed_by_pack:
         print("\n[2] PER-EMOTION TELEMETRY FOR PROCEDURAL MOCHI-21 (ALL 21 STATES AT 240x320)")
         print("-" * 110)
