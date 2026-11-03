@@ -183,7 +183,7 @@ Photos of the physical build live in `docs/assets/hardware/real/`. They are docu
 - **Alt text and caption:** alt starts with `design:os by Jang. Real hardware: ` and then one factual English sentence. The caption is `design:os by Jang · <short title>`.
 - **Originals** stay outside the repository. Never commit an unredacted version: git history keeps every file.
 - **Own material only.** Use the owner's own photos. See `THIRD_PARTY_NOTICES.md`.
-- **Third-party art on the board.** Silkscreen logos and posters printed on a board belong to someone else (section 12). Blur them with a heavy mosaic and blur before export, so only the owner's own hardware stays recognisable. Known items are a ring logo, a WANTED-style poster and a lion drawing, on the board edge and inside the on-screen board drawings. OCR and the S-13 check cannot see art, so check every photo by eye at 100% zoom, left and right board edges and the screen, before export. Photo 06 and 03/04 were re-exported after a post-merge review found missed regions.
+- **Third-party art on the board.** Silkscreen logos and posters printed on a board belong to someone else (section 12). Blur them with a heavy mosaic and blur before export, so only the owner's own hardware stays recognisable. Known items are a ring logo, a ribbed oval emblem, a WANTED-style poster, a lion drawing and a few small symbols on the board edges and inside the on-screen board drawings, plus embossed brand marks on cable plugs and bottles and the module model text. OCR and the S-13 check cannot see art, so check every photo by eye at 100% zoom, left and right board edges and the screen, before export.
 
 ## 7. Promo formats
 

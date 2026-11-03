@@ -70,7 +70,7 @@ The avatar build and the flash step read your own device dumps. Dumps and built 
 
 ## Real hardware
 
-Photos of the physical RB5320XZ78AI build, taken by the repository owner. The network name, setup address, serial prints and QR codes are blurred or covered by a solid bar. Third-party silkscreen art (a ring logo, a poster and a lion drawing, on the board edge and in the line-art drawings shown on the screen) is blurred in every photo where it appears. Photo 05 (back of the board) shows none, and the files carry no metadata. Select a photo for the full-size version.
+Photos of the physical RB5320XZ78AI build, taken by the repository owner. The network name, setup address, serial prints and QR codes are blurred or covered by a solid bar. Third-party silkscreen art and logos (a ring logo, a ribbed oval emblem, a poster, a lion drawing and a few small symbols, on the board edges and in the line-art drawings shown on the screen), the embossed brand marks on a cable plug and a bottle, and the module model text are blurred in every photo where they appear. Generic board labels such as pin names, part numbers and the SPI, PWR ON and PCM labels stay visible. Photo 05 (back of the board) shows no such art, and the files carry no metadata. Select a photo for the full-size version.
 
 <table>
 <tr>
