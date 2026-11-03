@@ -16,5 +16,5 @@ Thay vì chỉ là một chiếc loa thông minh vô tri chờ câu lệnh *"Hi,
 | **Must (P0)** | Động cơ vi phân 4D (`Energy`, `Hunger`, `Bond`, `Valence/Arousal`) + Bộ ánh xạ đầy đủ sang **21 trạng thái `Procedural Mochi-21`** | Trái tim toán học của Tamagotchi |
 | **Must (P0)** | Lưu trữ bền vững `SQLite` (`WAL mode`) cho trạng thái tức thời, nhật ký sự kiện (bảng `episodic_memories`) và lịch sử tiến hóa | Không mất trí nhớ khi khởi động lại |
 | **Must (P0)** | Bộ lọc `Quiet Hours` (`23:00–07:30`) + Cooldown chống làm phiền (`>= 45 phút` giữa 2 lần chủ động) | Đảm bảo không bao giờ gây ồn ban đêm |
-| **Must (P0)** | Công cụ kiểm thử & đo hiệu năng định lượng (`benchmark` (mô phỏng 24 giờ) + `benchmark` đo latency `µs/tick`) | Cho phép kiểm chứng 100% bằng chương trình và con số khi làm việc remote |
+| **Must (P0)** | Công cụ kiểm thử & đo hiệu năng định lượng (`benchmark`: mô phỏng 24 giờ + đo latency `µs/tick`) | Cho phép kiểm chứng 100% bằng chương trình và con số khi làm việc remote |
 | **Won't (This Spec)** | Gửi gói mạng trực tiếp xuống `RoBot.5320` | Thuộc phạm vi **Spec 03 (`03-xiaozhi-proactive-bridge`)** |
