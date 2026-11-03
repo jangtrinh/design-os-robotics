@@ -29,5 +29,5 @@ Dark, flat, single-accent engineering instrument for ESP32-S3 robotic companions
 ## Voice
 
 - Write clear, grounded, first-principles hardware and companion-AI engineering prose in English.
-- Name observable physical or affective quantities (`Valence`, `Arousal`, `Energy`, `Social Drive`, `Curiosity`, `USB-JTAG: Ready`, `Wi-Fi LAN: Ready`) without marketing hype or anthropomorphized fluff.
+- Name observable physical or affective quantities (`Valence`, `Arousal`, `Energy`, `Satiety`, `Bond`, `USB-JTAG: Ready`, `Wi-Fi LAN: Ready`) without marketing hype or anthropomorphized fluff.
 - Keep badge and button labels concise (`2–4` words) and pair every numeric telemetry readout with explicit units (`V`, `A`, `FPS`, `KB`, `%`).

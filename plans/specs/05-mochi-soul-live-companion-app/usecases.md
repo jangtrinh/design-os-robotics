@@ -5,7 +5,7 @@
 - **Preconditions**: `MochiCompanionApp` initialized with SQLite WAL database (`engine.py`), `XiaozhiProactiveBridge` (`bridge.py`), and `EmbodiedReflexEngine` (`reflex_60fps.py`).
 - **Flow**:
   1. Actor triggers an interaction (`feed`, `pet`, `play`, `wake`, `sleep`, `dream`) or a Workspace Symbiosis event (`git_commit`, `test_pass`, `test_fail`, `pomodoro_complete`, `agent_approval_needed`).
-  2. `MochiCompanionApp` updates the 4D Homeostasis vector $S(t) = [E, V, B, C]^T$, steps the 10-DOF spring target to the resulting 21-emotion keyframe, synthesizes the corresponding `ota_1` `OnIncomingJson` packet list (`notify`, `alert`, `llm`, `mcp` servo/LED choreography), and appends the packet trace to the live ring buffer.
+  2. `MochiCompanionApp` updates the 4D Homeostasis state $S(t) = [\text{energy}, \text{hunger}, \text{bond}, \text{mood}]^T$ ($\text{mood} = (\text{valence}, \text{arousal})$), steps the 10-DOF spring target to the resulting 21-emotion keyframe, synthesizes the corresponding `ota_1` `OnIncomingJson` packet list (`notify`, `alert`, `llm`, `mcp` servo/LED choreography), and appends the packet trace to the live ring buffer.
 
 ### Gherkin `AC-01` (Unified Pipeline Latency & Workspace Symbiosis Completeness)
 ```gherkin
