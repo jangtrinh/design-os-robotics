@@ -469,5 +469,15 @@ def run_spec04_benchmark() -> dict:
     return report
 
 
-if __name__ == "__main__":
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Spec-04 benchmark: 60fps spring reflex, lip-sync and C++ header generation. "
+        "Running it (no arguments) overwrites plans/reports/benchmark-reflex-60fps.json; "
+        "restore with 'git checkout plans/reports'."
+    )
+    parser.parse_args()
     run_spec04_benchmark()
+
+
+if __name__ == "__main__":
+    main()

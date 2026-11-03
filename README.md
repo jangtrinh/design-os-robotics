@@ -23,7 +23,7 @@ Pin map and partition offsets are for `RB5320XZ78AI` (`ESP32-S3-WROOM-1U-N16R8`,
 ## What you get
 
 - **No-reset health audit.** Four non-intrusive layers via `robotctl.py health`.
-- **NVS control.** `robotctl.py optimize --flash` writes the NVS partition at `0x9000` (needs your own NVS dump; known issue, fix pending).
+- **NVS control.** `robotctl.py optimize --flash` writes the NVS partition at `0x9000` (needs your own NVS dump).
 - **Procedural Mochi-21 avatar.** 244.71 KB, −90.4% versus the default GIF pack.
 - **Mochi-Soul engine.** 4D state `S(t)=[E,V,B,C]`, ~0.76 µs/tick (median of 12 runs, measured idle), 1.31M ticks/s. SQLite WAL ~4.0 µs/tx (median of 12 runs). Quiet hours 23:00–07:30. Proactive MCP/WebSocket bridge 1.22 ms HUD card (single run). 60 Hz spring reflex 2.36 µs/frame (single run).
 
@@ -43,14 +43,14 @@ python3 tools/mochi-soul-engine/engine.py benchmark
 
 `health` exits 0 with or without a board. With no board connected, the USB-JTAG, Wi-Fi and some NVS rows show FAIL. It contacts the voice server and Open-Meteo over the network. `engine.py benchmark` overwrites the committed `plans/reports/benchmark-mochi-soul-engine.json`; restore it with `git checkout plans/reports`.
 
-### Flashing and NVS backup (known issue, fix pending)
+### Flashing and NVS backup
 
 > **Back up NVS before you flash.** `optimize --flash` writes the NVS partition at `0x9000`, which holds the board's saved settings, Wi-Fi included. Read that partition back from the board with esptool first, using the partition size from your own partition table, and keep the file.
 
-The avatar build and the flash step need files that are not in the repository. Dev owns the fixes. This list stays true whether or not PR #3 has merged:
+The avatar build and the flash step read your own device dumps. Dumps and built `.bin` files are gitignored and are not in the repository:
 
-- `python3 tools/cook-procedural-avatar.py` needs a base assets dump at `profiles/example-esp32s3-n16r8/partitions/08-assets-0xAA0000.bin`. That file is not in the repo, so the script exits with an error on a clean clone. A tree without PR #3 stops even earlier, with `NameError: name 'os' is not defined` (fixed in #3). The finished GIFs are already committed in `themes/procedural-mochi/`.
-- `robotctl.py status`, `optimize` and `optimize --flash` stop with `FileNotFoundError`. They read `profiles/example-esp32s3-n16r8/partitions/03-nvs-0x009000.bin`, which is gitignored and not in the repo. You must supply your own dump of the NVS partition at that path. `--flash` then writes only NVS at `0x9000`, through `uvx esptool`, so it needs [uv](https://docs.astral.sh/uv/).
+- `python3 tools/cook-procedural-avatar.py` needs your dump of the assets partition at `profiles/example-esp32s3-n16r8/partitions/08-assets-0xAA0000.bin` (or pass `--base-bin`). Without it the script prints an error and exits with status 2. It builds `themes/procedural-mochi-fullvien-240x320.bin` locally; that file is not tracked. The finished GIFs are already committed in `themes/procedural-mochi/`.
+- `robotctl.py status`, `optimize` and `optimize --flash` read your own dump of the NVS partition at `profiles/example-esp32s3-n16r8/partitions/03-nvs-0x009000.bin` (`--nvs` for `status`, `--base-nvs` for `optimize`). Without it they print how to read the partition from your board and exit with status 2. `--flash` then writes only NVS at `0x9000`, through `uvx esptool`, so it needs [uv](https://docs.astral.sh/uv/).
 
 ![Terminal health dashboard: four layers, no reset](./docs/assets/brand/health-dashboard.png)
 
@@ -86,13 +86,13 @@ python3 tools/robotctl.py health
 python3 tools/robotctl.py dashboard
 ```
 
-`dashboard` refreshes the same audit live until you press Ctrl+C. `status` and `optimize` need the NVS dump described under [Flashing and NVS backup](#flashing-and-nvs-backup-known-issue-fix-pending).
+`dashboard` refreshes the same audit live until you press Ctrl+C. `status` and `optimize` need the NVS dump described under [Flashing and NVS backup](#flashing-and-nvs-backup).
 
 ## Procedural Mochi-21 avatar
 
 ![21 code-drawn faces](./docs/assets/brand/faces-21.png)
 
-Drawn entirely by code. The GIFs in `themes/procedural-mochi/` come from `tools/cook-procedural-avatar.py`; running that script needs an external assets dump (see [Flashing and NVS backup](#flashing-and-nvs-backup-known-issue-fix-pending)), so it does not run on a clean clone.
+Drawn entirely by code. The GIFs in `themes/procedural-mochi/` come from `tools/cook-procedural-avatar.py`; running that script needs your own assets dump (see [Flashing and NVS backup](#flashing-and-nvs-backup)). The packed `.bin` is built locally and is not tracked.
 Full-bleed 240×240 on the 240×320 ST7789.
 244.71 KB, 8-colour indexed LZW, checksum `0x5867`. Sources live in [./themes/procedural-mochi/](./themes/procedural-mochi/).
 
@@ -106,14 +106,16 @@ Benchmarks are host-CPU numbers (Python 3 on a Linux x86 VM), not device speed. 
 
 The repeated-run figures (ticks and SQLite writes) use one method: the median of all 12 runs. Ticks: 0.76 µs/tick (range 0.70–1.50). Writes: ~4.0 µs/tx (range 3.6–6.6). Outliers stay in and are disclosed: runs 8 and 9 for ticks (about 1.5 µs/tick), runs 5 and 9 for writes (about 6.5 µs). Without the two tick outliers the tick median is 0.754. The outlier rule (above 1.5× the all-12 median) was set after the data had been seen, and its threshold comes from the same data, so it describes the runs; it is not a pre-registered test. The recorded load average does not explain the outliers. The VM was not dedicated, so "idle" means no heavy work was competing for the benchmark core. The other figures on this page, 2.36 µs/frame (`benchmark-reflex-60fps.json`) and 1.22 ms per HUD card (`benchmark-proactive-bridge.json`), are single runs, not medians.
 
-Two suites run and exit 0 on a clean clone:
+Four suites run and exit 0 on a clean clone:
 
 ```bash
 python3 tools/mochi-soul-engine/engine.py benchmark
 python3 tools/mochi-soul-engine/reflex_60fps.py
+python3 tools/mochi-soul-engine/bridge.py benchmark
+python3 tools/benchmark-avatar-perf.py
 ```
 
-Two suites fail on a tree without PR #3 and are fixed in #3: `tools/benchmark-avatar-perf.py` stops with `IndexError`, because the factory and video-cut theme sets it compares are not in the repo, and `tools/mochi-soul-engine/bridge.py benchmark` stops with `NameError`, a missing `import os`. The avatar figures above come from the committed `benchmark-avatar-perf.json`; the suite that produced them cannot be re-run from a tree without #3. Each suite that runs overwrites its committed JSON report.
+`tools/benchmark-avatar-perf.py` needs no `.bin` pack: when none is present it benchmarks the committed GIFs in `themes/procedural-mochi/` and shows `n/a` for the flash-image rows. With a locally built pack it also reports flash footprint. The first three suites overwrite their committed JSON reports (and `bridge.py benchmark` the HUD card PNG in `plans/reports/`); restore them with `git checkout plans/reports`.
 
 ## Voice
 
@@ -130,11 +132,11 @@ The voice pipeline itself is not part of this repository: there is no speech rec
 |:---|:---|
 | `tools/robotctl.py` | NVS inspect and patch, OTA slot switch, four-layer health dashboard, and 240×320 theme flashing. |
 | `tools/cook-assets-and-nvs.py` | Cooks a full-screen 240×320 `esp_mmap_assets` binary and a HUD-enabled NVS image. |
-| `tools/cook-procedural-avatar.py` | Draws all 21 Procedural Mochi emotions in code and packs the 240×320 asset binary. Needs an external assets dump; the `NameError` is fixed in #3. |
-| `tools/benchmark-avatar-perf.py` | Measures flash footprint, LZW/RLE, decode speed, and estimated SPI/CPU load for avatar packs. Fails with `IndexError` on a tree without #3 (fixed in #3). |
+| `tools/cook-procedural-avatar.py` | Draws all 21 Procedural Mochi emotions in code and packs the 240×320 asset binary. Needs your own assets dump; the `.bin` it builds is local and not tracked. |
+| `tools/benchmark-avatar-perf.py` | Measures flash footprint, LZW/RLE, decode speed, and estimated SPI/CPU load for avatar packs. Runs without a `.bin` by reading the committed GIFs. |
 | `tools/xtensa-disasm.py` | Zero-dependency Xtensa LX7 disassembler and xref analyzer for ESP-IDF application partitions. |
 | `tools/mochi-soul-engine/engine.py` | 4D homeostasis engine, 21-emotion router, SQLite WAL memory, and benchmark suite. |
-| `tools/mochi-soul-engine/bridge.py` | Proactive robot bridge, 240×320 HUD renderer, and `ota_1` protocol validator. `benchmark` fails with `NameError` on a tree without #3 (fixed in #3). |
+| `tools/mochi-soul-engine/bridge.py` | Proactive robot bridge, 240×320 HUD renderer, and `ota_1` protocol validator. |
 | `tools/mochi-soul-engine/reflex_60fps.py` | 60 fps spring-damper face engine, audio RMS lip-sync, and C++17 header generator. |
 
 ## Repository map
@@ -150,7 +152,7 @@ design-os-robotics/
 ├── tools/                         Host CLI, compilers, and Mochi-Soul engine
 ├── themes/
 │   ├── procedural-mochi/          22 GIFs: 21 code-drawn faces and a spring transition
-│   └── procedural-mochi-fullvien-240x320.bin   Factory pack (removed in #3)
+│   └── (procedural-mochi-fullvien-240x320.bin: built locally by tools/cook-procedural-avatar.py, not tracked)
 ├── knowledge/                     Internal research notes
 └── profiles/
     └── example-esp32s3-n16r8/     Example board profile
@@ -160,7 +162,7 @@ design-os-robotics/
 
 Health checks are non-intrusive by design. The tools do not toggle DTR/RTS and do not reset the chip on a health run.
 
-The pin map and partition offsets are calibrated for `RB5320XZ78AI` only. Back up NVS before flashing (see [Flashing and NVS backup](#flashing-and-nvs-backup-known-issue-fix-pending)).
+The pin map and partition offsets are calibrated for `RB5320XZ78AI` only. Back up NVS before flashing (see [Flashing and NVS backup](#flashing-and-nvs-backup)).
 
 If you only need a browser reflash, or you are building firmware for a different board, you may not need this toolchain.
 
@@ -168,7 +170,7 @@ If you only need a browser reflash, or you are building firmware for a different
 
 PolyForm Shield 1.0.0, source-available. Any purpose is permitted except providing a product that competes with this software, or with a product the licensor provides using it. You may use, study, modify and distribute it if you keep the licence terms (or their URL) and the `Required Notice:` line. The [LICENSE](./LICENSE) text is the only binding statement; this paragraph is a summary.
 
-Third-party works in this repository keep their own licences: the Be Vietnam Pro typeface (SIL OFL 1.1) and three.js (MIT). See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
+Third-party works in this repository keep their own licences: the Be Vietnam Pro typeface (SIL OFL 1.1), three.js r186 (MIT), and one hardware wiring image that the licence above does not cover. See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
 
 ## Ecosystem
 
@@ -181,12 +183,6 @@ Third-party works in this repository keep their own licences: the Be Vietnam Pro
 | Knowledge Builder | Multimodal knowledge compiler with UKMC.v1 contract and epistemic gate | [jangtrinh.github.io/design-os-knowledge-builder](https://jangtrinh.github.io/design-os-knowledge-builder/) |
 | Agent Teacher | Evidence-graded pedagogy library and curriculum tree runtime | [jangtrinh.github.io/design-os-pedagogy](https://jangtrinh.github.io/design-os-pedagogy/) |
 | jang.work | Canonical portfolio, case studies and zero-chroma design language | [www.jang.work](https://www.jang.work/) |
-
-## Support and contributing
-
-If this toolchain saves you time on the board, you can support continued work.
-
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy_Me_A_Coffee-202020?style=for-the-badge&logo=buy-me-a-coffee&logoColor=white&labelColor=09090b)](https://www.buymeacoffee.com/jangtrinh)
 
 ## Credits
 

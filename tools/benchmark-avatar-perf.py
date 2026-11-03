@@ -18,6 +18,7 @@ import io
 import itertools
 import json
 import struct
+import sys
 import time
 from pathlib import Path
 from PIL import Image
@@ -25,6 +26,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parent.parent
 FACTORY_BIN = ROOT / "profiles/example-esp32s3-n16r8/partitions/08-assets-0xAA0000.bin"
 PROCEDURAL_BIN = ROOT / "themes/procedural-mochi-fullvien-240x320.bin"
+LOOSE_GIF_DIR = ROOT / "themes/procedural-mochi"
 PARTITION_MAX_BYTES = 0x540000  # 5,505,024 bytes (5.25 MB)
 
 
@@ -64,6 +66,27 @@ def unpack_mmap_assets(bin_path: Path) -> dict:
         "entries": entries,
         "index": idx,
     }
+
+
+def load_loose_gifs(gif_dir: Path) -> dict | None:
+    """Build the same structure as unpack_mmap_assets() from the committed GIFs (no .bin needed).
+
+    Returns None when the folder has no GIFs. Flash-image fields are None because no .bin exists.
+    """
+    # The spring-transition clip is a demo, not one of the 21 faces.
+    files = sorted(p for p in gif_dir.glob("*.gif") if "transition" not in p.name)
+    if not files:
+        return None
+    entries = {}
+    for f in files:
+        payload = f.read_bytes()
+        entries[f.name] = {
+            "size": len(payload),
+            "sha256": hashlib.sha256(payload).hexdigest()[:12],
+            "payload": payload,
+        }
+    idx = {"emoji_collection": [{"name": f.stem, "file": f.name} for f in files]}
+    return {"total_bytes": None, "checksum": None, "checksum_valid": None, "entries": entries, "index": idx}
 
 
 def analyze_gif_metrics(gif_bytes: bytes, decode_iters: int = 6) -> dict:
@@ -160,10 +183,24 @@ def main() -> None:
     print("  ROBOT.5320 AVATAR PERFORMANCE & COMPRESSION BENCHMARK SUITE (ESP32-S3 240MHz · 240x320 ST7789)")
     print("=" * 110)
 
-    for label, path in packs:
-        if not path.exists():
-            continue
-        info = unpack_mmap_assets(path)
+    present = [(label, path) for label, path in packs if path.exists()]
+    if not present:
+        # The .bin packs are built locally and are not tracked; fall back to the committed GIFs.
+        print(
+            "Note: no avatar .bin pack found (profiles/.../08-assets-0xAA0000.bin or "
+            "themes/procedural-mochi-fullvien-240x320.bin). They are gitignored and built locally; "
+            "see README, 'Procedural Mochi-21 avatar'.\n"
+            f"Benchmarking the committed GIFs in {LOOSE_GIF_DIR.relative_to(ROOT)}/ instead. "
+            "Flash-image rows show n/a."
+        )
+        loose = load_loose_gifs(LOOSE_GIF_DIR)
+        if loose is None:
+            print(f"error: no GIFs in {LOOSE_GIF_DIR}", file=sys.stderr)
+            sys.exit(2)
+        present = [(packs[1][0], loose)]
+
+    for label, path in present:
+        info = path if isinstance(path, dict) else unpack_mmap_assets(path)
         entries = info["entries"]
         idx = info["index"]
 
@@ -196,9 +233,11 @@ def main() -> None:
         row = {
             "label": label,
             "total_bin_bytes": info["total_bytes"],
-            "total_bin_mb": info["total_bytes"] / (1024 * 1024),
-            "flash_free_mb": (PARTITION_MAX_BYTES - info["total_bytes"]) / (1024 * 1024),
-            "checksum": f"0x{info['checksum']:04x}",
+            "total_bin_mb": None if info["total_bytes"] is None else info["total_bytes"] / (1024 * 1024),
+            "flash_free_mb": None
+            if info["total_bytes"] is None
+            else (PARTITION_MAX_BYTES - info["total_bytes"]) / (1024 * 1024),
+            "checksum": None if info["checksum"] is None else f"0x{info['checksum']:04x}",
             "checksum_valid": info["checksum_valid"],
             "unique_emotions": len(unique_hashes),
             "total_gif_bytes": total_gif_bytes,
@@ -235,7 +274,7 @@ def main() -> None:
     print("-" * 110)
 
     def fmt_row(title: str, key: str, fmt: str, unit: str = "") -> None:
-        vals = [f"{r[key]:{fmt}}{unit}" for r in summary_rows]
+        vals = ["n/a" if r[key] is None else f"{r[key]:{fmt}}{unit}" for r in summary_rows]
         print(f"{title:38s} | " + " | ".join(f"{v:22s}" for v in vals))
 
     fmt_row("Unique Emotion Animations", "unique_emotions", "d", " / 21")
