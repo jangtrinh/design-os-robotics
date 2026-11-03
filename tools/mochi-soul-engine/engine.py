@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-FileCopyrightText: 2026 Jang Trinh
 """
 engine.py — Mochi-Soul 4D Biological Homeostasis Engine, 21-Emotion Router,
 SQLite WAL Episodic Memory & Quantitative Benchmark Suite (Spec 02).

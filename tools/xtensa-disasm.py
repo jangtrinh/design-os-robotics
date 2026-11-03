@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-FileCopyrightText: 2026 Jang Trinh
 """
 xtensa-disasm.py — Zero-dependency Xtensa LX7 (ESP32-S3) disassembler & xref analyzer
 for ESP-IDF application partition binaries (e.g. 07-ota1-v2.5.3-0x560000.bin).

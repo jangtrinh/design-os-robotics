@@ -1,10 +1,12 @@
-import os
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-FileCopyrightText: 2026 Jang Trinh
 """
 reflex_60fps.py — Spec 04: 60FPS Spring-Damper Parametric Face Engine,
 Real-Time 16kHz Audio RMS Lip-Sync, HC-SR04 Proximity Gaze Reflex & C++17 Header Generator.
 """
 import argparse
+import os
 import io
 import json
 import math

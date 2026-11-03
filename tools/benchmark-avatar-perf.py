@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-FileCopyrightText: 2026 Jang Trinh
 """
 benchmark-avatar-perf.py — Quantitative Performance & Compression Benchmark Suite
 for RoBot.5320 (ESP32-S3 240MHz + ST7789 240x320 + esp_mmap_assets lv_gif).

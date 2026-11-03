@@ -1,10 +1,12 @@
-import os
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-FileCopyrightText: 2026 Jang Trinh
 """
 bridge.py — Spec 03: Xiaozhi Proactive Robot Bridge, 240x320 Tamagotchi HUD Renderer,
 Disassembly-Exact ota_1 Protocol Validator (0x4202c0c8..0x4202c711) & Loopback Benchmark.
 """
 import argparse
+import os
 import hashlib
 import http.client
 import http.server

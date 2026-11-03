@@ -31,7 +31,7 @@ Mạch tự động nạp (Auto-Reset) trên hầu hết các bo ESP32-S3 sử d
 
 ## 3. Giao thức Điều khiển MCP qua WebSocket (`JSON-RPC 2.0`)
 
-Firmware `xiaozhi v2.5.3` tích hợp máy chủ MCP nội bộ gồm 32 công cụ (`self.get_device_status`, `self.screen.set_theme`, `self.screen.set_brightness`, `self.screen.preview_image`, `self.audio_speaker.set_volume`, `self.led.set_color`, `self.Otto.*`...):
+Firmware `xiaozhi v2.5.3` tích hợp máy chủ MCP nội bộ (danh sách công cụ của firmware gốc không được liệt kê ở đây):
 
 - Mọi lệnh MCP được bọc trong gói tin WebSocket `"type": "mcp"` với phần thân `"payload"` tuân thủ chuẩn **JSON-RPC 2.0** (`"jsonrpc": "2.0"`, `"id"`, `"method": "tools/call"`, `"params": { "name": ..., "arguments": ... }`).
 - Xem chi tiết cài đặt trong [`tools/mochi-soul-engine/bridge.py`](../tools/mochi-soul-engine/bridge.py).

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-FileCopyrightText: 2026 Jang Trinh
 """
 robotctl.py — Complete CLI Mastery & Optimization Toolkit for RoBot.5320 (ESP32-S3 N16R8)
 Supports:

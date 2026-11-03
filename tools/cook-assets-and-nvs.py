@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-FileCopyrightText: 2026 Jang Trinh
 """
 Cook full-screen 240x320 esp_mmap_assets binary + HUD-enabled NVS image for RoBot.5320 (ESP32-S3 N16R8).
 """
