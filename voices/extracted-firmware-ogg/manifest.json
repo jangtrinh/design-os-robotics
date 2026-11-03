@@ -1,0 +1,314 @@
+[
+  {
+    "index": 0,
+    "file": "ogg_00_lang_pack_1_0x004c86.ogg",
+    "offset_hex": "0x004c86",
+    "end_hex": "0x006065",
+    "max_size_bytes": 5087,
+    "role": "lang_pack_1"
+  },
+  {
+    "index": 1,
+    "file": "ogg_01_lang_pack_1_0x02efc4.ogg",
+    "offset_hex": "0x02efc4",
+    "end_hex": "0x02f748",
+    "max_size_bytes": 1924,
+    "role": "lang_pack_1"
+  },
+  {
+    "index": 2,
+    "file": "ogg_02_lang_pack_1_0x02f74c.ogg",
+    "offset_hex": "0x02f74c",
+    "end_hex": "0x02fd6d",
+    "max_size_bytes": 1569,
+    "role": "lang_pack_1"
+  },
+  {
+    "index": 3,
+    "file": "ogg_03_lang_pack_1_0x02fd71.ogg",
+    "offset_hex": "0x02fd71",
+    "end_hex": "0x03036d",
+    "max_size_bytes": 1532,
+    "role": "lang_pack_1"
+  },
+  {
+    "index": 4,
+    "file": "ogg_04_lang_pack_1_0x030371.ogg",
+    "offset_hex": "0x030371",
+    "end_hex": "0x030916",
+    "max_size_bytes": 1445,
+    "role": "lang_pack_1"
+  },
+  {
+    "index": 5,
+    "file": "ogg_05_lang_pack_1_0x03091a.ogg",
+    "offset_hex": "0x03091a",
+    "end_hex": "0x0310b2",
+    "max_size_bytes": 1944,
+    "role": "lang_pack_1"
+  },
+  {
+    "index": 6,
+    "file": "ogg_06_lang_pack_1_0x0310b6.ogg",
+    "offset_hex": "0x0310b6",
+    "end_hex": "0x0316e8",
+    "max_size_bytes": 1586,
+    "role": "lang_pack_1"
+  },
+  {
+    "index": 7,
+    "file": "ogg_07_lang_pack_1_0x0316ec.ogg",
+    "offset_hex": "0x0316ec",
+    "end_hex": "0x031dd0",
+    "max_size_bytes": 1764,
+    "role": "lang_pack_1"
+  },
+  {
+    "index": 8,
+    "file": "ogg_08_lang_pack_1_0x031dd4.ogg",
+    "offset_hex": "0x031dd4",
+    "end_hex": "0x032612",
+    "max_size_bytes": 2110,
+    "role": "lang_pack_1"
+  },
+  {
+    "index": 9,
+    "file": "ogg_09_lang_pack_1_0x032616.ogg",
+    "offset_hex": "0x032616",
+    "end_hex": "0x032c39",
+    "max_size_bytes": 1571,
+    "role": "lang_pack_1"
+  },
+  {
+    "index": 10,
+    "file": "ogg_10_lang_pack_1_0x032c3d.ogg",
+    "offset_hex": "0x032c3d",
+    "end_hex": "0x0332b2",
+    "max_size_bytes": 1653,
+    "role": "lang_pack_1"
+  },
+  {
+    "index": 11,
+    "file": "ogg_11_lang_pack_1_0x0332b6.ogg",
+    "offset_hex": "0x0332b6",
+    "end_hex": "0x03554d",
+    "max_size_bytes": 8855,
+    "role": "lang_pack_1"
+  },
+  {
+    "index": 12,
+    "file": "ogg_12_lang_pack_1_0x035551.ogg",
+    "offset_hex": "0x035551",
+    "end_hex": "0x03642e",
+    "max_size_bytes": 3805,
+    "role": "lang_pack_1"
+  },
+  {
+    "index": 13,
+    "file": "ogg_13_lang_pack_1_0x036432.ogg",
+    "offset_hex": "0x036432",
+    "end_hex": "0x038296",
+    "max_size_bytes": 7780,
+    "role": "lang_pack_1"
+  },
+  {
+    "index": 14,
+    "file": "ogg_14_lang_pack_1_0x03829a.ogg",
+    "offset_hex": "0x03829a",
+    "end_hex": "0x038ec2",
+    "max_size_bytes": 3112,
+    "role": "lang_pack_1"
+  },
+  {
+    "index": 15,
+    "file": "ogg_15_lang_pack_1_0x038ec6.ogg",
+    "offset_hex": "0x038ec6",
+    "end_hex": "0x039993",
+    "max_size_bytes": 2765,
+    "role": "lang_pack_1"
+  },
+  {
+    "index": 16,
+    "file": "ogg_16_lang_pack_1_0x039997.ogg",
+    "offset_hex": "0x039997",
+    "end_hex": "0x03abb1",
+    "max_size_bytes": 4634,
+    "role": "lang_pack_1"
+  },
+  {
+    "index": 17,
+    "file": "ogg_17_lang_pack_2_0x03abb5.ogg",
+    "offset_hex": "0x03abb5",
+    "end_hex": "0x03b15b",
+    "max_size_bytes": 1446,
+    "role": "lang_pack_2"
+  },
+  {
+    "index": 18,
+    "file": "ogg_18_lang_pack_2_0x03b15f.ogg",
+    "offset_hex": "0x03b15f",
+    "end_hex": "0x03b7c2",
+    "max_size_bytes": 1635,
+    "role": "lang_pack_2"
+  },
+  {
+    "index": 19,
+    "file": "ogg_19_lang_pack_2_0x03b7c6.ogg",
+    "offset_hex": "0x03b7c6",
+    "end_hex": "0x03bf07",
+    "max_size_bytes": 1857,
+    "role": "lang_pack_2"
+  },
+  {
+    "index": 20,
+    "file": "ogg_20_lang_pack_2_0x03bf0b.ogg",
+    "offset_hex": "0x03bf0b",
+    "end_hex": "0x03c583",
+    "max_size_bytes": 1656,
+    "role": "lang_pack_2"
+  },
+  {
+    "index": 21,
+    "file": "ogg_21_lang_pack_2_0x03c587.ogg",
+    "offset_hex": "0x03c587",
+    "end_hex": "0x03cbf8",
+    "max_size_bytes": 1649,
+    "role": "lang_pack_2"
+  },
+  {
+    "index": 22,
+    "file": "ogg_22_lang_pack_2_0x03cbfc.ogg",
+    "offset_hex": "0x03cbfc",
+    "end_hex": "0x03d19f",
+    "max_size_bytes": 1443,
+    "role": "lang_pack_2"
+  },
+  {
+    "index": 23,
+    "file": "ogg_23_lang_pack_2_0x03d1a3.ogg",
+    "offset_hex": "0x03d1a3",
+    "end_hex": "0x03d89d",
+    "max_size_bytes": 1786,
+    "role": "lang_pack_2"
+  },
+  {
+    "index": 24,
+    "file": "ogg_24_lang_pack_2_0x03d8a1.ogg",
+    "offset_hex": "0x03d8a1",
+    "end_hex": "0x03e050",
+    "max_size_bytes": 1967,
+    "role": "lang_pack_2"
+  },
+  {
+    "index": 25,
+    "file": "ogg_25_lang_pack_2_0x03e054.ogg",
+    "offset_hex": "0x03e054",
+    "end_hex": "0x03e62a",
+    "max_size_bytes": 1494,
+    "role": "lang_pack_2"
+  },
+  {
+    "index": 26,
+    "file": "ogg_26_lang_pack_2_0x03e62e.ogg",
+    "offset_hex": "0x03e62e",
+    "end_hex": "0x03ecf3",
+    "max_size_bytes": 1733,
+    "role": "lang_pack_2"
+  },
+  {
+    "index": 27,
+    "file": "ogg_27_lang_pack_2_0x03ecf7.ogg",
+    "offset_hex": "0x03ecf7",
+    "end_hex": "0x04130a",
+    "max_size_bytes": 9747,
+    "role": "lang_pack_2"
+  },
+  {
+    "index": 28,
+    "file": "ogg_28_lang_pack_2_0x04130e.ogg",
+    "offset_hex": "0x04130e",
+    "end_hex": "0x0421ec",
+    "max_size_bytes": 3806,
+    "role": "lang_pack_2"
+  },
+  {
+    "index": 29,
+    "file": "ogg_29_lang_pack_2_0x0421f0.ogg",
+    "offset_hex": "0x0421f0",
+    "end_hex": "0x044205",
+    "max_size_bytes": 8213,
+    "role": "lang_pack_2"
+  },
+  {
+    "index": 30,
+    "file": "ogg_30_lang_pack_2_0x044209.ogg",
+    "offset_hex": "0x044209",
+    "end_hex": "0x04524b",
+    "max_size_bytes": 4162,
+    "role": "lang_pack_2"
+  },
+  {
+    "index": 31,
+    "file": "ogg_31_lang_pack_2_0x04524f.ogg",
+    "offset_hex": "0x04524f",
+    "end_hex": "0x045dc0",
+    "max_size_bytes": 2929,
+    "role": "lang_pack_2"
+  },
+  {
+    "index": 32,
+    "file": "ogg_32_lang_pack_2_0x045dc4.ogg",
+    "offset_hex": "0x045dc4",
+    "end_hex": "0x047217",
+    "max_size_bytes": 5203,
+    "role": "lang_pack_2"
+  },
+  {
+    "index": 33,
+    "file": "ogg_33_lang_pack_2_0x04721b.ogg",
+    "offset_hex": "0x04721b",
+    "end_hex": "0x048d0f",
+    "max_size_bytes": 6900,
+    "role": "lang_pack_2"
+  },
+  {
+    "index": 34,
+    "file": "ogg_34_snd_wake_0_0x048d13.ogg",
+    "offset_hex": "0x048d13",
+    "end_hex": "0x049392",
+    "max_size_bytes": 1663,
+    "role": "snd_wake_0"
+  },
+  {
+    "index": 35,
+    "file": "ogg_35_snd_wake_1_0x049396.ogg",
+    "offset_hex": "0x049396",
+    "end_hex": "0x049c73",
+    "max_size_bytes": 2269,
+    "role": "snd_wake_1"
+  },
+  {
+    "index": 36,
+    "file": "ogg_36_snd_wake_2_0x049c77.ogg",
+    "offset_hex": "0x049c77",
+    "end_hex": "0x04a0f3",
+    "max_size_bytes": 1148,
+    "role": "snd_wake_2"
+  },
+  {
+    "index": 37,
+    "file": "ogg_37_snd_wake_3_0x04a0f7.ogg",
+    "offset_hex": "0x04a0f7",
+    "end_hex": "0x04a8d3",
+    "max_size_bytes": 2012,
+    "role": "snd_wake_3"
+  },
+  {
+    "index": 38,
+    "file": "ogg_38_snd_wake_4_0x04a8d7.ogg",
+    "offset_hex": "0x04a8d7",
+    "end_hex": "0x04aefd",
+    "max_size_bytes": 1574,
+    "role": "snd_wake_4"
+  }
+]

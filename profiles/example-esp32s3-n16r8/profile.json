@@ -1,0 +1,18 @@
+{
+  "profile_id": "example-esp32s3-n16r8",
+  "board_model": "RB5320XZ78AI",
+  "mcu": "ESP32-S3-WROOM-1U-N16R8",
+  "flash_size_mb": 16,
+  "psram_size_mb": 8,
+  "serial_port_glob": "/dev/cu.usbmodem*",
+  "network": {
+    "mac_address": "AA:BB:CC:DD:EE:FF",
+    "lan_ip": "<DHCP_ASSIGNED>"
+  },
+  "partitions": {
+    "nvs": "0x9000",
+    "ota_0": "0x20000",
+    "ota_1": "0x560000",
+    "assets": "0xAA0000"
+  }
+}

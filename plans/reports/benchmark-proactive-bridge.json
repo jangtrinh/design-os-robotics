@@ -1,0 +1,16 @@
+{
+  "hud_render_ms": 1.217,
+  "hud_png_bytes": 2716,
+  "hud_dims": [
+    240,
+    320
+  ],
+  "hud_sha256": "9f8ec3cf72344b33",
+  "validation_us_per_packet": 1.148,
+  "valid_packets_passed": "880/880",
+  "invalid_packets_caught": "9/9",
+  "e2e_loopback_rtt_ms": 0.511,
+  "ac01_pass": true,
+  "ac02_pass": true,
+  "ac03_pass": true
+}

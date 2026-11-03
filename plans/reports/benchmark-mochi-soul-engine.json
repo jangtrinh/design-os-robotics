@@ -1,0 +1,697 @@
+{
+  "metrics": {
+    "us_per_math_tick": 0.471,
+    "ticks_per_sec": 2121997.0,
+    "us_per_sqlite_write": 2.521,
+    "us_per_sqlite_read": 2.659,
+    "sim_24h_walltime_ms": 4.18,
+    "emotions_covered_count": 21,
+    "emotions_covered": [
+      "angry",
+      "confident",
+      "confused",
+      "cool",
+      "crying",
+      "delicious",
+      "embarrassed",
+      "funny",
+      "happy",
+      "kissy",
+      "laughing",
+      "loving",
+      "neutral",
+      "relaxed",
+      "sad",
+      "shocked",
+      "silly",
+      "sleepy",
+      "surprised",
+      "thinking",
+      "winking"
+    ],
+    "bounds_violations": 0,
+    "quiet_hours_violations": 0,
+    "cooldown_violations": 0,
+    "ac01_pass": true,
+    "ac02_pass": true,
+    "ac03_pass": true
+  },
+  "hourly_snapshots": [
+    {
+      "time": "09:00",
+      "quiet": false,
+      "energy": 83.8,
+      "hunger": 23.5,
+      "bond": 66.0,
+      "valence": 0.19,
+      "arousal": 0.07,
+      "emotion": "neutral",
+      "stage": "Stage 1: Mochi Spore"
+    },
+    {
+      "time": "10:00",
+      "quiet": false,
+      "energy": 78.6,
+      "hunger": 35.0,
+      "bond": 68.0,
+      "valence": 0.15,
+      "arousal": 0.07,
+      "emotion": "neutral",
+      "stage": "Stage 1: Mochi Spore"
+    },
+    {
+      "time": "11:00",
+      "quiet": false,
+      "energy": 72.4,
+      "hunger": 0.1,
+      "bond": 77.0,
+      "valence": 0.5,
+      "arousal": 0.18,
+      "emotion": "confident",
+      "stage": "Stage 1: Mochi Spore"
+    },
+    {
+      "time": "12:00",
+      "quiet": false,
+      "energy": 68.2,
+      "hunger": 6.6,
+      "bond": 77.0,
+      "valence": 0.17,
+      "arousal": 0.06,
+      "emotion": "neutral",
+      "stage": "Stage 1: Mochi Spore"
+    },
+    {
+      "time": "13:00",
+      "quiet": false,
+      "energy": 62.0,
+      "hunger": 13.1,
+      "bond": 86.0,
+      "valence": 0.35,
+      "arousal": 0.25,
+      "emotion": "neutral",
+      "stage": "Stage 2: Curious Mochi"
+    },
+    {
+      "time": "14:00",
+      "quiet": false,
+      "energy": 55.8,
+      "hunger": 21.6,
+      "bond": 91.0,
+      "valence": 0.21,
+      "arousal": 0.12,
+      "emotion": "neutral",
+      "stage": "Stage 2: Curious Mochi"
+    },
+    {
+      "time": "15:00",
+      "quiet": false,
+      "energy": 51.6,
+      "hunger": 28.1,
+      "bond": 91.0,
+      "valence": 0.15,
+      "arousal": 0.05,
+      "emotion": "neutral",
+      "stage": "Stage 2: Curious Mochi"
+    },
+    {
+      "time": "16:00",
+      "quiet": false,
+      "energy": 46.4,
+      "hunger": 4.6,
+      "bond": 96.0,
+      "valence": 0.37,
+      "arousal": 0.18,
+      "emotion": "delicious",
+      "stage": "Stage 2: Curious Mochi"
+    },
+    {
+      "time": "17:00",
+      "quiet": false,
+      "energy": 45.2,
+      "hunger": 6.1,
+      "bond": 100.0,
+      "valence": 0.41,
+      "arousal": 0.22,
+      "emotion": "cool",
+      "stage": "Stage 2: Curious Mochi"
+    },
+    {
+      "time": "18:00",
+      "quiet": false,
+      "energy": 41.0,
+      "hunger": 12.6,
+      "bond": 100.0,
+      "valence": 0.27,
+      "arousal": 0.25,
+      "emotion": "embarrassed",
+      "stage": "Stage 2: Curious Mochi"
+    },
+    {
+      "time": "19:00",
+      "quiet": false,
+      "energy": 39.8,
+      "hunger": 19.1,
+      "bond": 100.0,
+      "valence": 0.49,
+      "arousal": 0.15,
+      "emotion": "kissy",
+      "stage": "Stage 2: Curious Mochi"
+    },
+    {
+      "time": "20:00",
+      "quiet": false,
+      "energy": 35.6,
+      "hunger": 25.6,
+      "bond": 100.0,
+      "valence": 0.17,
+      "arousal": 0.19,
+      "emotion": "neutral",
+      "stage": "Stage 2: Curious Mochi"
+    },
+    {
+      "time": "21:00",
+      "quiet": false,
+      "energy": 24.4,
+      "hunger": 36.1,
+      "bond": 91.0,
+      "valence": -0.22,
+      "arousal": 0.28,
+      "emotion": "neutral",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "22:00",
+      "quiet": false,
+      "energy": 25.2,
+      "hunger": 40.6,
+      "bond": 96.0,
+      "valence": 0.16,
+      "arousal": 0.03,
+      "emotion": "neutral",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "23:00",
+      "quiet": true,
+      "energy": 21.3,
+      "hunger": 47.0,
+      "bond": 96.0,
+      "valence": 0.15,
+      "arousal": 0.04,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "00:00",
+      "quiet": true,
+      "energy": 35.3,
+      "hunger": 48.2,
+      "bond": 96.0,
+      "valence": 0.15,
+      "arousal": -0.76,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "01:00",
+      "quiet": true,
+      "energy": 49.3,
+      "hunger": 49.4,
+      "bond": 96.0,
+      "valence": 0.15,
+      "arousal": -0.8,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "02:00",
+      "quiet": true,
+      "energy": 63.3,
+      "hunger": 50.6,
+      "bond": 96.0,
+      "valence": 0.15,
+      "arousal": -0.8,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "03:00",
+      "quiet": true,
+      "energy": 77.3,
+      "hunger": 51.8,
+      "bond": 96.0,
+      "valence": 0.15,
+      "arousal": -0.8,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "04:00",
+      "quiet": true,
+      "energy": 91.3,
+      "hunger": 53.0,
+      "bond": 96.0,
+      "valence": 0.15,
+      "arousal": -0.8,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "05:00",
+      "quiet": true,
+      "energy": 100.0,
+      "hunger": 54.2,
+      "bond": 96.0,
+      "valence": 0.15,
+      "arousal": -0.8,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "06:00",
+      "quiet": true,
+      "energy": 100.0,
+      "hunger": 55.4,
+      "bond": 96.0,
+      "valence": 0.15,
+      "arousal": -0.8,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "07:00",
+      "quiet": true,
+      "energy": 100.0,
+      "hunger": 56.6,
+      "bond": 96.0,
+      "valence": 0.15,
+      "arousal": -0.8,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "08:00",
+      "quiet": false,
+      "energy": 97.8,
+      "hunger": 60.6,
+      "bond": 96.0,
+      "valence": 0.15,
+      "arousal": -0.12,
+      "emotion": "neutral",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "09:00",
+      "quiet": false,
+      "energy": 93.6,
+      "hunger": 67.1,
+      "bond": 95.6,
+      "valence": 0.11,
+      "arousal": 0.03,
+      "emotion": "thinking",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "10:00",
+      "quiet": false,
+      "energy": 89.4,
+      "hunger": 73.6,
+      "bond": 94.1,
+      "valence": -0.04,
+      "arousal": 0.03,
+      "emotion": "sad",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "11:00",
+      "quiet": false,
+      "energy": 85.2,
+      "hunger": 80.1,
+      "bond": 92.6,
+      "valence": -0.19,
+      "arousal": 0.03,
+      "emotion": "sad",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "12:00",
+      "quiet": false,
+      "energy": 81.0,
+      "hunger": 86.6,
+      "bond": 91.1,
+      "valence": -0.34,
+      "arousal": 0.03,
+      "emotion": "sad",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "13:00",
+      "quiet": false,
+      "energy": 76.8,
+      "hunger": 93.1,
+      "bond": 89.6,
+      "valence": -0.49,
+      "arousal": 0.03,
+      "emotion": "sad",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "14:00",
+      "quiet": false,
+      "energy": 72.6,
+      "hunger": 99.6,
+      "bond": 88.1,
+      "valence": -0.64,
+      "arousal": 0.03,
+      "emotion": "sad",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "15:00",
+      "quiet": false,
+      "energy": 68.4,
+      "hunger": 62.1,
+      "bond": 90.6,
+      "valence": 0.02,
+      "arousal": 0.16,
+      "emotion": "delicious",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "16:00",
+      "quiet": false,
+      "energy": 66.2,
+      "hunger": 68.6,
+      "bond": 96.6,
+      "valence": 0.18,
+      "arousal": 0.07,
+      "emotion": "thinking",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "17:00",
+      "quiet": false,
+      "energy": 62.0,
+      "hunger": 75.1,
+      "bond": 96.6,
+      "valence": 0.15,
+      "arousal": 0.05,
+      "emotion": "thinking",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "18:00",
+      "quiet": false,
+      "energy": 57.8,
+      "hunger": 81.6,
+      "bond": 96.6,
+      "valence": 0.15,
+      "arousal": 0.05,
+      "emotion": "thinking",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "19:00",
+      "quiet": false,
+      "energy": 53.6,
+      "hunger": 88.1,
+      "bond": 95.6,
+      "valence": 0.05,
+      "arousal": 0.05,
+      "emotion": "sad",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "20:00",
+      "quiet": false,
+      "energy": 49.4,
+      "hunger": 94.6,
+      "bond": 94.1,
+      "valence": -0.1,
+      "arousal": 0.05,
+      "emotion": "sad",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "21:00",
+      "quiet": false,
+      "energy": 45.2,
+      "hunger": 100.0,
+      "bond": 92.6,
+      "valence": -0.25,
+      "arousal": 0.05,
+      "emotion": "sad",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "22:00",
+      "quiet": false,
+      "energy": 41.0,
+      "hunger": 100.0,
+      "bond": 91.1,
+      "valence": -0.4,
+      "arousal": 0.05,
+      "emotion": "sad",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "23:00",
+      "quiet": true,
+      "energy": 37.1,
+      "hunger": 100.0,
+      "bond": 89.6,
+      "valence": -0.55,
+      "arousal": 0.04,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "00:00",
+      "quiet": true,
+      "energy": 51.1,
+      "hunger": 100.0,
+      "bond": 89.6,
+      "valence": -0.55,
+      "arousal": -0.76,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "01:00",
+      "quiet": true,
+      "energy": 65.1,
+      "hunger": 100.0,
+      "bond": 89.6,
+      "valence": -0.55,
+      "arousal": -0.8,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "02:00",
+      "quiet": true,
+      "energy": 79.1,
+      "hunger": 100.0,
+      "bond": 89.6,
+      "valence": -0.55,
+      "arousal": -0.8,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "03:00",
+      "quiet": true,
+      "energy": 93.1,
+      "hunger": 100.0,
+      "bond": 89.6,
+      "valence": -0.55,
+      "arousal": -0.8,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "04:00",
+      "quiet": true,
+      "energy": 100.0,
+      "hunger": 100.0,
+      "bond": 89.6,
+      "valence": -0.55,
+      "arousal": -0.8,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "05:00",
+      "quiet": true,
+      "energy": 100.0,
+      "hunger": 100.0,
+      "bond": 89.6,
+      "valence": -0.55,
+      "arousal": -0.8,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "06:00",
+      "quiet": true,
+      "energy": 100.0,
+      "hunger": 100.0,
+      "bond": 89.6,
+      "valence": -0.55,
+      "arousal": -0.8,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "07:00",
+      "quiet": true,
+      "energy": 100.0,
+      "hunger": 100.0,
+      "bond": 89.6,
+      "valence": -0.55,
+      "arousal": -0.8,
+      "emotion": "sleepy",
+      "stage": "Stage 3: Companion Mochi"
+    },
+    {
+      "time": "08:00",
+      "quiet": false,
+      "energy": 97.8,
+      "hunger": 100.0,
+      "bond": 88.8,
+      "valence": -0.63,
+      "arousal": -0.8,
+      "emotion": "sad",
+      "stage": "Stage 3: Companion Mochi"
+    }
+  ],
+  "proactive_impulses": [
+    {
+      "sim_minute": 2024,
+      "hour_float": 9.73,
+      "impulse_kind": "notify_voice",
+      "emotion": "sad",
+      "message": "Bạn làm việc chăm chỉ thế, nghỉ tay uống ngụm nước với Mochi nhé!"
+    },
+    {
+      "sim_minute": 2069,
+      "hour_float": 10.48,
+      "impulse_kind": "notify_voice",
+      "emotion": "thinking",
+      "message": "Mochi đang tò mò quá, hôm nay bạn có khám phá gì mới kể cho Mochi nghe với!"
+    },
+    {
+      "sim_minute": 2114,
+      "hour_float": 11.23,
+      "impulse_kind": "notify_voice",
+      "emotion": "thinking",
+      "message": "Mochi đang tò mò quá, hôm nay bạn có khám phá gì mới kể cho Mochi nghe với!"
+    },
+    {
+      "sim_minute": 2159,
+      "hour_float": 11.98,
+      "impulse_kind": "notify_voice",
+      "emotion": "thinking",
+      "message": "Mochi đang tò mò quá, hôm nay bạn có khám phá gì mới kể cho Mochi nghe với!"
+    },
+    {
+      "sim_minute": 2204,
+      "hour_float": 12.73,
+      "impulse_kind": "notify_voice",
+      "emotion": "thinking",
+      "message": "Mochi đang tò mò quá, hôm nay bạn có khám phá gì mới kể cho Mochi nghe với!"
+    },
+    {
+      "sim_minute": 2249,
+      "hour_float": 13.48,
+      "impulse_kind": "notify_voice",
+      "emotion": "thinking",
+      "message": "Mochi đang tò mò quá, hôm nay bạn có khám phá gì mới kể cho Mochi nghe với!"
+    },
+    {
+      "sim_minute": 2294,
+      "hour_float": 14.23,
+      "impulse_kind": "notify_voice",
+      "emotion": "thinking",
+      "message": "Mochi đang tò mò quá, hôm nay bạn có khám phá gì mới kể cho Mochi nghe với!"
+    },
+    {
+      "sim_minute": 2339,
+      "hour_float": 14.98,
+      "impulse_kind": "notify_voice",
+      "emotion": "thinking",
+      "message": "Mochi đang tò mò quá, hôm nay bạn có khám phá gì mới kể cho Mochi nghe với!"
+    },
+    {
+      "sim_minute": 2459,
+      "hour_float": 16.98,
+      "impulse_kind": "notify_voice",
+      "emotion": "thinking",
+      "message": "Mochi đang tò mò quá, hôm nay bạn có khám phá gì mới kể cho Mochi nghe với!"
+    },
+    {
+      "sim_minute": 2504,
+      "hour_float": 17.73,
+      "impulse_kind": "notify_voice",
+      "emotion": "thinking",
+      "message": "Mochi đang tò mò quá, hôm nay bạn có khám phá gì mới kể cho Mochi nghe với!"
+    },
+    {
+      "sim_minute": 2549,
+      "hour_float": 18.48,
+      "impulse_kind": "notify_voice",
+      "emotion": "thinking",
+      "message": "Mochi đang tò mò quá, hôm nay bạn có khám phá gì mới kể cho Mochi nghe với!"
+    },
+    {
+      "sim_minute": 2594,
+      "hour_float": 19.23,
+      "impulse_kind": "notify_voice",
+      "emotion": "thinking",
+      "message": "Mochi đang tò mò quá, hôm nay bạn có khám phá gì mới kể cho Mochi nghe với!"
+    },
+    {
+      "sim_minute": 2639,
+      "hour_float": 19.98,
+      "impulse_kind": "notify_voice",
+      "emotion": "thinking",
+      "message": "Mochi đang tò mò quá, hôm nay bạn có khám phá gì mới kể cho Mochi nghe với!"
+    },
+    {
+      "sim_minute": 2684,
+      "hour_float": 20.73,
+      "impulse_kind": "notify_voice",
+      "emotion": "thinking",
+      "message": "Mochi đang tò mò quá, hôm nay bạn có khám phá gì mới kể cho Mochi nghe với!"
+    },
+    {
+      "sim_minute": 2729,
+      "hour_float": 21.48,
+      "impulse_kind": "notify_voice",
+      "emotion": "thinking",
+      "message": "Mochi đang tò mò quá, hôm nay bạn có khám phá gì mới kể cho Mochi nghe với!"
+    },
+    {
+      "sim_minute": 2774,
+      "hour_float": 22.23,
+      "impulse_kind": "notify_voice",
+      "emotion": "thinking",
+      "message": "Mochi đang tò mò quá, hôm nay bạn có khám phá gì mới kể cho Mochi nghe với!"
+    },
+    {
+      "sim_minute": 2819,
+      "hour_float": 22.98,
+      "impulse_kind": "notify_voice",
+      "emotion": "thinking",
+      "message": "Mochi đang tò mò quá, hôm nay bạn có khám phá gì mới kể cho Mochi nghe với!"
+    },
+    {
+      "sim_minute": 3330,
+      "hour_float": 7.5,
+      "impulse_kind": "notify_voice",
+      "emotion": "thinking",
+      "message": "Mochi đang tò mò quá, hôm nay bạn có khám phá gì mới kể cho Mochi nghe với!"
+    }
+  ]
+}
