@@ -85,9 +85,8 @@ The type ladder is 13, 14, 16, 18, 20, 24, 30, 36, 48 px. Use a step from it for
 | File | Path | Size | Use |
 |:---|:---|:---|:---|
 | Lockup (vector) | `docs/assets/brand/logo-lockup.svg` | 720x200 | Lockup on its own dark plate |
-| Mark (raster) | `docs/assets/brand/design-os-robotics.webp` | 256x256 | Shaded block mark for avatars and hero art |
-| Favicon | `docs/assets/brand/favicon-64.png` | 64x64 | Browser tab |
-| Apple touch icon | `docs/assets/brand/apple-touch-icon-180.png` | 180x180 | iOS home screen |
+
+The raster mark, the favicon and the apple touch icon are listed with their sizes in the exception table below.
 
 ### The mark
 
@@ -105,12 +104,12 @@ Add or remove a file here, and nowhere else.
 
 | File | Why it is exempt |
 |:---|:---|
-| `docs/assets/brand/design-os-robotics.webp` | The source raster of the shaded mark. |
+| `docs/assets/brand/design-os-robotics.webp` | The source raster of the shaded mark, 256x256, for avatars and hero art. |
 | `docs/assets/brand/hero-dark.png` | Dark README hero; it embeds the shaded mark. |
 | `docs/assets/brand/hero-light.png` | Light README hero; it embeds the shaded mark. |
 | `docs/assets/brand/social-preview.png` | Social and OG preview; it embeds the shaded mark. |
-| `docs/assets/brand/favicon-64.png` | A 64 px render of the shaded mark. |
-| `docs/assets/brand/apple-touch-icon-180.png` | A 180 px render of the shaded mark. |
+| `docs/assets/brand/favicon-64.png` | A 64x64 render of the shaded mark, for the browser tab. |
+| `docs/assets/brand/apple-touch-icon-180.png` | A 180x180 render of the shaded mark, for the iOS home screen. |
 | Promo stills `x-image-16x9` and `square-1x1` (EN and VI) and the four MP4s | They show the mark, and section 7 says promo files follow the same rules. |
 
 Not exempt: the vector mark, `logo-lockup.svg`, diagrams, backgrounds and any other art. The exception is pending Jang's decision on the mark. If that decision changes, every row changes with it.
@@ -226,10 +225,10 @@ Promo files are delivered with the post, not committed here, but they follow the
   - No bounce on text, no linear moves, no elastic overshoot beyond the spring above.
 - **Timing:** enter in 300 to 500 ms, hold at least 2 seconds, exit in 200 to 300 ms. A headline stays on screen long enough to be read twice.
 - **No flashing**, no strobing cuts, no parallax, no camera shake. Nothing blinks faster than 3 times a second.
-- **Step badges:** the numbered badges in the beat-3 list follow the secondary minimum of the format. In the 9:16 cut the digits are set at 40 px 
+- **Step badges:** the numbered badges in the beat-3 list follow the secondary minimum of the format. In the 9:16 cut the digits are set at 40 px.
   Source: `b_motion.py`, `fs`. Measured on the render: 29 px digit height.
-- **Capture beats:** a light capture never pops in on the dark canvas. It cross-fades in and out through a dark card; the designed ramp is 0.9 s in and 0.8 s out.
-  Measured on the renders (whole-frame luma): 1.23 s at 2 to 98 % of the step, 0.5 to 0.7 s at 5 to 95 %. State the threshold with any fade time.
+- **Capture beats:** a light capture never pops in on the dark canvas. It cross-fades in and out through a dark card. The designed ramp is 0.9 s in and 0.8 s out (`b_motion.py:108`).
+- **Measured fades:** a measured fade time must state its threshold (for example 2 to 98 % of the step) and its ROI (the panel or the whole frame). Without both, quote the designed ramp only.
 - **Render:** from HTML or SVG frames at exactly 30 fps. Check the last frame, the beat boundaries and a mid-spring frame before export.
 
 ## 9. Data rules
@@ -321,7 +320,7 @@ No output means clean. Then open every new image and read it.
 <img src="./assets/brand/hero-dark.png" alt="design:os by Jang" width="220">
 
 - **Do:** Keep one orange element and a lot of dark space.
-- **Don't:** Add a second accent, a gradient, a glow or a drop shadow.
+- **Don't:** Add a second accent, a gradient, a glow or a drop shadow. The only exception is the table in section 4.
 
 <img src="./assets/brand/social-preview.png" alt="design:os by Jang" width="220">
 
@@ -336,6 +335,7 @@ No output means clean. Then open every new image and read it.
 ## 14. Checklist before a PR
 
 - [ ] Colours are the tokens in section 2; one orange focus per view (a second is a decision to defend, see section 2).
+- [ ] A gradient or shadow appears only in a file listed in the exception table in section 4.
 - [ ] Type is Be Vietnam Pro, three weights, sizes meet the minimums.
 - [ ] Faces come from `tools/cook-procedural-avatar.py` or `themes/procedural-mochi/`.
 - [ ] Every number traces to a committed file (section 9).
