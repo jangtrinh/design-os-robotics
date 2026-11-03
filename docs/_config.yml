@@ -1,0 +1,33 @@
+# GitHub Pages site for design-os-robotics, built from this docs/ folder.
+# _layouts/default.html wraps every Markdown page in the landing's design language;
+# index.html is a hand-built page (layout: null) sharing assets/site.css.
+# jekyll-seo-tag emits <title>, <meta name="description">, Open Graph and JSON-LD;
+# jekyll-sitemap emits sitemap.xml for Google Search Console.
+title: design-os-robotics
+description: Non-intrusive NVS & esp_mmap_assets compiler, 4-layer hardware health telemetry, 4D homeostasis Tamagotchi engine, and 60Hz spring kinematics for RB5320XZ78AI.
+url: https://jangtrinh.github.io
+baseurl: /design-os-robotics
+lang: en
+repository: jangtrinh/design-os-robotics
+repository_url: https://github.com/jangtrinh/design-os-robotics
+wordmark: JANG®
+wordmark_url: https://www.jang.work/
+eyebrow: DESIGN:OS · ROBOTICS & MOCHI-SOUL ENGINE          # short product family label, e.g. design:os
+logo: /images/cover.png          # a real capture under docs/images/
+nav:                        # one entry per Markdown page under docs/, in reading order
+  - { title: Deep dive, url: /deep-dive.html }
+footer:
+  - { title: GitHub, url: https://github.com/jangtrinh/design-os-robotics }
+  - { title: PolyForm Shield 1.0.0, url: https://github.com/jangtrinh/design-os-robotics/blob/main/LICENSE }
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: false
+defaults:
+  - scope: { path: "" }
+    values: { layout: default }
+  - scope: { path: "google*.html" }
+    values: { sitemap: false }

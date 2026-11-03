@@ -1,0 +1,30 @@
+# macOS & Python
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+
+# Private device profiles, NVS dumps, runtime SQLite DBs & third-party reference snapshots
+reference/
+profiles/robot-*/
+profiles/*/full-flash-*.bin
+profiles/*/nvs-*.bin
+profiles/*/partitions/*.bin
+profiles/*/*.db*
+*.db
+*.db-shm
+*.db-wal
+
+# Large unmodified binary dumps
+profiles/*/unpacked-assets/*.bin
+profiles/*/unpacked-assets/*.raw
+profiles/*/unpacked-assets/emoji_*.gif
+themes/mochi-240x320.bin
+themes/mochi-fullvien-240x240.bin
+
+# Raw extracted firmware audio & personal voice samples
+voices/extracted-firmware-ogg/*.ogg
+voices/golden-reference/*.wav
+voices/golden-reference/*elevenlabs*

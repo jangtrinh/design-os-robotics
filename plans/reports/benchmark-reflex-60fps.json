@@ -1,0 +1,16 @@
+{
+  "us_per_60hz_step": 2.363,
+  "transition_pairs_converged": "420/420",
+  "avg_settling_frames": 8.0,
+  "avg_settling_ms": 133.3,
+  "avg_overshoot_pct": 6.77,
+  "us_per_lipsync_frame": 22.289,
+  "lipsync_pearson_r": 0.9592,
+  "silence_decay_frames": 2,
+  "reflex_us": 1.014,
+  "cpp_header_bytes": 3898,
+  "demo_gif_bytes": 22180,
+  "ac01_pass": true,
+  "ac02_pass": true,
+  "ac03_pass": true
+}
