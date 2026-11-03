@@ -11,8 +11,8 @@ Every asset carries the same alt text and caption: `design:os by Jang`.
 
 ## 1. Principles
 
-1. **Dark, flat, one accent.** Near-black canvas, zinc greys, a single orange. No gradients, no glow, no drop shadows on art. The one exception is the shaded block mark
-   raster, the six repo files that embed it, and the promo stills and MP4s that show it (section 4).
+1. **Dark, flat, one accent.** Near-black canvas, zinc greys, a single orange. No gradients, no glow, no drop shadows on art. The one exception is the shaded block mark;
+   its single list of files is the table in section 4 ("Shaded-mark exception").
 2. **Real or absent.** A number, a face, a terminal line or a board view is either real output from this repository or it is not shown.
 3. **Chunky and simple.** Big shapes, few of them, rough rather than polished. If a detail disappears at 64 px, remove it.
 4. **Silent and quiet.** No sound by default, no loops that flash, no decorative motion.
@@ -97,11 +97,23 @@ version in the lockup is a flat `#fca849` rounded rectangle (144 px square, 40 p
 - SVG files contain vector shapes only. **No embedded raster**: no `<image>`, no `data:` URI, no `xlink:href` to a bitmap. Check with `rg "<image|base64" docs/assets/brand/*.svg`.
 - The lockup wordmark is outlined paths, so it does not depend on an installed font.
 - Do not redraw, tilt, recolour, outline, add a face to it or add a shadow of your own to it.
-- **Approved exception: the shaded block mark.** The shaded raster mark breaks the no-gradient and no-shadow rule in sections 1 and 2. The exception covers exactly the
-  six repo files that embed it: `design-os-robotics.webp`, `hero-dark.png`, `hero-light.png`, `social-preview.png`, `favicon-64.png` and `apple-touch-icon-180.png`.
-  The promo stills (`x-image-16x9` and `square-1x1`, EN and VI) and the MP4s that show the mark are covered by the same pending exception, because section 7 says promo files follow the same rules.
-  It does not cover the vector mark, `logo-lockup.svg`, diagrams, backgrounds or any other art. It is pending Jang's decision on the mark. If that decision changes,
-  the exception and all of those files change with it.
+
+### Shaded-mark exception
+
+The shaded raster mark breaks the no-gradient and no-shadow rule in sections 1 and 2. This table is the only list of what is exempt. Other sections point here and do not repeat it.
+Add or remove a file here, and nowhere else.
+
+| File | Why it is exempt |
+|:---|:---|
+| `docs/assets/brand/design-os-robotics.webp` | The source raster of the shaded mark. |
+| `docs/assets/brand/hero-dark.png` | Dark README hero; it embeds the shaded mark. |
+| `docs/assets/brand/hero-light.png` | Light README hero; it embeds the shaded mark. |
+| `docs/assets/brand/social-preview.png` | Social and OG preview; it embeds the shaded mark. |
+| `docs/assets/brand/favicon-64.png` | A 64 px render of the shaded mark. |
+| `docs/assets/brand/apple-touch-icon-180.png` | A 180 px render of the shaded mark. |
+| Promo stills `x-image-16x9` and `square-1x1` (EN and VI) and the four MP4s | They show the mark, and section 7 says promo files follow the same rules. |
+
+Not exempt: the vector mark, `logo-lockup.svg`, diagrams, backgrounds and any other art. The exception is pending Jang's decision on the mark. If that decision changes, every row changes with it.
 
 ### Lockup
 
@@ -204,7 +216,7 @@ Promo files are delivered with the post, not committed here, but they follow the
   | 3 | 8.0 to 12.0 | | The four health layers as a neutral list, no values |
   | 4 | 12.0 to 15.5 | | A face reacting to engine state |
   | 5 | 15.5 to 18.5 | | Capture of the interactive board viewer |
-  | 6 | 18.5 to 21.0 | | End card: mark, repo name, licence line. The header mark is hidden on this beat, so the end-card mark is the only orange mark. |
+  | 6 | 18.5 to 21.0 | | End card: mark, repo name, licence line. The header mark is hidden here, so the end-card mark is the only mark (exception table, section 4). |
 
 - **One idea per beat.** One headline of 2 to 6 words, one picture, at most one supporting line. A thin segmented progress bar (6 segments, 3 px, `#27272a` track, `#f4f4f5` fill) marks the beat.
 - **Easing:**
@@ -214,8 +226,10 @@ Promo files are delivered with the post, not committed here, but they follow the
   - No bounce on text, no linear moves, no elastic overshoot beyond the spring above.
 - **Timing:** enter in 300 to 500 ms, hold at least 2 seconds, exit in 200 to 300 ms. A headline stays on screen long enough to be read twice.
 - **No flashing**, no strobing cuts, no parallax, no camera shake. Nothing blinks faster than 3 times a second.
-- **Step badges:** the numbered badges in the beat-3 list follow the secondary minimum of the format. In the 9:16 cut the digits are set at 40 px.
-- **Capture beats:** a light capture never pops in on the dark canvas. It cross-fades in and out through a dark card over 0.8 to 1.0 s.
+- **Step badges:** the numbered badges in the beat-3 list follow the secondary minimum of the format. In the 9:16 cut the digits are set at 40 px 
+  Source: `b_motion.py`, `fs`. Measured on the render: 29 px digit height.
+- **Capture beats:** a light capture never pops in on the dark canvas. It cross-fades in and out through a dark card; the designed ramp is 0.9 s in and 0.8 s out.
+  Measured on the renders (whole-frame luma): 1.23 s at 2 to 98 % of the step, 0.5 to 0.7 s at 5 to 95 %. State the threshold with any fade time.
 - **Render:** from HTML or SVG frames at exactly 30 fps. Check the last frame, the beat boundaries and a mid-spring frame before export.
 
 ## 9. Data rules
