@@ -3,13 +3,13 @@
 ## 1. Use Cases
 
 ### UC-01: Vòng lặp Sinh học 4D & Ánh xạ Đủ 21 Biểu cảm (`Homeostasis & 21-State Emotion Router`)
-- **Actor**: `MochiSoulEngine.step(dt_minutes, current_hour, event=None)`
+- **Actor**: `MochiSoulEngine.step_minute()` (mỗi tick 1 phút) và `MochiSoulEngine.apply_event(event_type)`
 - **Precondition**: Khởi tạo hoặc đọc trạng thái từ `profiles/example-esp32s3-n16r8/mochi_soul.db`.
 - **Happy Path**:
-  1. Cập nhật `Energy` ($E \in [0, 100]$): Giảm `-3.5 / giờ` khi thức, tăng `+18.0 / giờ` khi trong `Quiet Hours (23:00–07:30)` hoặc sự kiện `rest`.
-  2. Cập nhật `Hunger/Curiosity` ($H \in [0, 100]$): Tăng `+5.5 / giờ` khi thức; giảm `-35.0` khi nhận sự kiện `feed_knowledge` (kèm biểu cảm `delicious` $\rightarrow$ `happy`).
-  3. Cập nhật `Bond` ($B \in [0, 100]$): Tăng khi có tương tác (`chat`, `praise`, `play`), giảm nhẹ `-1.2 / giờ` nếu bị bỏ rơi liên tục $> 4\text{ giờ}$.
-  4. Tính toán вектор cảm xúc `(Valence, Arousal)` và chọn chính xác 1 trong **21 biểu cảm `Procedural Mochi-21`**.
+  1. Cập nhật `Energy` ($E \in [0, 100]$): Giảm `-4.2 / giờ` khi thức, tăng `+14.0 / giờ` khi trong `Quiet Hours (23:00–07:30)`. (Engine không có sự kiện `rest`.)
+  2. Cập nhật `Hunger` ($H \in [0, 100]$): Tăng `+6.5 / giờ` khi thức; giảm `-38.0` khi nhận sự kiện `feed_knowledge` (kèm biểu cảm `delicious` $\rightarrow$ `happy`).
+  3. Cập nhật `Bond` ($B \in [0, 100]$): Tăng khi có tương tác (ví dụ `chat_hello`, `praise`, `gentle_pet`), giảm nhẹ `-1.5 / giờ` nếu không có tương tác nào trong $> 3\text{ giờ}$.
+  4. Tính toán vector cảm xúc `(Valence, Arousal)` và chọn chính xác 1 trong **21 biểu cảm `Procedural Mochi-21`**.
 
 ### UC-02: Giả lập 24 Giờ & Đo Hiệu năng Định lượng Từ Xa (`Remote Simulation & Perf Benchmark`)
 - **Actor**: Developer (Remote) chạy `python3 tools/mochi-soul-engine/engine.py benchmark`

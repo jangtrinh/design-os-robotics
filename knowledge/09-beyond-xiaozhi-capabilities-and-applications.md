@@ -452,7 +452,7 @@ flowchart TD
 
 - **Mô tả Trải nghiệm**:
   Thay vì là một chiếc loa vô hồn chỉ mở miệng khi được gọi tên, robot sở hữu một mô hình tâm lý mô phỏng sự sống tự trị (Autonomous Artificial Life):
-  - **Chỉ số Sinh học Ảo**: Robot có 4 chỉ số nội tâm thay đổi liên tục theo thời gian: Năng lượng (`Energy`), Sự tò mò (`Curiosity`), Cảm xúc (`Happiness`), và Độ gắn kết (`Affinity`).
+  - **Chỉ số Sinh học Ảo**: Robot có 4 nhóm chỉ số nội tâm thay đổi liên tục theo thời gian, đúng như `tools/mochi-soul-engine/engine.py`: Năng lượng (`energy`), Cơn đói tri thức (`hunger`), Độ gắn kết (`bond`), và Tâm trạng (`mood` = cặp `valence` / `arousal`). Bản thiết kế cũ có thêm chỉ số "Sự tò mò" (`Curiosity`) riêng; engine hiện tại không có chỉ số đó, và `Happiness` nay chính là phần `valence` dương của `mood`.
   - **Tương tác Đa giác quan**:
     - Nếu bạn để phòng tối và yên tĩnh, robot sẽ ngáp và chuyển sang trạng thái ngủ `sleepy`.
     - Nếu nghe thấy tiếng cười nói trong phòng qua mic, robot sẽ tò mò mở to mắt `surprised`.

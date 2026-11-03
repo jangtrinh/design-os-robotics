@@ -1,7 +1,7 @@
 # 11 — Kiến trúc Avatar Tự Vẽ Bằng Code (Procedural / Parametric Vector Face Engine) cho `RoBot.5320`
 
-> **Kết luận Thực nghiệm**: Hoàn toàn khả thi và **nhẹ hơn từ 10.4 lần đến $\infty$ lần** so với dùng ảnh GIF truyền thống.
-> - **Phương án A (Zero-Firmware-Mod — Procedural GIF Compiler bằng Python [`tools/cook-procedural-avatar.py`](../tools/cook-procedural-avatar.py))**: Toàn bộ **21 trạng thái cảm xúc riêng biệt** (`240x320`, 16 frames mỗi trạng thái = **336 khung hình tràn viền**) tự vẽ bằng toán học chỉ nặng tổng cộng **`252,271 bytes` (`246.36 KB`)** — trung bình **`11.7 KB` / biểu cảm**, giảm **90.4%** dung lượng so với bộ 21 GIF gốc (`2,621,717 bytes` / `2,560.27 KB`) và nhẹ hơn **3.17 lần** so với bộ 6 GIF cắt từ video (`801,236 bytes`)!
+> **Kết luận Thực nghiệm**: Hoàn toàn khả thi và **nhẹ hơn từ 10.46 lần đến $\infty$ lần** so với dùng ảnh GIF truyền thống.
+> - **Phương án A (Zero-Firmware-Mod — Procedural GIF Compiler bằng Python [`tools/cook-procedural-avatar.py`](../tools/cook-procedural-avatar.py))**: Toàn bộ **21 trạng thái cảm xúc riêng biệt** (GIF `240x240`, 12 đến 16 khung hình mỗi trạng thái, tổng **312 khung hình**, hiển thị tràn viền trên màn hình `240x320`) tự vẽ bằng toán học chỉ nặng tổng cộng **`250,580 bytes` (`244.71 KB`)** — trung bình **`11.7 KB` / biểu cảm**, giảm **90.4%** dung lượng so với bộ 21 GIF gốc (`2,621,717 bytes` / `2,560.27 KB`) và, **nếu** con số `801,236 bytes` của bộ 6 GIF cắt từ video là đúng (**chưa kiểm chứng**: bộ đó không còn trong repo và không có nguồn), thì nhẹ hơn khoảng **3.20 lần**.
 > - **Phương án B (Native On-Chip C++ Parametric Engine — Kiến trúc Anki Cozmo / Stack-chan / RoboEyes)**: Tốn **`0 KB` Flash assets**, chỉ **`64 bytes` RAM** cho vector trạng thái, chạy mượt **`60 FPS` với `< 3%` CPU**, mở khóa **vô hạn biểu cảm nội suy lò xo (Spring Physics)**, **nhép môi theo biên độ âm thanh thời gian thực (Real-time Lip-Sync)** và **liếc mắt theo vị trí người ngồi (`HC-SR04`)**.
 
 ---
@@ -11,9 +11,9 @@
 | Tiêu chí | 1. Bộ 21 GIF gốc (`08-assets-0xAA0000.bin`) | 2. Bộ 6 GIF Video (`Procedural Mochi-21` lặp vào 21 slot) | 3. Bộ 21 GIF Tự Vẽ Bằng Code (`Procedural Mochi 21`) | 4. Native On-Chip Procedural (`C++ LVGL`) |
 |---|---|---|---|---|
 | **Số biểu cảm độc lập thực sự** | 21 | Chỉ **6** (15 trạng thái bị dùng trùng) | **Đủ 21 biểu cảm riêng biệt 100%** | **Vô hạn ($\infty$)** |
-| **Dung lượng trung bình 1 GIF (`240x320`)** | `124.8 KB` | `130.2 KB` | **`11.7 KB`** (`5.76 KB – 19.44 KB`) | **`0 KB`** |
-| **Tổng dung lượng 21 GIF trên Flash** | `2,621,717 B` (`2,560.27 KB`) | `801,236 B` (`782.46 KB`) | **`252,271 B` (`246.36 KB`, giảm 90.4%)** | **`0 KB`** |
-| **Tổng file `.bin` nạp vào `0xAA0000`** | `5,636,096 B` (`5.37 MB`) | `2,643,248 B` (`2.52 MB`) | **`2,094,283 B` (`2.00 MB`)** | `1,842,012 B` (`1.76 MB`) |
+| **Dung lượng trung bình 1 GIF** (KB = KiB) | `121.92 KB` | `130.41 KB` *(chưa kiểm chứng)* | **`11.7 KB`** (`5.69 KB – 19.36 KB`) | **`0 KB`** |
+| **Tổng dung lượng 21 GIF** | `2,621,717 B` (`2,560.27 KB`) | `801,236 B` (`782.46 KB`) *(chưa kiểm chứng)* | **`250,580 B` (`244.71 KB`, giảm 90.4%)** | **`0 KB`** |
+| **Tổng file `.bin` nạp vào `0xAA0000`** | `5,636,096 B` (`5.375 MiB`) | `2,643,248 B` (`2.52 MiB`) *(chưa kiểm chứng)* | **`2,092,592 B` (`2.00 MiB`)** | `1,842,012 B` (`1.76 MiB`) *(chưa kiểm chứng: không có nguồn trong repo)* |
 | **Tải CPU ESP32-S3 (`240MHz`) khi giải mã** | `35% – 55%` | `35% – 55%` (LZW nhiễu dithering) | **`8% – 12%`** (bảng màu phẳng 8 màu) | **`< 3%` ở 60 FPS** |
 | **Cần biên dịch lại Firmware C++ (`ota_1`)?** | Không | Không | **Không (Chạy ngay trên `ota_1` `v2.5.3`!)** | Có |
 

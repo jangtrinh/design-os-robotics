@@ -7,7 +7,7 @@
 - **Precondition**: Phân vùng gốc `profiles/example-esp32s3-n16r8/partitions/08-assets-0xAA0000.bin` tồn tại để trích xuất `srmodels.bin`, `font_puhui_deepseek_20_4.bin` và bảng ánh xạ 21 tên file `emoji_*.gif`.
 - **Happy Path**:
   1. Chạy `python3 tools/cook-procedural-avatar.py`.
-  2. Script render 21 chuỗi 16 khung hình `240x320` ở chế độ bảng màu 8 màu phẳng (`Palette Mode P`), xuất 21 file `.gif` vào `themes/procedural-mochi/` và bảng tổng hợp `procedural_mochi_21_preview.png`.
+  2. Script render 21 chuỗi 12–16 khung hình `240x240` (tổng 312 khung) ở chế độ bảng màu 8 màu phẳng (`Palette Mode P`), xuất 21 file `.gif` vào `themes/procedural-mochi/` và bảng tổng hợp `procedural_mochi_21_preview.png`.
   3. Script ánh xạ chính xác từng tên cảm xúc trong `index.json["emoji_collection"]` vào đúng file `emoji_*.gif` tương ứng, thêm khóa dự phòng `"robot_2" -> "emoji_3ec1da35.gif"` (`neutral`), bật `"hide_subtitle": true` và màu nền `#000000`.
   4. Script đóng gói `themes/procedural-mochi-fullvien-240x320.bin` kèm tiền tố `ZZ` và checksum 16-bit.
 - **Edge Cases**:
@@ -17,7 +17,7 @@
 - **Actor**: Developer / `esptool` + `tools/robotctl.py`
 - **Precondition**: `RoBot.5320` đang kết nối qua `/dev/cu.usbmodem*`.
 - **Happy Path**:
-  1. Kiểm tra kích thước file `themes/procedural-mochi-fullvien-240x320.bin` (`2,094,283 bytes` $\le 5,505,024 bytes` của phân vùng `0xAA0000`).
+  1. Kiểm tra kích thước file `themes/procedural-mochi-fullvien-240x320.bin` (`2,092,592 bytes` $\le 5,505,024 bytes` của phân vùng `0xAA0000`).
   2. Nạp file vào địa chỉ `0xAA0000` ở tốc độ `921600` baud bằng `esptool write-flash`.
   3. Khởi động lại robot và chạy `python3 tools/robotctl.py status`.
   4. Robot đạt `8/8 [  OK  ]`, màn hình `240x320` hiển thị khuôn mặt `Procedural Mochi-21` sắc nét tràn viền trên nền đen `#000000`.
@@ -30,8 +30,8 @@
 Scenario: AC-01 — Đủ 21 trạng thái cảm xúc độc lập và siêu nhẹ (< 300 KB)
   Given script "tools/cook-procedural-avatar.py" được thực thi
   When kiểm tra thư mục "themes/procedural-mochi/" và "themes/procedural-mochi-fullvien-240x320.bin"
-  Then phải có đúng 21 file .gif riêng biệt có độ phân giải 240x320 và 16 khung hình mỗi file
-  And tổng dung lượng của cả 21 file .gif phải nhỏ hơn 300,000 bytes (thực tế: 252,271 bytes)
+  Then phải có đúng 21 file .gif riêng biệt có độ phân giải 240x240 và 12 đến 16 khung hình mỗi file (tổng 312 khung hình)
+  And tổng dung lượng của cả 21 file .gif phải nhỏ hơn 300,000 bytes (thực tế: 250,580 bytes)
   And cả 21 mục trong "index.json" phải trỏ tới 21 nội dung GIF khác nhau hoàn toàn
 
 Scenario: AC-02 — Toàn vẹn cấu trúc esp_mmap_assets và tài nguyên hệ thống

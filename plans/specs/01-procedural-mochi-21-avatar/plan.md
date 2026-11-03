@@ -4,9 +4,9 @@
 - **Generator & Packer**: [`tools/cook-procedural-avatar.py`](../../../tools/cook-procedural-avatar.py)
 - **Performance Benchmark Suite**: [`tools/benchmark-avatar-perf.py`](../../../tools/benchmark-avatar-perf.py) & [`plans/reports/benchmark-avatar-perf.json`](../../reports/benchmark-avatar-perf.json)
 - **Generated Assets**:
-  - 21 file GIF (`240x240` viewport-matched trên nền `#000000` `240x320`, 16 frames): `themes/procedural-mochi/{emotion}.gif` (`250,580 bytes` / `244.71 KB` tổng cộng)
+  - 21 file GIF (`240x240` viewport-matched trên nền `#000000` `240x320`, 12–16 frames mỗi file): `themes/procedural-mochi/{emotion}.gif` (`250,580 bytes` / `244.71 KB` tổng cộng)
   - Bảng xem trước `7x3`: `themes/procedural-mochi/procedural_mochi_21_preview.png`
-  - Image nạp Flash (`0xAA0000`): `themes/procedural-mochi-fullvien-240x320.bin` (built locally, git-ignored) (`2,092,592 bytes`, `1.04 MB` compressed, checksum `0x5867`, `background_dark.raw` & `background_light.raw` zeroed to `#000000`)
+  - Image nạp Flash (`0xAA0000`): `themes/procedural-mochi-fullvien-240x320.bin` (built locally, git-ignored) (`2,092,592 bytes`, `1.04 MB` compressed (**unverified**: no source in the repo; the benchmark JSON only records 2,092,592 B), checksum `0x5867`, `background_dark.raw` & `background_light.raw` zeroed to `#000000`)
 - **Hardware Verifier**: [`tools/robotctl.py`](../../../tools/robotctl.py)
 
 ## 2. Danh sách Công việc Nguyên tử (Atomic Checklist)
