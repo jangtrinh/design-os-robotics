@@ -143,8 +143,7 @@ The faces are the product's identity. They are **code-drawn only**.
 - **Allowed in art:** frames rendered from the script or from the GIFs in `themes/procedural-mochi/`, and the contact sheet `docs/assets/brand/faces-21.png`.
 - **Not allowed:** hand-drawn or AI-generated look-alikes, redrawn faces, faces traced from a sticker or video, or any face the script did not produce.
 - **How to render:**
-  1. Take frames from the committed GIFs. `python3 tools/cook-procedural-avatar.py` needs an external base assets dump that is not in the repo, so do not depend on it. A
-     tree without PR #3 also stops with a `NameError` (fixed in #3).
+  1. Take frames from the committed GIFs. `python3 tools/cook-procedural-avatar.py` needs an external base assets dump that is not in the repo, so do not depend on it.
   2. Show each face at its native 240x240 or at an integer multiple (2x, 3x, 4x). Scale with nearest-neighbour (`image-rendering: pixelated`). No smoothing, no blur.
   3. Put the face on a `#000000` tile with a 1 px `#27272a` border and a corner radius of about 7% of the tile width.
   4. Do not recolour, mirror, crop through the eyes or add effects.
