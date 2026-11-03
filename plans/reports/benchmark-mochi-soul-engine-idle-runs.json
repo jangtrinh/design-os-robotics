@@ -1,0 +1,140 @@
+{
+  "description": "Repeated runs of `python3 tools/mochi-soul-engine/engine.py benchmark`, recorded to source the idle figure quoted in README.md (~0.75 us/tick). Each run was a separate process; the per-run metrics are copied unchanged from the report that the engine writes.",
+  "date": "2026-11-03 12:06 (UTC+7)",
+  "command": "HEAVY_BOT=Design heavy -- python3 tools/mochi-soul-engine/engine.py benchmark",
+  "machine": {
+    "cpu": "Intel Xeon (virtualised), x86_64, 8 cores, 1 thread per core",
+    "memory_gib": 15,
+    "os": "Linux 6.12",
+    "python": "3.13.5",
+    "scope": "Shared Linux VM. The benchmark is single-threaded Python, so one core is busy during a run."
+  },
+  "load_note": "The VM was not dedicated. The 1-minute load average before each run was 1.07-1.39 on 8 cores (other agents ran light jobs), so 'idle' here means no heavy work competing for the benchmark core, not a quiet machine. Runs 8 and 9 (about 1.5 us/tick) overlapped with other activity on the host and are kept in the file, flagged as contended, not dropped. Results are host-CPU numbers, not device speed.",
+  "runs": [
+    {
+      "run": 1,
+      "load_avg_1m_before": 1.37,
+      "us_per_math_tick": 0.811,
+      "ticks_per_sec": 1233567.6,
+      "us_per_sqlite_write": 3.641,
+      "us_per_sqlite_read": 3.774,
+      "contended": false
+    },
+    {
+      "run": 2,
+      "load_avg_1m_before": 1.37,
+      "us_per_math_tick": 0.768,
+      "ticks_per_sec": 1301456.0,
+      "us_per_sqlite_write": 4.253,
+      "us_per_sqlite_read": 4.152,
+      "contended": false
+    },
+    {
+      "run": 3,
+      "load_avg_1m_before": 1.34,
+      "us_per_math_tick": 0.722,
+      "ticks_per_sec": 1384492.5,
+      "us_per_sqlite_write": 3.867,
+      "us_per_sqlite_read": 4.164,
+      "contended": false
+    },
+    {
+      "run": 4,
+      "load_avg_1m_before": 1.39,
+      "us_per_math_tick": 0.781,
+      "ticks_per_sec": 1279610.2,
+      "us_per_sqlite_write": 4.023,
+      "us_per_sqlite_read": 4.076,
+      "contended": false
+    },
+    {
+      "run": 5,
+      "load_avg_1m_before": 1.39,
+      "us_per_math_tick": 0.751,
+      "ticks_per_sec": 1331538.4,
+      "us_per_sqlite_write": 6.52,
+      "us_per_sqlite_read": 5.943,
+      "contended": false
+    },
+    {
+      "run": 6,
+      "load_avg_1m_before": 1.28,
+      "us_per_math_tick": 0.757,
+      "ticks_per_sec": 1321363.5,
+      "us_per_sqlite_write": 4.078,
+      "us_per_sqlite_read": 4.218,
+      "contended": false
+    },
+    {
+      "run": 7,
+      "load_avg_1m_before": 1.28,
+      "us_per_math_tick": 0.775,
+      "ticks_per_sec": 1289693.7,
+      "us_per_sqlite_write": 3.925,
+      "us_per_sqlite_read": 4.37,
+      "contended": false
+    },
+    {
+      "run": 8,
+      "load_avg_1m_before": 1.18,
+      "us_per_math_tick": 1.498,
+      "ticks_per_sec": 667404.3,
+      "us_per_sqlite_write": 4.181,
+      "us_per_sqlite_read": 3.967,
+      "contended": true
+    },
+    {
+      "run": 9,
+      "load_avg_1m_before": 1.08,
+      "us_per_math_tick": 1.468,
+      "ticks_per_sec": 681055.7,
+      "us_per_sqlite_write": 6.587,
+      "us_per_sqlite_read": 7.601,
+      "contended": true
+    },
+    {
+      "run": 10,
+      "load_avg_1m_before": 1.08,
+      "us_per_math_tick": 0.721,
+      "ticks_per_sec": 1387415.1,
+      "us_per_sqlite_write": 3.677,
+      "us_per_sqlite_read": 3.941,
+      "contended": false
+    },
+    {
+      "run": 11,
+      "load_avg_1m_before": 1.08,
+      "us_per_math_tick": 0.723,
+      "ticks_per_sec": 1383262.9,
+      "us_per_sqlite_write": 3.716,
+      "us_per_sqlite_read": 3.766,
+      "contended": false
+    },
+    {
+      "run": 12,
+      "load_avg_1m_before": 1.07,
+      "us_per_math_tick": 0.703,
+      "ticks_per_sec": 1422950.8,
+      "us_per_sqlite_write": 3.736,
+      "us_per_sqlite_read": 3.919,
+      "contended": false
+    }
+  ],
+  "summary": {
+    "runs": 12,
+    "uncontended_runs": 10,
+    "us_per_math_tick_uncontended": {
+      "min": 0.703,
+      "median": 0.754,
+      "max": 0.811
+    },
+    "us_per_math_tick_all_runs": {
+      "min": 0.703,
+      "median": 0.762,
+      "max": 1.498
+    },
+    "us_per_sqlite_write_uncontended_median": 3.896,
+    "ticks_per_sec_uncontended_median": 1326450.9,
+    "readme_figure": "~0.75 us/tick (median of the uncontended runs, rounded)"
+  }
+}
