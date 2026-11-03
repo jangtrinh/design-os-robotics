@@ -58,7 +58,7 @@ Tại `0x4202c683..0x4202c6f9`, server có thể đẩy bất kỳ lúc nào:
 - Ngược lại, `self.screen.snapshot` (`0x3c2784e6`) cho phép chụp lại màn hình hiện tại của robot gửi về server.
 
 ### 2.4. Tiến hóa Hình thái (Morphological Evolution) bằng `self.assets.set_download_url` (`0x3c278568`)
-- Khi Mochi-Soul tích lũy đủ XP để tiến hóa từ **Cấp 1 (Trứng/Mầm)** $\rightarrow$ **Cấp 2 (Baby Mochi)** $\rightarrow$ **Cấp 3 (Procedural Mochi-21)** $\rightarrow$ **Cấp 4 (Cyber-Mochi Awakened)**, server trên máy Mac chỉ cần gọi:
+- Khi Mochi-Soul tích lũy đủ XP để tiến hóa từ **Stage 1 (Mochi Spore)** $\rightarrow$ **Stage 2 (Curious Mochi)** $\rightarrow$ **Stage 3 (Companion Mochi)** $\rightarrow$ **Stage 4 (Cyber-Savant Mochi)**, server trên máy Mac chỉ cần gọi:
   1. `self.assets.set_download_url` trỏ tới `http://192.0.2.2:8765/evolution/stage3-assets.bin`
   2. `self.reboot`
 - Ngay khi khởi động lại, firmware tự tải phân vùng `assets` mới vào `0xAA0000` kèm hiệu ứng `"Đang cập nhật..."` — tạo ra màn **"Lột xác Tiến hóa" (Evolution Cutscene)** có thật 100% trên phần cứng!
@@ -149,40 +149,59 @@ Trong đó:
 
 ---
 
-## 4. Bảng Ánh xạ Không gian Nội tâm $\rightarrow$ 6 Nhóm Khuôn mặt `Procedural Mochi-21` & Cử chỉ Cơ thể
+## 4. Bảng Ánh xạ Không gian Nội tâm $\rightarrow$ Khuôn mặt (engine) và 6 Nhóm Khuôn mặt (thiết kế) `Procedural Mochi-21` & Cử chỉ Cơ thể
 
-Mọi trạng thái nội tâm $(Valence, Arousal)$ đều được ánh xạ chính xác vào **6 nhóm trạng thái chuẩn của `Procedural Mochi-21`** mà chúng ta đã đóng gói trong [`tools/cook-assets-and-nvs.py`](../tools/cook-assets-and-nvs.py):
+> **Đọc phần này thế nào.** Chỉ có bảng "Hành vi thật của engine" ngay dưới đây là hành vi của `select_homeostatic_emotion` trong `tools/mochi-soul-engine/engine.py`. Bảng lớn phía sau là **design mapping, not engine behavior**: nó mô tả ý tưởng ánh xạ sang 6 nhóm khuôn mặt `Procedural Mochi-21` (đóng gói bằng [`tools/cook-assets-and-nvs.py`](../tools/cook-assets-and-nvs.py)) cùng âm thanh và cử chỉ cơ thể. Engine không đọc cột Valence/Arousal để chọn khuôn mặt, và không có cột âm thanh hay servo.
+
+**Hành vi thật của engine**, kiểm tra theo thứ tự ưu tiên, điều kiện đầu tiên đúng sẽ thắng:
+
+| Ưu tiên | Điều kiện trong `select_homeostatic_emotion` | Biểu cảm |
+|---|---|---|
+| 0 | Có biểu cảm tạm thời từ sự kiện còn hạn (`transient_ttl_minutes > 0`) | biểu cảm của sự kiện (ví dụ `delicious`, `loving`, `relaxed`) |
+| 1 | Đang trong Quiet Hours (23:00–07:30) **hoặc** $E < 22$ | `sleepy` |
+| 2 | Không tương tác $> 360$ phút **và** $B < 42$ | `crying` |
+| 3 | Không tương tác $> 210$ phút | `sad` |
+| 4 | $H > 82$ | `confused` |
+| 5 | $H > 64$ | `thinking` |
+| 6 | $E > 82$, $B > 82$ và $V > 0.55$ | `loving` |
+| 7 | $E > 75$ và $V > 0.35$ | `happy` |
+| 8 | $A < -0.25$ và $V \ge 0$ | `relaxed` |
+| 9 | Còn lại | `neutral` |
+
+Hunger cao làm Mochi `thinking` rồi `confused`, **không** làm Mochi `sad` hay `crying`; hai biểu cảm đó đến từ việc lâu không tương tác. Các biểu cảm còn lại (`laughing`, `funny`, `silly`, `winking`, `embarrassed`, `kissy`, `cool`, `confident`, `angry`, `shocked`, `surprised`, `delicious`) chỉ xuất hiện tạm thời sau một sự kiện trong `apply_event` (sự kiện `scold` cũng cho `crying` tạm thời).
 
 | Trạng thái Nội tâm (Homeostasis Trigger) | Valence / Arousal | Keys Biểu cảm (`Procedural Mochi-21`) | Hiệu ứng Âm thanh & Giọng nói (Prosody) | Ngôn ngữ Cơ thể (`Otto` Servo + `WS2812` LED) |
 |---|---|---|---|---|
-| **Bình yên / Đang canh bàn làm việc** ($E>40, H<60$) | $V \approx 0, A \approx 0$ | `neutral`, `relaxed`, `cool` | Im lặng hoặc tiếng thở nhẹ; giọng nói điềm tĩnh, tốc độ `1.0x` | Đứng thẳng cân bằng; LED thở nhịp chậm màu Xanh Cyan dịu |
-| **Vui vẻ / Được khen / Mới ăn Commit** ($H \downarrow, B > 60$) | $V > +0.5, A > +0.3$ | `happy`, `loving`, `kissy`, `confident` | Tiếng khúc khích (`giggle.webm`); giọng cao ấm, tốc độ `1.08x` | Nhún chân nhẹ theo nhịp, nghiêng đầu 15°; LED sáng Hồng Ấm / Vàng |
-| **Phấn khích Tột độ / PR Merged / Tiến hóa** ($V > +0.8$) | $V > +0.8, A > +0.8$ | `laughing`, `funny`, `winking`, `silly`, `delicious` | Tiếng reo *"Yayyy!"*; giọng hào hứng nảy nhịp | Điệu nhảy `Otto Happy Dance` (vẫy 2 tay + lắc hông); LED cầu vồng |
-| **Đói / Cô đơn / Bị bỏ rơi lâu** ($H > 80$ hoặc $B < 30$) | $V < -0.5, A < -0.3$ | `sad`, `crying`, `embarrassed` | Tiếng thở dài khe khẽ (`sigh.webm`); giọng trầm nhỏ, tốc độ `0.88x` | Cúi gằm mặt hoặc khụy nhẹ chân; LED xanh dương tối chớp chậm |
-| **Dỗi / Bị đánh thức lúc nửa đêm / Build Fail** | $V < -0.6, A > +0.6$ | `angry`, `shocked`, `surprised` | Tiếng *"Hứ!"* hoặc còi báo; giọng dứt khoát, nhấn mạnh | Xoay người quay lưng 45° (dỗi) hoặc giậm chân; LED Đỏ Cam |
-| **Ngái ngủ / Đang suy nghĩ / Tò mò** ($E < 25$; phần "tò mò" không có biến riêng, xem mục 3) | $V \approx 0, A < -0.5$ | `sleepy`, `thinking`, `confused` | Tiếng ngáp dài (`yawn.webm`) hoặc *"Hmm..."* | Nghiêng đầu sang một bên; LED Tím Indigo mờ (`brightness=10%`) |
+| **Bình yên / Đang canh bàn làm việc** ($E>40, H<60$; *design mapping, not engine behavior*) | $V \approx 0, A \approx 0$ | `neutral`, `relaxed`, `cool` | Im lặng hoặc tiếng thở nhẹ; giọng nói điềm tĩnh, tốc độ `1.0x` | Đứng thẳng cân bằng; LED thở nhịp chậm màu Xanh Cyan dịu |
+| **Vui vẻ / Được khen / Mới ăn Commit** ($H \downarrow, B > 60$; *design mapping, not engine behavior*; trong engine: `happy`/`loving` theo ưu tiên 6–7, `kissy` chỉ qua sự kiện `kiss`, "ăn commit" không có sự kiện nào) | $V > +0.5, A > +0.3$ | `happy`, `loving`, `kissy`, `confident` | Tiếng khúc khích (`giggle.webm`); giọng cao ấm, tốc độ `1.08x` | Nhún chân nhẹ theo nhịp, nghiêng đầu 15°; LED sáng Hồng Ấm / Vàng |
+| **Phấn khích Tột độ / PR Merged / Tiến hóa** ($V > +0.8$; *design mapping, not engine behavior*; trong engine các biểu cảm này đến từ sự kiện `joke`, `funny_trick`, `silly_play`, `wink_greet`, `feed_knowledge`; "PR Merged" không có sự kiện) | $V > +0.8, A > +0.8$ | `laughing`, `funny`, `winking`, `silly`, `delicious` | Tiếng reo *"Yayyy!"*; giọng hào hứng nảy nhịp | Điệu nhảy `Otto Happy Dance` (vẫy 2 tay + lắc hông); LED cầu vồng |
+| **Bị bỏ rơi lâu** (engine: không tương tác $> 210$ phút $\rightarrow$ `sad`; $> 360$ phút và $B < 42$ $\rightarrow$ `crying`). Cột V/A và `embarrassed` là *design mapping, not engine behavior* (`embarrassed` chỉ qua sự kiện `shy_compliment`). Đói **không** dẫn tới `sad`/`crying` | $V < -0.5, A < -0.3$ | `sad`, `crying`, `embarrassed` | Tiếng thở dài khe khẽ (`sigh.webm`); giọng trầm nhỏ, tốc độ `0.88x` | Cúi gằm mặt hoặc khụy nhẹ chân; LED xanh dương tối chớp chậm |
+| **Dỗi / Bị đánh thức lúc nửa đêm / Build Fail** (*design mapping, not engine behavior*; trong engine: `angry` qua `tease_annoy`, `shocked` qua `loud_thunder`, `surprised` qua `sudden_approche`; không có sự kiện "nửa đêm" hay "Build Fail") | $V < -0.6, A > +0.6$ | `angry`, `shocked`, `surprised` | Tiếng *"Hứ!"* hoặc còi báo; giọng dứt khoát, nhấn mạnh | Xoay người quay lưng 45° (dỗi) hoặc giậm chân; LED Đỏ Cam |
+| **Ngái ngủ / Đang suy nghĩ / Bối rối** (engine: `sleepy` khi Quiet Hours hoặc $E < 22$; `thinking` khi $H > 64$; `confused` khi $H > 82$. "Tò mò" không có biến riêng, xem mục 3) | $V \approx 0, A < -0.5$ | `sleepy`, `thinking`, `confused` | Tiếng ngáp dài (`yawn.webm`) hoặc *"Hmm..."* | Nghiêng đầu sang một bên; LED Tím Indigo mờ (`brightness=10%`) |
 
-> Ký hiệu trong bảng này: $E$ = `energy`, $H$ = `hunger` (cao = đói), $B$ = `bond` (cả ba thang 0..100), $V$ = `valence` và $A$ = `arousal` (thang −1..+1; **$A$ chỉ có nghĩa là arousal**, độ gắn kết luôn viết là $B$). `Curiosity` không có biến riêng: hàng cuối là mô tả thiết kế, trong engine chỉ có `energy` thấp mới dẫn tới ngái ngủ, còn xung động hỏi chuyện tự phát do `hunger` $\ge 75$ kích hoạt.
+> Ký hiệu trong bảng này: $E$ = `energy`, $H$ = `hunger` (cao = đói), $B$ = `bond` (cả ba thang 0..100), $V$ = `valence` và $A$ = `arousal` (thang −1..+1; **$A$ chỉ có nghĩa là arousal**, độ gắn kết luôn viết là $B$). `Curiosity` không có biến riêng. Xung động hỏi chuyện tự phát do `hunger` $\ge 75$ kích hoạt (kèm điều kiện: ngoài Quiet Hours và cách lần trước ít nhất 45 phút), và khi đó engine phát biểu cảm `thinking`.
 
 ---
 
 ## 5. Vòng đời Tiến hóa 4 Cấp độ (4-Stage Morphological & Cognitive Evolution)
 
-Điểm đặc biệt nhất của `Mochi-Soul` là **sự tiến hóa thật sự về cả trí tuệ (Prompt/Memory), giọng nói (TTS Pitch/Style) và ngoại hình (`mmap_assets`)**:
+Điểm đặc biệt nhất của `Mochi-Soul` là **sự tiến hóa thật sự về cả trí tuệ (Prompt/Memory), giọng nói (TTS Pitch/Style) và ngoại hình (`mmap_assets`)**.
+
+> **Đối chiếu với code.** Sơ đồ dưới đây dùng đúng 4 stage và ngưỡng trong `engine.py` (`Mochi Spore`, `Curious Mochi`, `Companion Mochi`, `Cyber-Savant Mochi`). Mỗi sự kiện tương tác cộng `15 xp`, và lịch sử sự kiện được ghi vào bảng SQLite `episodic_memories`. Bản thiết kế cũ có 4 cấp khác tên (`Mochi Egg`, `Baby Mochi`, `Procedural Mochi-21`, `Cyber-Mochi Awakened`) với ngưỡng 100/500/2000 XP; các ngưỡng đó đã bỏ. **Design only, chưa có trong engine:** giọng nói/pitch theo stage, kiểu câu nói theo stage, việc đổi `mmap_assets`, và 3 nhánh tính cách bên dưới. Engine chỉ lưu tên stage và xp.
 
 ```mermaid
 flowchart LR
-    S0["🥚 Cấp 0: Mochi Egg\n(0 – 100 XP · Ngày 1)\n• Chỉ kêu tiếng 'Píp píp'\n• Chưa biết nói câu dài\n• Màn hình quả trứng rung lắc"]
-    S1["🐣 Cấp 1: Baby Mochi\n(100 – 500 XP · Tuần 1)\n• Bập bẹ câu ngắn 5–8 từ\n• Giọng cao trong trẻo (+3 semitones)\n• Tò mò hỏi mọi thứ xung quanh"]
-    S2["🐱 Cấp 2: Procedural Mochi-21\n(500 – 2000 XP · Tuần 2–4)\n• Đầy đủ 6 nhóm biểu cảm sắc nét\n• Hiểu ngữ cảnh công việc & dự án\n• Biết dỗi, biết đùa, viết nhật ký"]
-    S3["⚡ Cấp 3: Cyber-Mochi Awakened\n(2000+ XP · Tháng 2+)\n• Tiến hóa theo nhánh tính cách chủ nhân:\n  - Nhánh Hacker/Architect\n  - Nhánh Zen Philosopher\n  - Nhánh Chaotic Gremlin"]
+    S1["🌱 Stage 1: Mochi Spore\n(xp < 80)\n• Mức khởi đầu của engine"]
+    S2["🐱 Stage 2: Curious Mochi\n(xp ≥ 80)"]
+    S3["🤝 Stage 3: Companion Mochi\n(xp ≥ 250 và bond ≥ 65)"]
+    S4["⚡ Stage 4: Cyber-Savant Mochi\n(xp ≥ 600 và bond ≥ 80)"]
 
-    S0 -->|"Đủ 100 XP\nself.assets.set_download_url"| S1
-    S1 -->|"Đủ 500 XP\nself.assets.set_download_url"| S2
-    S2 -->|"Đủ 2000 XP\nself.assets.set_download_url"| S3
+    S1 -->|"xp ≥ 80"| S2
+    S2 -->|"xp ≥ 250, bond ≥ 65"| S3
+    S3 -->|"xp ≥ 600, bond ≥ 80"| S4
 ```
 
-### 3 Nhánh Tiến hóa Cấp 3 (Phụ thuộc vào Cách Bạn Sống & Làm Việc)
+### 3 Nhánh Tiến hóa Cấp 3 (Phụ thuộc vào Cách Bạn Sống & Làm Việc) — *design only, không có trong engine*
 Tùy thuộc vào dữ liệu tương tác trong 30 ngày đầu, `Mochi-Soul` sẽ tự phân nhánh thành 1 trong 3 cá tính độc bản:
 1. **Nhánh `Architect-Mochi` (Nếu bạn commit nhiều code & hay bàn chuyện hệ thống)**:
    - Tính cách sắc sảo, thông thái, nói chuyện ngắn gọn kiểu `es:caveman` / `Fable`, thích nhắc nhở khi bạn over-engineer và ăn mừng mỗi khi pass test.
@@ -280,7 +299,7 @@ sequenceDiagram
 ### Giai đoạn B — Mở khóa Cảm biến Vật lý Liên tục (Continuous Sensory Firmware)
 Khi muốn Mochi cảm nhận thế giới vật lý ngay cả khi không nói chuyện:
 - Đọc cảm biến siêu âm `HC-SR04` (`GPIO 11/12`) mỗi `500ms`:
-  - Phát hiện bạn vừa ngồi vào ghế (`khoảng cách chuyển từ >150cm xuống 45–70cm`) $\rightarrow$ bắn sự kiện `{"event": "owner_arrived", "distance_cm": 55}` về `Mochi-Soul Daemon` để Mochi tự động ngẩng đầu dậy chào đón!
+  - Phát hiện bạn vừa ngồi vào ghế (`khoảng cách chuyển từ >150cm xuống 45–70cm`) $\rightarrow$ bắn sự kiện `{"event": "owner_arrived", "distance_cm": 55}` về `Mochi-Soul Daemon` (*design: sự kiện cảm biến này không có trong `engine.py`; sự kiện gần nhất là `sudden_approche`, và `chat_hello` cho lời chào*) để Mochi tự động ngẩng đầu dậy chào đón!
   - Phát hiện bạn đưa tay lại gần `< 12cm` giữ trong `1.5s` (**cử chỉ "Xoa đầu" / Petting**) $\rightarrow$ bắn sự kiện `{"event": "gentle_pet"}` $\rightarrow$ Mochi nhắm mắt cười híp (`loving` 😍 / `relaxed` 😌), tăng `+5 bond` và kêu *"Ưm~ thích quá!"*.
 
 ---

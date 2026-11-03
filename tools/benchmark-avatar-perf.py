@@ -7,7 +7,7 @@ for RoBot.5320 (ESP32-S3 240MHz + ST7789 240x320 + esp_mmap_assets lv_gif).
 
 Measures (Pure Python + Pillow, zero external numeric dependencies):
   1. Partition-level Flash footprint, free space in 5.25MB (0xAA0000), and unique emotion coverage.
-  2. Per-emotion (21/21) GIF byte size, LZW compression ratio vs raw RGB565 (2,457,600 B / 16 frames).
+  2. Per-emotion (21/21) GIF byte size, LZW compression ratio vs raw RGB565 (12-16 frames per GIF, 312 frames total).
   3. Actual GIF frame decode speed (us/frame & ms/loop), horizontal RLE/LZW scanline spans per frame
      (the primary bottleneck in lv_gif gifdec.c on Xtensa LX7), and inter-frame dirty pixel ratio.
   4. SPI Flash MMU (80MHz QIO) bandwidth & ESP32-S3 CPU load estimation at 12.5 FPS (80ms frame period).
@@ -294,7 +294,7 @@ def main() -> None:
 
     proc_label = "2. Procedural Mochi-21 (Code)"
     if proc_label in detailed_by_pack:
-        print("\n[2] PER-EMOTION TELEMETRY FOR PROCEDURAL MOCHI-21 (ALL 21 STATES AT 240x320)")
+        print("\n[2] PER-EMOTION TELEMETRY FOR PROCEDURAL MOCHI-21 (ALL 21 STATES AT 240x240)")
         print("-" * 110)
         print(
             f"{'#':>2s} | {'Emotion':13s} | {'File':18s} | {'Size (KB)':>9s} | {'LZW Ratio':>9s} | {'Spans/Frm':>9s} | {'Dirty %':>7s} | {'Decode(us)':>10s} | {'ESP32 CPU%':>10s}"

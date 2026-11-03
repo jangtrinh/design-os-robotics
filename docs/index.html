@@ -48,7 +48,7 @@
         },
         {
           "@type": "Question",
-          "name": "How does the 244.71 KB Procedural-21 Avatar save 90.4% flash over the default GIF pack?",
+          "name": "How does the 244.71 KB Procedural-21 Avatar save 90.4% smaller GIF total over the default GIF pack?",
           "acceptedAnswer": {
             "@type": "Answer",
             "text": "Instead of shipping the default GIF pack of 2.50 MiB (2,621,717 bytes) of 100x100 bitmap GIFs, cook-procedural-avatar.py synthesizes all 21 emotions from 582 lines of geometric math at 240x240 px with a locked 8-colour indexed LZW palette, achieving 681 average scanline RLE spans per frame."
@@ -248,7 +248,7 @@
             </div>
             <div class="project-body">
               <h3>Spec 01 · Procedural Mochi-21 Vector Avatar (244.71 KB · Checksum 0x5867)</h3>
-              <p>All 21 emotions generated mathematically at <code>240×240</code> px with a locked 8-colour indexed LZW palette (<code>robot_2</code> reuses the neutral GIF), saving <code>90.4%</code> Flash over factory GIFs.</p>
+              <p>All 21 emotions generated mathematically at <code>240×240</code> px with a locked 8-colour indexed LZW palette (<code>robot_2</code> reuses the neutral GIF), for a <code>90.4%</code> smaller GIF total than the factory GIFs (the packed <code>.bin</code> is <code>62.9%</code> smaller: 5,636,096 → 2,092,592 B).</p>
               <p>Source: <code>plans/reports/benchmark-avatar-perf.json</code></p>
             </div>
           </article>
@@ -347,7 +347,7 @@ python3 tools/mochi-soul-engine/engine.py benchmark</code></pre>
         <p>DESIGN:OS Robotics is a source-available hardware control CLI, esp_mmap_assets theme compiler, 4-layer non-intrusive diagnostic dashboard, and Spec-Driven Generative AI Tamagotchi runtime (Project Mochi-Soul) built for ESP32-S3 N16R8 voice robots (RB5320XZ78AI / XiaoZhi78).</p>
       </details>
       <details>
-        <summary>How does the 244.71 KB Procedural-21 Avatar save 90.4% flash over the default GIF pack? <svg class="ph" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg></summary>
+        <summary>How does the 244.71 KB Procedural-21 Avatar save 90.4% smaller GIF total over the default GIF pack? <svg class="ph" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg></summary>
         <p>Instead of shipping the default GIF pack of 2.50 MiB (2,621,717 bytes) of 100x100 bitmap GIFs, cook-procedural-avatar.py synthesizes all 21 emotions from 582 lines of geometric math at 240x240 px with a locked 8-colour indexed LZW palette, achieving 681 average scanline RLE spans per frame.</p>
       </details>
       <details>
