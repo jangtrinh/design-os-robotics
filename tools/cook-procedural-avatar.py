@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-FileCopyrightText: 2026 Jang Trinh
 """
 cook-procedural-avatar.py — 100% Code-Drawn (Procedural Parametric Vector) Mochi Avatar Generator
 for RoBot.5320 (240x320 ST7789 IPS LCD).
@@ -16,11 +18,14 @@ Also packs:
 """
 from __future__ import annotations
 
+import argparse
 import io
 import json
 import math
+import os
 import shutil
 import struct
+import sys
 from pathlib import Path
 from PIL import Image, ImageDraw
 
@@ -445,7 +450,8 @@ def render_emotion_frame(emotion: str, frame_idx: int, num_frames: int = 16, w: 
 
 def build_all_21_procedural_gifs() -> dict[str, bytes]:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+    if ARTIFACT_DIR:
+        ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
     gif_bytes_by_emotion: dict[str, bytes] = {}
     poster_frames: dict[str, Image.Image] = {}
 
@@ -466,7 +472,8 @@ def build_all_21_procedural_gifs() -> dict[str, bytes]:
         gif_bytes_by_emotion[emo] = raw
         out_file = OUT_DIR / f"{emo}.gif"
         out_file.write_bytes(raw)
-        shutil.copyfile(out_file, ARTIFACT_DIR / f"procedural_{emo}.gif")
+        if ARTIFACT_DIR:
+            shutil.copyfile(out_file, ARTIFACT_DIR / f"procedural_{emo}.gif")
         print(f"  [GIF] {emo:13s}: {len(raw):6,d} bytes ({len(raw)/1024:5.2f} KB) -> {out_file.name}")
 
     # Build 21-panel Master Contact Sheet (7 cols x 3 rows, scaled 50% per cell -> 120x160 each)
@@ -492,13 +499,13 @@ def build_all_21_procedural_gifs() -> dict[str, bytes]:
 
     sheet_path = OUT_DIR / "procedural_mochi_21_preview.png"
     sheet.save(sheet_path, format="PNG", optimize=True)
-    shutil.copyfile(sheet_path, ARTIFACT_DIR / "procedural_mochi_21_preview.png")
+    if ARTIFACT_DIR:
+        shutil.copyfile(sheet_path, ARTIFACT_DIR / "procedural_mochi_21_preview.png")
     print(f"  [PNG] 21-Panel Master Sheet: {sheet_path} ({sheet_path.stat().st_size:,d} bytes)")
     return gif_bytes_by_emotion
 
 
-def pack_mmap_assets_21(gif_bytes_by_emotion: dict[str, bytes], out_bin_path: Path) -> None:
-    base_bin = ROOT / "profiles/example-esp32s3-n16r8/partitions/08-assets-0xAA0000.bin"
+def pack_mmap_assets_21(gif_bytes_by_emotion: dict[str, bytes], out_bin_path: Path, base_bin: Path) -> None:
     d_base = base_bin.read_bytes()
     nf, _, _ = struct.unpack("<III", d_base[:12])
     tend = 12 + nf * 44
@@ -574,9 +581,29 @@ def pack_mmap_assets_21(gif_bytes_by_emotion: dict[str, bytes], out_bin_path: Pa
     print(f"  [BIN] Packed {out_bin_path} ({len(header) + len(body):,d} bytes, checksum=0x{checksum:04x})")
 
 
-if __name__ == "__main__":
+def main() -> int:
+    ap = argparse.ArgumentParser(
+        description="Synthesize the 21 procedural Mochi GIFs into themes/procedural-mochi/ and pack "
+        "themes/procedural-mochi-fullvien-240x320.bin (local build output, not tracked). "
+        "Set ARTIFACT_DIR to also copy the GIFs and contact sheet to another folder.",
+    )
+    ap.add_argument(
+        "--base-bin",
+        type=Path,
+        default=ROOT / "profiles/example-esp32s3-n16r8/partitions/08-assets-0xAA0000.bin",
+        help="your own dump of the device assets partition (read only; not shipped in this repo)",
+    )
+    args = ap.parse_args()
+    if not args.base_bin.is_file():
+        print(f"error: base assets dump not found: {args.base_bin}", file=sys.stderr)
+        return 2
     print("=== Cooking ALL 21 Procedural Code-Drawn Mochi Emotions (240x320) ===")
     gifs = build_all_21_procedural_gifs()
     total_21 = sum(len(v) for v in gifs.values())
     print(f"  [SUM] Total for ALL 21 unique procedural emotions: {total_21:,d} bytes ({total_21/1024:.2f} KB)")
-    pack_mmap_assets_21(gifs, ROOT / "themes" / "procedural-mochi-fullvien-240x320.bin")
+    pack_mmap_assets_21(gifs, ROOT / "themes" / "procedural-mochi-fullvien-240x320.bin", args.base_bin)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

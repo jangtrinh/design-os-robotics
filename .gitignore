@@ -21,8 +21,9 @@ profiles/*/*.db*
 profiles/*/unpacked-assets/*.bin
 profiles/*/unpacked-assets/*.raw
 profiles/*/unpacked-assets/emoji_*.gif
-themes/mochi-240x320.bin
-themes/mochi-fullvien-240x240.bin
+# Theme images are built locally (tools/cook-procedural-avatar.py) from the user's own device dump; not tracked
+themes/*.bin
+themes/*-preview/
 
 # Raw extracted firmware audio & personal voice samples
 voices/extracted-firmware-ogg/*.ogg

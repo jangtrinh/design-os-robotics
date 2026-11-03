@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-FileCopyrightText: 2026 Jang Trinh
 """
 robotctl.py — Complete CLI Mastery & Optimization Toolkit for RoBot.5320 (ESP32-S3 N16R8)
 Supports:
@@ -182,8 +184,28 @@ def update_string_in_page1(nvs: bytearray, ns_id: int, key: str, new_str: str) -
     raise KeyError(f"String key {key} (ns={ns_id}) not found in Page 1")
 
 
+def require_nvs_dump(path: Path) -> None:
+    """Exit with a clear message when the user's own NVS dump is missing (dumps are gitignored, never shipped)."""
+    if path.is_file():
+        return
+    try:
+        shown = path.relative_to(ROOT)
+    except ValueError:
+        shown = path
+    print(
+        f"error: NVS dump not found: {shown}\n"
+        "NVS dumps are gitignored and are not in this repository. Read the partition from your own board first, e.g.\n"
+        "  uvx --from esptool esptool --port <PORT> read-flash 0x9000 <partition size from your partition table> "
+        f"{ORIG_NVS.relative_to(ROOT) if ORIG_NVS.is_relative_to(ROOT) else ORIG_NVS}\n"
+        "or pass another file with --nvs (status) / --base-nvs (optimize).",
+        file=sys.stderr,
+    )
+    sys.exit(2)
+
+
 def cmd_status(args: argparse.Namespace) -> None:
     nvs_path = Path(args.nvs)
+    require_nvs_dump(nvs_path)
     parsed = parse_nvs(nvs_path.read_bytes())
     print(f"=== NVS Configuration ({nvs_path.name}) ===")
     for ns, items in parsed.items():
@@ -195,7 +217,9 @@ def cmd_status(args: argparse.Namespace) -> None:
 
 
 def cmd_optimize(args: argparse.Namespace) -> None:
-    nvs = bytearray(ORIG_NVS.read_bytes())
+    base_nvs = Path(args.base_nvs)
+    require_nvs_dump(base_nvs)
+    nvs = bytearray(base_nvs.read_bytes())
     # 1. Enable Battery ADC (GPIO 17) & Charging Status (GPIO 38) in lcd_cfg (ns=5, Page 0 slots 113 & 114)
     patch_i32_or_u8_in_nvs(nvs, 0, 113, args.p_bat, is_u8=False)
     patch_i32_or_u8_in_nvs(nvs, 0, 114, args.p_chg, is_u8=False)
@@ -593,6 +617,7 @@ def main() -> None:
     p_opt.add_argument("--enable-weather", type=int, default=1)
     p_opt.add_argument("--ssid", default=None)
     p_opt.add_argument("--password", default=None)
+    p_opt.add_argument("--base-nvs", default=str(ORIG_NVS), help="your own dump of the NVS partition (read only; not shipped in this repo)")
     p_opt.add_argument("--out", default=str(DEFAULT_NVS))
     p_opt.add_argument("--flash", action="store_true")
     p_opt.add_argument("--port", default=DEFAULT_PORT)

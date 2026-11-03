@@ -501,7 +501,7 @@ gantt
     title Lộ trình Hiện thực hóa Năng lực Vượt bậc RoBot.5320
     dateFormat  YYYY-MM-DD
     section Phase 1: Local Protocol Hijack
-    Viết tools/local-xiaozhi-server.py (Mac Mini)     :p1_1, 2026-11-03, 1d
+    Viết máy chủ WebSocket cục bộ (Mac Mini, dự kiến)     :p1_1, 2026-11-03, 1d
     Đổi websocket.url trong NVS & Test đàm thoại LAN   :p1_2, after p1_1, 1d
     Tích hợp MLX-Whisper + Ollama + Kokoro/F5-TTS     :p1_3, after p1_2, 1d
     section Phase 2: AI Agent & Hardware Gate Bridge
@@ -524,7 +524,7 @@ gantt
    - Chạy 100% đàm thoại bằng mô hình AI trên máy Mac của bạn.
    - Không can thiệp mã nhị phân firmware, có thể đảo ngược về mặc định trong 5 giây.
 2. **Các bước Thực hiện**:
-   - Bước 1: Viết script máy chủ WebSocket [`tools/local-xiaozhi-server.py`](../tools/local-xiaozhi-server.py) (~150 dòng Python) hỗ trợ giao thức JSON `hello`/`listen`/`stt`/`llm`/`tts`.
+   - Bước 1: Viết script máy chủ WebSocket cục bộ (dự kiến, chưa có trong repo; ~150 dòng Python) hỗ trợ giao thức JSON `hello`/`listen`/`stt`/`llm`/`tts`.
    - Bước 2: Tích hợp thư viện giải mã Opus (`opuslib` hoặc `pyogg`) và kết nối với `mlx-whisper` + `Ollama` + `Kokoro-TTS`.
    - Bước 3: Cắm cáp USB vào robot, chạy lệnh:
      ```bash
@@ -540,7 +540,7 @@ gantt
    - Biến robot thành **DevOps Physical HUD** và **Hardware Approval Gate** cho hệ thống Agent `Orca` / `Antigravity`.
    - Kết nối đàm thoại với kho tri thức `.brv` và Obsidian.
 2. **Các bước Thực hiện**:
-   - Bước 1: Mở rộng `local-xiaozhi-server.py` với một REST/WebSocket API nội bộ đón nhận sự kiện từ các công cụ dòng lệnh trên Mac.
+   - Bước 1: Mở rộng máy chủ WebSocket cục bộ ở trên với một REST/WebSocket API nội bộ đón nhận sự kiện từ các công cụ dòng lệnh trên Mac.
    - Bước 2: Thêm hook vào `Orca` daemon: khi bắt đầu task, khi test chạy, khi test pass/fail -> gửi JSON sự kiện tới robot.
    - Bước 3: Viết script `tools/hardware-gate.sh` can thiệp vào quy trình `git push` hoặc `deploy`: gửi yêu cầu phê duyệt tới robot, chờ tín hiệu bấm nút vật lý từ robot trước khi cho phép lệnh shell tiếp tục chạy.
    - Bước 4: Tích hợp lệnh `brv query` vào pipeline xử lý ngữ cảnh của LLM khi người dùng đặt câu hỏi kỹ thuật về codebase.
