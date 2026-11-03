@@ -170,7 +170,7 @@ If you only need a browser reflash, or you are building firmware for a different
 
 PolyForm Shield 1.0.0, source-available. Any purpose is permitted except providing a product that competes with this software, or with a product the licensor provides using it. You may use, study, modify and distribute it if you keep the licence terms (or their URL) and the `Required Notice:` line. The [LICENSE](./LICENSE) text is the only binding statement; this paragraph is a summary.
 
-Third-party works in this repository keep their own licences: the Be Vietnam Pro typeface (SIL OFL 1.1), three.js r186 (MIT), and one hardware wiring image that the licence above does not cover. See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
+Third-party works in this repository keep their own licences: the Be Vietnam Pro typeface (SIL OFL 1.1) and three.js r186 (MIT). The one hardware wiring image is the owner's own material and is covered by the licence above. See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
 
 ## Ecosystem
 

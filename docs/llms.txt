@@ -19,4 +19,4 @@ DESIGN:OS Robotics is a source-available, local-first hardware control, `esp_mma
 - [GitHub Repository](https://github.com/jangtrinh/design-os-robotics): Source code, themes, and CLI tools.
 - [Domain Glossary & ADRs (`CONTEXT.md`)](https://github.com/jangtrinh/design-os-robotics/blob/main/CONTEXT.md): Canonical definitions and `ADR-001`..`ADR-005`.
 - [Licence (PolyForm Shield 1.0.0)](https://github.com/jangtrinh/design-os-robotics/blob/main/LICENSE): Source-available. Any purpose is permitted except providing a product that competes with this software.
-- [Third-party notices](https://github.com/jangtrinh/design-os-robotics/blob/main/THIRD_PARTY_NOTICES.md): Be Vietnam Pro (SIL OFL 1.1), three.js r186 (MIT) and a hardware wiring image.
+- [Third-party notices](https://github.com/jangtrinh/design-os-robotics/blob/main/THIRD_PARTY_NOTICES.md): Be Vietnam Pro (SIL OFL 1.1), three.js r186 (MIT), plus a note that the hardware wiring image is the owner's own material.

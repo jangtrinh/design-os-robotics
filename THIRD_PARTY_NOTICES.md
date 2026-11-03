@@ -1,6 +1,6 @@
 # Third-party notices
 
-This repository includes three third-party items: a typeface, a JavaScript library and one hardware wiring image.
+This repository includes two third-party items, a typeface and a JavaScript library, and one hardware wiring image that is the owner's own material (see the last section).
 
 ## Be Vietnam Pro
 
@@ -38,4 +38,4 @@ THE SOFTWARE.
 
 ## RB5320XZ78AI wiring schematic
 
-`docs/assets/hardware/04-rb5320xz78ai-st7789-schematic.png` is a wiring schematic of the RB5320XZ78AI board kit. It is assembled from component photographs and the board vendor's logo. This repository does not record who made the source artwork, so the PolyForm Shield licence of this repository should not be read as covering the image. It is included only as a hardware reference; the rights stay with their owners. It will be removed on request.
+`docs/assets/hardware/04-rb5320xz78ai-st7789-schematic.png` is a wiring schematic of the RB5320XZ78AI board kit. It is supplied by the repository owner, Jang Trịnh, as his own material, and is covered by the PolyForm Shield 1.0.0 licence of this repository.
