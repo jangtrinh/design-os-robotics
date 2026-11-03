@@ -131,7 +131,7 @@ The voice pipeline itself is not part of this repository: there is no speech rec
 | Tool | Role |
 |:---|:---|
 | `tools/robotctl.py` | NVS inspect and patch, OTA slot switch, four-layer health dashboard, and 240×320 theme flashing. |
-| `tools/cook-assets-and-nvs.py` | Cooks a full-screen 240×320 `esp_mmap_assets` binary and a HUD-enabled NVS image. |
+| `tools/cook-assets-and-nvs.py` | Cooks a full-screen 240×320 `esp_mmap_assets` binary and a HUD-enabled NVS image. Takes no options: it reads fixed paths under `themes/` and `profiles/`, and any extra argument is rejected with exit code 2 (`--help` prints this). |
 | `tools/cook-procedural-avatar.py` | Draws all 21 Procedural Mochi emotions in code and packs the 240×320 asset binary. Needs your own assets dump; the `.bin` it builds is local and not tracked. |
 | `tools/benchmark-avatar-perf.py` | Measures flash footprint, LZW/RLE, decode speed, and estimated SPI/CPU load for avatar packs. Runs without a `.bin` by reading the committed GIFs. |
 | `tools/xtensa-disasm.py` | Zero-dependency Xtensa LX7 disassembler and xref analyzer for ESP-IDF application partitions. |

@@ -163,9 +163,12 @@ def disasm_range(data: bytes, start_va: int, end_va: int) -> None:
 
 
 def main() -> None:
-    if len(sys.argv) < 4:
+    if len(sys.argv) > 1 and sys.argv[1] in ("-h", "--help", "help"):
         print(__doc__.strip())
-        sys.exit(1)
+        sys.exit(0)
+    if len(sys.argv) < 4:
+        print(__doc__.strip(), file=sys.stderr)
+        sys.exit(2)
     cmd = sys.argv[1]
     data = Path(sys.argv[2]).read_bytes()
     if cmd == "disasm":
