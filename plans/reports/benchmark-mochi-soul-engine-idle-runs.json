@@ -1,7 +1,7 @@
 {
-  "description": "Repeated runs of `python3 tools/mochi-soul-engine/engine.py benchmark`, recorded to source the idle figure quoted in README.md (~0.75 us/tick). Each run was a separate process; the per-run metrics are copied unchanged from the report that the engine writes.",
+  "description": "Repeated runs of `python3 tools/mochi-soul-engine/engine.py benchmark`, recorded to source the idle figure quoted in README.md (~0.76 us/tick). Each run was a separate process; the per-run metrics are copied unchanged from the report that the engine writes.",
   "date": "2026-11-03 12:06 (UTC+7)",
-  "command": "HEAVY_BOT=Design heavy -- python3 tools/mochi-soul-engine/engine.py benchmark",
+  "command": "python3 tools/mochi-soul-engine/engine.py benchmark",
   "machine": {
     "cpu": "Intel Xeon (virtualised), x86_64, 8 cores, 1 thread per core",
     "memory_gib": 15,
@@ -10,7 +10,7 @@
     "scope": "Shared Linux VM. The benchmark is single-threaded Python, so one core is busy during a run."
   },
   "load_note": "The VM was not dedicated, so 'idle' means no heavy work was competing for the benchmark core, not a quiet machine. Only the 1-minute load average before each run was recorded (1.07-1.39 on 8 cores); no after-run load, steal time or CPU-time data was captured. The load average does not separate the slow runs from the fast ones: runs 8 and 9 started at 1.18 and 1.08, inside the same band as the other runs, so the cause of their ~1.5 us/tick is not established. Run 5 has a normal tick (0.751 us) but a slow SQLite write (6.52 us) and read (5.94 us); the cause is also not established. No run was dropped. Results are host-CPU numbers, not device speed.",
-  "outlier_rule": "A run is flagged tick_outlier when its us_per_math_tick is above 1.5x the median of all 12 runs, and sqlite_write_outlier when its us_per_sqlite_write is above 1.5x the median of all 12 runs. The flags are a statistical filter, not a claim about the cause.",
+  "outlier_rule": "A run is flagged tick_outlier when its us_per_math_tick is above 1.5x the median of all 12 runs, and sqlite_write_outlier when its us_per_sqlite_write is above 1.5x the median of all 12 runs. The flags are a statistical filter, not a claim about the cause. The rule and its 1.5x threshold were set after the 12 runs had been seen, so they describe this data set; they were not fixed in advance.",
   "runs": [
     {
       "run": 1,
@@ -148,7 +148,8 @@
       ],
       "min": 0.703,
       "median": 0.754,
-      "max": 0.811
+      "max": 0.811,
+      "note": "Sensitivity check only. It is not used for any headline figure."
     },
     "us_per_sqlite_write_all_runs": {
       "min": 3.641,
@@ -160,6 +161,6 @@
       ]
     },
     "ticks_per_sec_all_runs_median": 1311409.8,
-    "readme_figure": "~0.75 us/tick = median of the 10 runs without tick outliers (0.754). The median of all 12 runs is 0.7625 us/tick. SQLite WAL write: ~4.0 us/tx = median of all 12 runs (3.974)."
+    "readme_figure": "One method for every headline: the median of all 12 runs, for ticks and for SQLite writes. ~0.76 us/tick = median of all 12 runs (0.7625). ~4.0 us/tx = median of all 12 runs (3.974). Outlier runs (8 and 9 for ticks; 5 and 9 for writes) stay in and are disclosed. The outlier rule was set after the data had been seen."
   }
 }
