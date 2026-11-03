@@ -1,6 +1,15 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="./docs/assets/brand/hero-light.png">
+    <img src="./docs/assets/brand/hero-dark.png" alt="design:os by Jang" width="100%">
+  </picture>
+</p>
+
 # Agentic firmware toolchain, 244 KB procedural-21 vector face, and 60 fps spring-reflex soul engine for ESP32-S3 voice robots.
 
 Non-intrusive NVS & `esp_mmap_assets` compiler, 4-layer hardware health telemetry, 4D homeostasis Tamagotchi engine, and 60Hz spring kinematics for `RB5320XZ78AI` (`ESP32-S3 N16R8 + ST7789 240×320`).
+
+**FREE + source-available (PolyForm Shield 1.0.0).** Free to use and modify; the license only restricts offering a competing product.
 
 [![License: PolyForm Shield 1.0.0](https://img.shields.io/badge/license-PolyForm_Shield_1.0.0-202020?style=for-the-badge)](./LICENSE)
 [![Hardware: ESP32-S3 N16R8 · ST7789](https://img.shields.io/badge/hardware-ESP32--S3_N16R8_·_ST7789-202020?style=for-the-badge)](./knowledge/07-connected-robot-hardware-profile.md)
@@ -11,7 +20,9 @@ Non-intrusive NVS & `esp_mmap_assets` compiler, 4-layer hardware health telemetr
 
 > **Interactive 3D Hardware & Mochi-Soul Assembly Viewer:** Explore the 54-mesh `RB5320XZ78AI` CAD assembly (`ESP32-S3-WROOM-1U-N16R8`, `ST7789 2.8" 240×320 IPS TFT`, dual `MAX98357A + PCM5102A` I2S DACs, `INMP441` MEMS mic, `18650` power pack, axial explode slider `0–100%`, and live 60fps spring face) at **[jangtrinh.github.io/design-os-robotics](https://jangtrinh.github.io/design-os-robotics/#viewer)**.
 
-![Mochi Full-Viền 240x320 vs Stock ROM](./docs/assets/mochi-fullvien-showcase.png)
+![Procedural Mochi-21: 21 code-drawn faces, 244.71 KB flash footprint](./docs/assets/brand/showcase.png)
+
+![All 21 Procedural Mochi faces, drawn by code](./docs/assets/brand/faces-21.png)
 
 ---
 
@@ -20,6 +31,8 @@ Non-intrusive NVS & `esp_mmap_assets` compiler, 4-layer hardware health telemetr
 | Target Hardware | Flash Footprint | 4D Soul Tick | 60Hz Spring Solver | Non-Reset Audit | License |
 |:---|:---|:---|:---|:---|:---|
 | `ESP32-S3 N16R8` · `ST7789` | `244.71 KB` (`-90.4%` GIFs) | `0.47 µs/tick` (`2.12M/s`) | `2.36 µs/frame` (`r = 0.959`) | `~1.8 s` (`~HUPCL` 4-layer) | [PolyForm Shield 1.0.0](./LICENSE) |
+
+![Flash footprint: Procedural Mochi-21 244.71 KB vs default GIF pack 2,560.27 KB](./docs/assets/brand/size-comparison.svg)
 
 ---
 
@@ -41,6 +54,14 @@ Most ESP32-S3 voice-robot repositories ship either a bare firmware binary or a s
 > - **Use the stock Web Serial flasher (`robot5320`)** if you only want a one-click browser reflash of factory themes without touching Python, NVS registers, or custom animations.
 > - **Use upstream `xiaozhi-esp32`** if you are compiling C++ firmware from scratch for a non-`RB5320XZ78AI` board (such as M5Stack CoreS3 or ESP-BOX-3) and do not need the `240×320` procedural Mochi-21 pack or proactive Tamagotchi daemon.
 > - **Hardware specificity:** Pin mappings (`GPIO 17` ADC battery, `GPIO 38` charge detect, dual `MAX98357A + PCM5102A` I2S DACs, `0xAA0000` `5 MB` assets partition) are calibrated specifically for `RB5320XZ78AI` (`ESP32-S3-WROOM-1U-N16R8`).
+
+---
+
+## How it fits together
+
+![Workflow: inspect, build, flash, verify](./docs/assets/brand/workflow.svg)
+
+![Architecture of the toolchain, soul engine and board](./docs/assets/brand/architecture.svg)
 
 ---
 
@@ -153,7 +174,7 @@ python3 tools/mochi-soul-engine/reflex_60fps.py --benchmark
 
 Khác với `esptool` (luôn kéo chân `DTR/RTS` làm **reset cứng** ESP32-S3 mỗi khi truy vấn), `./tools/robotctl.py health` kiểm tra sức khỏe 4 lớp trong `~1.8s` với **0% gián đoạn cuộc trò chuyện**:
 
-![Terminal Health Dashboard Preview](./docs/assets/health-dashboard-preview.png)
+![Terminal health dashboard: four layers, no reset](./docs/assets/brand/health-dashboard.png)
 
 1. **Lớp 1 — Vật lý & Mạng LAN (`USB-JTAG` + `ARP/ICMP`):** Mở cổng `/dev/cu.usbmodem*` ở chế độ `~HUPCL` (không hạ `DTR` khi đóng cổng), tự động dò địa chỉ MAC `AA:BB:CC:DD:EE:FF` trong bảng ARP của macOS và đo độ trễ ping Wi-Fi.
 2. **Lớp 2 — Dịch vụ Đám mây AI & Thời tiết:** Kiểm tra kết nối TLS tới máy chủ giọng nói `api.tenclass.net:443` và API thời tiết màn hình chờ `api.open-meteo.com`.
