@@ -42,4 +42,4 @@ THE SOFTWARE.
 
 ## Real hardware photos
 
-The six photos in `docs/assets/hardware/real/` were taken by the repository owner, Jang Trịnh, of his own build. They are his own material and are covered by the PolyForm Shield 1.0.0 licence of this repository. Network names, setup addresses, serial prints, QR codes and third-party silkscreen art are blurred or removed, and the files carry no metadata.
+The six photos in `docs/assets/hardware/real/` were taken by the repository owner, Jang Trịnh, of his own build. They are his own material and are covered by the PolyForm Shield 1.0.0 licence of this repository. Network names, setup addresses, serial prints and QR codes are blurred or covered by a solid bar. Third-party silkscreen art (a ring logo, a poster and a lion drawing, on the board edge and in the line-art drawings shown on the screen) is blurred in every photo where it appears. Photo 05 (back of the board) shows none, and the files carry no metadata.
