@@ -17,7 +17,7 @@
 - **Actor**: Developer / `esptool` + `tools/robotctl.py`
 - **Precondition**: `RoBot.5320` đang kết nối qua `/dev/cu.usbmodem*`.
 - **Happy Path**:
-  1. Kiểm tra kích thước file `themes/procedural-mochi-fullvien-240x320.bin` (`2,094,283 bytes` $\le 5,505,024 bytes` của phân vùng `0xAA0000`).
+  1. Kiểm tra kích thước file `themes/procedural-mochi-fullvien-240x320.bin` (`2,092,592 bytes` $\le 5,505,024 bytes` của phân vùng `0xAA0000`).
   2. Nạp file vào địa chỉ `0xAA0000` ở tốc độ `921600` baud bằng `esptool write-flash`.
   3. Khởi động lại robot và chạy `python3 tools/robotctl.py status`.
   4. Robot đạt `8/8 [  OK  ]`, màn hình `240x320` hiển thị khuôn mặt `Procedural Mochi-21` sắc nét tràn viền trên nền đen `#000000`.

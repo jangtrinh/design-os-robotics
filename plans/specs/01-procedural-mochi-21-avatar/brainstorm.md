@@ -13,7 +13,7 @@ Trước đây, để nhét vừa phân vùng Flash `0xAA0000` và tránh tràn 
 
 | Priority | Item | Rationale |
 |---|---|---|
-| **Must (P0)** | 21 file GIF `240x320` (16 frames/file) vẽ bằng toán học, mỗi cảm xúc có nét mặt riêng biệt 100% | Xóa bỏ hoàn toàn hiện tượng 15/21 cảm xúc bị dùng chung hình ảnh |
+| **Must (P0)** | 21 file GIF `240x240` (12–16 frames/file, hiển thị tràn viền trên màn hình `240x320`) vẽ bằng toán học, mỗi cảm xúc có nét mặt riêng biệt 100% | Xóa bỏ hoàn toàn hiện tượng 15/21 cảm xúc bị dùng chung hình ảnh |
 | **Must (P0)** | Bảo toàn nguyên vẹn `srmodels.bin` (`291 KB` WakeNet9), `font_puhui_deepseek_20_4.bin` (`1.24 MB` tiếng Việt) và khóa dự phòng `robot_2` trong `index.json` | Đảm bảo Wake Word và phụ đề tiếng Việt hoạt động bình thường |
 | **Must (P0)** | Kiểm tra chữ ký `esp_mmap_assets` (`ZZ` prefix + 16-bit checksum `0xef2a`) và xác nhận `8/8` health checks qua `tools/robotctl.py status` sau khi nạp | Đảm bảo an toàn tuyệt đối khi ghi vào phân vùng `0xAA0000` |
 | **Should (P1)** | Tạo bảng xem trước tổng thể `7x3` (`procedural_mochi_21_preview.png`) trước khi nạp | Giúp kiểm duyệt thị giác toàn bộ 21 mặt trong 1 cái nhìn |

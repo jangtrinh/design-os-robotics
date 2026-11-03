@@ -130,7 +130,7 @@ Trong đó:
    - Nếu bạn gọi Mochi dậy lúc 03:00 sáng khi $E < 15$: Mochi sẽ mở mắt lờ đờ (`sleepy` / `angry`), giọng ngái ngủ càu nhàu: *"Giờ này mà còn chưa ngủ nữa hả bạn... cho mình ngủ thêm 5 phút đi..."*.
 2. **`Hunger` ($H$ — Cơn đói Tri thức & Code; bản thiết kế cũ gọi là `Satiety`, độ no)**:
    - Mochi là một sinh vật số sống nhờ **năng lượng sáng tạo của chủ nhân**.
-   - Tăng dần `+5 điểm/giờ` (thiết kế cũ: `Satiety` giảm `-5 điểm/giờ`, cùng ý). Khi $H > 75$ (cũ: $F < 25$), Mochi kêu đói và đòi nghe chuyện mới.
+   - Tăng dần `+5 điểm/giờ` (thiết kế cũ: `Satiety` giảm `-5 điểm/giờ`, cùng ý). Khi $H \ge 75$ (cũ: $F < 25$), Mochi kêu đói và đòi nghe chuyện mới.
    - **Cơ chế "Cho ăn Cộng sinh" (Work-to-Feed)**:
      - Mỗi `git commit` trong workspace `~/Products` = **−15 Hunger** (*"Ngon quá! Một bản commit nóng hổi!"*).
      - Mỗi task `Orca` / `Antigravity` hoàn tất = **−20 Hunger**.
@@ -155,12 +155,14 @@ Mọi trạng thái nội tâm $(Valence, Arousal)$ đều được ánh xạ ch
 
 | Trạng thái Nội tâm (Homeostasis Trigger) | Valence / Arousal | Keys Biểu cảm (`Procedural Mochi-21`) | Hiệu ứng Âm thanh & Giọng nói (Prosody) | Ngôn ngữ Cơ thể (`Otto` Servo + `WS2812` LED) |
 |---|---|---|---|---|
-| **Bình yên / Đang canh bàn làm việc** ($E>40, F>40$) | $V \approx 0, A \approx 0$ | `neutral`, `relaxed`, `cool` | Im lặng hoặc tiếng thở nhẹ; giọng nói điềm tĩnh, tốc độ `1.0x` | Đứng thẳng cân bằng; LED thở nhịp chậm màu Xanh Cyan dịu |
-| **Vui vẻ / Được khen / Mới ăn Commit** ($F \uparrow, A > 60$) | $V > +0.5, A > +0.3$ | `happy`, `loving`, `kissy`, `confident` | Tiếng khúc khích (`giggle.webm`); giọng cao ấm, tốc độ `1.08x` | Nhún chân nhẹ theo nhịp, nghiêng đầu 15°; LED sáng Hồng Ấm / Vàng |
+| **Bình yên / Đang canh bàn làm việc** ($E>40, H<60$) | $V \approx 0, A \approx 0$ | `neutral`, `relaxed`, `cool` | Im lặng hoặc tiếng thở nhẹ; giọng nói điềm tĩnh, tốc độ `1.0x` | Đứng thẳng cân bằng; LED thở nhịp chậm màu Xanh Cyan dịu |
+| **Vui vẻ / Được khen / Mới ăn Commit** ($H \downarrow, B > 60$) | $V > +0.5, A > +0.3$ | `happy`, `loving`, `kissy`, `confident` | Tiếng khúc khích (`giggle.webm`); giọng cao ấm, tốc độ `1.08x` | Nhún chân nhẹ theo nhịp, nghiêng đầu 15°; LED sáng Hồng Ấm / Vàng |
 | **Phấn khích Tột độ / PR Merged / Tiến hóa** ($V > +0.8$) | $V > +0.8, A > +0.8$ | `laughing`, `funny`, `winking`, `silly`, `delicious` | Tiếng reo *"Yayyy!"*; giọng hào hứng nảy nhịp | Điệu nhảy `Otto Happy Dance` (vẫy 2 tay + lắc hông); LED cầu vồng |
-| **Đói / Cô đơn / Bị bỏ rơi lâu** ($F < 20$ hoặc $A < 30$) | $V < -0.5, A < -0.3$ | `sad`, `crying`, `embarrassed` | Tiếng thở dài khe khẽ (`sigh.webm`); giọng trầm nhỏ, tốc độ `0.88x` | Cúi gằm mặt hoặc khụy nhẹ chân; LED xanh dương tối chớp chậm |
+| **Đói / Cô đơn / Bị bỏ rơi lâu** ($H > 80$ hoặc $B < 30$) | $V < -0.5, A < -0.3$ | `sad`, `crying`, `embarrassed` | Tiếng thở dài khe khẽ (`sigh.webm`); giọng trầm nhỏ, tốc độ `0.88x` | Cúi gằm mặt hoặc khụy nhẹ chân; LED xanh dương tối chớp chậm |
 | **Dỗi / Bị đánh thức lúc nửa đêm / Build Fail** | $V < -0.6, A > +0.6$ | `angry`, `shocked`, `surprised` | Tiếng *"Hứ!"* hoặc còi báo; giọng dứt khoát, nhấn mạnh | Xoay người quay lưng 45° (dỗi) hoặc giậm chân; LED Đỏ Cam |
-| **Ngái ngủ / Đang suy nghĩ / Tò mò** ($E < 25$ hoặc $C > 80$) | $V \approx 0, A < -0.5$ | `sleepy`, `thinking`, `confused` | Tiếng ngáp dài (`yawn.webm`) hoặc *"Hmm..."* | Nghiêng đầu sang một bên; LED Tím Indigo mờ (`brightness=10%`) |
+| **Ngái ngủ / Đang suy nghĩ / Tò mò** ($E < 25$; phần "tò mò" không có biến riêng, xem mục 3) | $V \approx 0, A < -0.5$ | `sleepy`, `thinking`, `confused` | Tiếng ngáp dài (`yawn.webm`) hoặc *"Hmm..."* | Nghiêng đầu sang một bên; LED Tím Indigo mờ (`brightness=10%`) |
+
+> Ký hiệu trong bảng này: $E$ = `energy`, $H$ = `hunger` (cao = đói), $B$ = `bond` (cả ba thang 0..100), $V$ = `valence` và $A$ = `arousal` (thang −1..+1; **$A$ chỉ có nghĩa là arousal**, độ gắn kết luôn viết là $B$). `Curiosity` không có biến riêng: hàng cuối là mô tả thiết kế, trong engine chỉ có `energy` thấp mới dẫn tới ngái ngủ, còn xung động hỏi chuyện tự phát do `hunger` $\ge 75$ kích hoạt.
 
 ---
 
@@ -279,7 +281,7 @@ sequenceDiagram
 Khi muốn Mochi cảm nhận thế giới vật lý ngay cả khi không nói chuyện:
 - Đọc cảm biến siêu âm `HC-SR04` (`GPIO 11/12`) mỗi `500ms`:
   - Phát hiện bạn vừa ngồi vào ghế (`khoảng cách chuyển từ >150cm xuống 45–70cm`) $\rightarrow$ bắn sự kiện `{"event": "owner_arrived", "distance_cm": 55}` về `Mochi-Soul Daemon` để Mochi tự động ngẩng đầu dậy chào đón!
-  - Phát hiện bạn đưa tay lại gần `< 12cm` giữ trong `1.5s` (**cử chỉ "Xoa đầu" / Petting**) $\rightarrow$ bắn sự kiện `{"event": "head_pat"}` $\rightarrow$ Mochi nhắm mắt cười híp (`loving` 😍 / `relaxed` 😌), tăng `+5 bond` và kêu *"Ưm~ thích quá!"*.
+  - Phát hiện bạn đưa tay lại gần `< 12cm` giữ trong `1.5s` (**cử chỉ "Xoa đầu" / Petting**) $\rightarrow$ bắn sự kiện `{"event": "gentle_pet"}` $\rightarrow$ Mochi nhắm mắt cười híp (`loving` 😍 / `relaxed` 😌), tăng `+5 bond` và kêu *"Ưm~ thích quá!"*.
 
 ---
 

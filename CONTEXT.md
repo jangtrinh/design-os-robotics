@@ -15,7 +15,7 @@ The `5.25 MB` flash partition at `0xAA0000` (`08-assets-0xAA0000.bin`) formatted
 _Avoid_: SPIFFS theme, SD card assets.
 
 **`Procedural Mochi-21`**:
-The 21-state code-drawn `240x320` avatar pack (`250,580 bytes` / `244.71 KB` in total, the sum of 21 unique GIFs of `240x240` px with 12 to 16 frames each, shown full-bleed on the `240x320` display; the demo `mochi_60fps_spring_transition.gif` is not counted) generated deterministically by `tools/cook-procedural-avatar.py` using parametric geometry, boolean eyelid masking, and harmonic motion in an 8-color flat palette (`Mode P`).
+The 21-state code-drawn avatar pack (`250,580 bytes` / `244.71 KB` in total, the sum of 21 unique GIFs of `240x240` px with 12 to 16 frames each, shown full-bleed on the `240x320` display; the demo `mochi_60fps_spring_transition.gif` is not counted) generated deterministically by `tools/cook-procedural-avatar.py` using parametric geometry, boolean eyelid masking, and harmonic motion in an 8-color flat palette (`Mode P`).
 _Avoid_: video-ripped GIFs, 6-state duplicated theme.
 
 **`Mochi-Soul Engine`**:
@@ -23,7 +23,7 @@ The host-side autonomous digital lifeform daemon (`tools/mochi-soul-engine/`) th
 _Avoid_: chatbot wrapper, cron voice script.
 
 **`Homeostasis Vector (4D State)`**:
-The 4 continuous biological variables governing Mochi's internal life: `Energy` ($E \in [0, 100]$), `Hunger/Curiosity` ($H \in [0, 100]$), `Bond/Affection` ($B \in [0, 100]$), and `Mood Valence/Arousal` ($M \in [-1, +1]^2$).
+The 4 continuous biological variables governing Mochi's internal life: `Energy` ($E \in [0, 100]$), `Hunger` ($H \in [0, 100]$, rises with time and drops when fed), `Bond` ($B \in [0, 100]$), and `Mood`, which is two axes: `Valence` and `Arousal` ($V, A \in [-1, +1]$). These are the fields of `SoulState` in `tools/mochi-soul-engine/engine.py`. There is no separate curiosity or affection variable.
 _Avoid_: random mood picker, static emotion state.
 
 **`Proactive Impulse`**:
