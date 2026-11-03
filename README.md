@@ -24,7 +24,7 @@ Pin map and partition offsets are for `RB5320XZ78AI` (`ESP32-S3-WROOM-1U-N16R8`,
 
 - **No-reset health audit.** Four non-intrusive layers via `robotctl.py health`.
 - **NVS control.** `robotctl.py optimize --flash` writes the NVS partition at `0x9000` (needs your own NVS dump).
-- **Procedural Mochi-21 avatar.** 244.71 KB, −90.4% versus the default GIF pack.
+- **Procedural Mochi-21 avatar.** 21 faces in 244.71 KB of GIFs, −90.4% versus the default pack's 21 GIFs.
 - **Mochi-Soul engine.** 4D state `S(t)=[energy, hunger, bond, mood]` (mood = valence and arousal), ~0.76 µs/tick (median of 12 runs, measured idle), 1.31M ticks/s. SQLite WAL ~4.0 µs/tx (median of 12 runs). Quiet hours 23:00–07:30. Proactive MCP/WebSocket bridge 1.22 ms HUD card (single run). 60 Hz spring reflex 2.36 µs/frame (single run).
 
 Benchmark sources and caveats are listed under [Benchmarks](#benchmarks).
@@ -93,14 +93,18 @@ python3 tools/robotctl.py dashboard
 ![21 code-drawn faces](./docs/assets/brand/faces-21.png)
 
 Drawn entirely by code. The GIFs in `themes/procedural-mochi/` come from `tools/cook-procedural-avatar.py`; running that script needs your own assets dump (see [Flashing and NVS backup](#flashing-and-nvs-backup)). The packed `.bin` is built locally and is not tracked.
-Full-bleed 240×240 on the 240×320 ST7789.
-244.71 KB, 8-colour indexed LZW, checksum `0x5867`. Sources live in [./themes/procedural-mochi/](./themes/procedural-mochi/).
+Full-bleed 240×240 on the 240×320 ST7789. 8-colour indexed LZW, checksum `0x5867`.
+
+Size: **250,580 bytes = 244.71 KiB** (this repo writes KiB as "KB"). That is the 21 unique emotion GIFs added together, and it is the `total_gif_bytes` value in `plans/reports/benchmark-avatar-perf.json`. Running `tools/cook-procedural-avatar.py` on the committed sources reproduces all 21 GIFs byte for byte. Two other numbers measure different things:
+
+- `themes/procedural-mochi/` holds 272,760 bytes in 22 GIFs: the 21 emotion GIFs (250,580 bytes) plus `mochi_60fps_spring_transition.gif` (22,180 bytes), a demo written by `tools/mochi-soul-engine/reflex_60fps.py`.
+- The packed assets `.bin` was 2,092,592 bytes in the benchmark run. It holds the GIFs and everything else packed with them, and lists `robot_2` as a second entry that reuses the neutral GIF. It is built locally and not tracked.
 
 ## Benchmarks
 
 Benchmarks are host-CPU numbers (Python 3 on a Linux x86 VM), not device speed. The JSON reports are in this repository:
 
-- `plans/reports/benchmark-avatar-perf.json`: flash footprint, 244.71 KB versus 2,560.27 KB for the default GIF pack.
+- `plans/reports/benchmark-avatar-perf.json`: total size of the 21 emotion GIFs, 244.71 KB versus 2,560.27 KB for the 21 GIFs of the default pack.
 - `plans/reports/benchmark-mochi-soul-engine.json`: a single run, 0.765 µs/tick, 1.31M ticks/s, 3.84 µs per SQLite WAL write.
 - `plans/reports/benchmark-mochi-soul-engine-idle-runs.json`: 12 repeated runs with machine spec, per-run load and the outlier rule.
 

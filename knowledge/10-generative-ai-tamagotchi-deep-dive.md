@@ -10,7 +10,7 @@
 |---|---|
 | **1. Bị động hoàn toàn (Reactive-Only)**: Im lìm như cục gạch cho tới khi người dùng đọc Wake Word. | **Spontaneous Agency (Chủ động Tự phát)**: Có động cơ nội tâm chạy ngầm 24/7. Tự biết thở dài khi chán, tự ngáp khi khuya, tự gọi tên chủ nhân khi đói hoặc khi thấy chủ nhân ngồi vào bàn làm việc. |
 | **2. "Mất trí nhớ" sau mỗi phiên (Stateless Chatbot)**: Mỗi lần hội thoại là một phiên LLM trắng hoặc chỉ nhớ vài câu gần nhất. | **3-Tier Autobiographical Memory + Giấc mơ Ban đêm (REM Consolidation)**: Nhớ từng sự kiện trong ngày, gom nén ký ức lúc 02:00 sáng và định hình tính cách theo cách bạn đối xử. |
-| **3. Biểu cảm ngẫu nhiên hoặc giả tạo**: Lặp đi lặp lại vài hiệu ứng cố định không liên quan tới trạng thái sinh học. | **Homeostasis & Circumplex Affective Engine**: Biểu cảm trên màn hình `240x320` là hàm toán học trực tiếp của 5 chỉ số sinh học nội môi (`Energy`, `Hunger`, `Affinity`, `Curiosity`, `Stress`). |
+| **3. Biểu cảm ngẫu nhiên hoặc giả tạo**: Lặp đi lặp lại vài hiệu ứng cố định không liên quan tới trạng thái sinh học. | **Homeostasis & Circumplex Affective Engine**: Biểu cảm trên màn hình `240x320` là hàm toán học trực tiếp của 5 chỉ số sinh học nội môi (`energy`, `hunger`, `bond`, `valence`, `arousal`). |
 | **4. Cơ chế "Cho ăn" nhàm chán**: Phải mở app điện thoại bấm nút "Feed" vô nghĩa. | **Symbiotic Developer Feeding ("Work-to-Feed")**: Sống cộng sinh với lập trình viên — thức ăn của Mochi là **Git Commits**, **PR Merged**, **Pomodoro Deep Work**, và những cuộc trò chuyện thực sự. |
 | **5. Ngoại hình đứng yên mãi mãi**: Mua về thế nào thì 1 năm sau vẫn y hệt vậy. | **OTA Morphological Evolution (`self.assets.set_download_url`)**: Tự động cook và nạp gói phân vùng `assets` (`0xAA0000`) mới qua Wi-Fi để **tiến hóa ngoại hình và giọng nói** qua 4 cấp độ trưởng thành! |
 
@@ -80,7 +80,7 @@ flowchart TD
     end
 
     subgraph SoulEngine["2. Mochi-Soul Engine (Chạy trên Mac Mini / Local Server)"]
-        HOMEO["Hệ Cân bằng Nội môi (Homeostasis)\n• Energy (Năng lượng: 0..100)\n• Satiety (Độ no Code/Tri thức: 0..100)\n• Affinity (Độ gắn kết: 0..100)\n• Curiosity (Sự tò mò: 0..100)\n• Mood/Stress (Tâm trạng: -100..+100)"]
+        HOMEO["Hệ Cân bằng Nội môi (Homeostasis)\n• energy (Năng lượng: 0..100)\n• hunger (Đói Code/Tri thức: 0..100, càng cao càng đói)\n• bond (Độ gắn kết: 0..100)\n• mood = valence + arousal (Tâm trạng: mỗi trục -1..+1)"]
         CIRC["Mô hình Cảm xúc Russell Circumplex\n(Valence × Arousal -> 21 Biểu cảm + Nhân cách)"]
         MEM["Trí nhớ Tự thuật 3 Tầng (SQLite + .brv)\n• Tầng 1: Working Memory (2h gần nhất)\n• Tầng 2: Episodic Diary (Sự kiện trong ngày)\n• Tầng 3: Long-Term Persona & Traits"]
         DREAM["Nightly REM Dream Engine (02:00 AM)\nNén ký ức + Sinh giấc mơ + Tính điểm Tiến hóa XP"]
@@ -103,37 +103,47 @@ flowchart TD
 ```
 
 ### 3.1. Phương trình Cân bằng Nội môi (Homeostasis Differential Equations)
-Mỗi $\Delta t = 1\text{ phút}$, 5 biến trạng thái sinh học $\mathbf{S}(t) = [E, F, A, C, V]^T \in [0, 100]^4 \times [-100, 100]$ biến thiên tự nhiên theo phương trình:
+> **Đối chiếu với code.** Phần này bắt đầu là bản thiết kế với 5 biến `Energy`, `Satiety`, `Affinity`, `Curiosity`, `Mood/Stress`. Tên và khoảng giá trị dưới đây đã được đổi theo `SoulState` trong `tools/mochi-soul-engine/engine.py`. Chỗ nào bản thiết kế cũ không có chỗ tương ứng trong code thì ghi thẳng ra, không ép ánh xạ:
+> - `Satiety` (no) là nghịch đảo của `hunger` (đói): cùng một đại lượng, chiều ngược lại, nên các con số `+X Satiety` cũ nay là `−X hunger`.
+> - `Affinity` là `bond`.
+> - `Curiosity` **không có biến riêng** trong engine. Tín hiệu "Mochi tò mò, muốn hỏi" hiện do `hunger` cao (từ 75 trở lên) kích hoạt, và thanh `CURIOSITY` trên thẻ HUD của `bridge.py` thực ra vẽ giá trị `hunger`.
+> - `Mood/Stress` tách thành hai trục `valence` và `arousal`, mỗi trục từ −1 đến +1 (không phải −100..+100). `Stress` **không có biến riêng**; trục gần nhất là `arousal`, nhưng nó đo độ kích thích, không đo căng thẳng.
+> - Cơ chế "Cho ăn Cộng sinh" qua `git commit` hoặc task `Orca` / `Antigravity` là ý tưởng thiết kế, **chưa có trong `engine.py`**; engine chỉ có sự kiện `feed_knowledge` (giảm `hunger` 38 điểm).
+> - Các con số tốc độ bên dưới là giá trị thiết kế; engine dùng `−4.2 energy/giờ` khi thức, `+14/giờ` trong Quiet Hours, `+6.5 hunger/giờ` khi thức, và `bond` giảm `1.5/giờ` sau 3 giờ không tương tác.
+
+Mỗi $\Delta t = 1\text{ phút}$, 5 biến trạng thái sinh học $\mathbf{S}(t) = [E, H, B, V, A]^T \in [0, 100]^3 \times [-1, +1]^2$ (`energy`, `hunger`, `bond`, `valence`, `arousal`) biến thiên theo các phương trình sau; `valence` và `arousal` được mô tả ngay dưới khối công thức:
 
 $$
 \begin{aligned}
 E(t + \Delta t) &= \text{clamp}\Big(E(t) - \alpha_{\text{awake}} \cdot \Delta t + \alpha_{\text{sleep}} \cdot \mathbb{I}_{\text{sleeping}} \cdot \Delta t,\; 0,\; 100\Big) \\
-F(t + \Delta t) &= \text{clamp}\Big(F(t) - \beta_{\text{burn}} \cdot \Delta t + \sum \text{FeedEvents}(\text{GitCommit}, \text{Chat}, \text{Snack}),\; 0,\; 100\Big) \\
-A(t + \Delta t) &= \text{clamp}\Big(A(t) - \gamma_{\text{lonely}} \cdot \mathbb{I}_{\text{alone} > 4\text{h}} \cdot \Delta t + \Delta A_{\text{interaction}},\; 0,\; 100\Big) \\
-C(t + \Delta t) &= \text{clamp}\Big(C(t) + \eta_{\text{idle}} \cdot \Delta t - \Delta C_{\text{satisfied}},\; 0,\; 100\Big)
+H(t + \Delta t) &= \text{clamp}\Big(H(t) + \beta_{\text{hunger}} \cdot \Delta t - \sum \text{FeedEvents}(\text{GitCommit}, \text{Chat}, \text{Snack}),\; 0,\; 100\Big) \\
+B(t + \Delta t) &= \text{clamp}\Big(B(t) - \gamma_{\text{lonely}} \cdot \mathbb{I}_{\text{alone}} \cdot \Delta t + \Delta B_{\text{interaction}},\; 0,\; 100\Big)
 \end{aligned}
 $$
+
+`valence` ($V$) và `arousal` ($A$) không có công thức vi phân riêng. Mỗi sự kiện kéo chúng về một cặp giá trị đích (ví dụ `gentle_pet` kéo về `valence +0.50`, `arousal −0.45`), và khi vừa có tương tác thì chúng thư giãn dần về mức nền dễ chịu (`valence 0.15`, `arousal 0.05`). Sau hơn 3 giờ không tương tác, `valence` giảm dần.
 
 Trong đó:
 1. **`Energy` ($E$ — Năng lượng sinh học)**:
    - Giảm dần `-4 điểm/giờ` khi thức.
    - Khi $E < 20$ hoặc sau `23:30` đêm: Mochi tự động ngáp (`sleepy`), hạ độ sáng màn hình `self.screen.set_brightness(15)`, và đi vào trạng thái ngủ (hồi `+12 điểm/giờ`).
    - Nếu bạn gọi Mochi dậy lúc 03:00 sáng khi $E < 15$: Mochi sẽ mở mắt lờ đờ (`sleepy` / `angry`), giọng ngái ngủ càu nhàu: *"Giờ này mà còn chưa ngủ nữa hả bạn... cho mình ngủ thêm 5 phút đi..."*.
-2. **`Satiety / Data-Hunger` ($F$ — Độ no Tri thức & Code)**:
+2. **`Hunger` ($H$ — Cơn đói Tri thức & Code; bản thiết kế cũ gọi là `Satiety`, độ no)**:
    - Mochi là một sinh vật số sống nhờ **năng lượng sáng tạo của chủ nhân**.
-   - Giảm `-5 điểm/giờ`. Khi $F < 25$, Mochi hiện biểu cảm `delicious` 🤤 hoặc `sad` 😔 và kêu đói.
+   - Tăng dần `+5 điểm/giờ` (thiết kế cũ: `Satiety` giảm `-5 điểm/giờ`, cùng ý). Khi $H > 75$ (cũ: $F < 25$), Mochi kêu đói và đòi nghe chuyện mới.
    - **Cơ chế "Cho ăn Cộng sinh" (Work-to-Feed)**:
-     - Mỗi `git commit` trong workspace `~/Products` = **+15 Satiety** (*"Ngon quá! Một bản commit nóng hổi!"*).
-     - Mỗi task `Orca` / `Antigravity` hoàn tất = **+20 Satiety**.
-     - Trò chuyện hoặc kể cho Mochi nghe một ý tưởng mới = **+10 Satiety**.
+     - Mỗi `git commit` trong workspace `~/Products` = **−15 Hunger** (*"Ngon quá! Một bản commit nóng hổi!"*).
+     - Mỗi task `Orca` / `Antigravity` hoàn tất = **−20 Hunger**.
+     - Trò chuyện hoặc kể cho Mochi nghe một ý tưởng mới = **−10 Hunger**.
      - Cho ăn qua câu lệnh thoại (*"Mochi ơi ăn bánh mochi dâu nè"*) = Server vẽ hình chiếc bánh dâu 240x320 đẩy lên `self.screen.preview_image` trong 4 giây rồi chuyển sang mặt `delicious` 🤤 + phát tiếng nhai *"Nhom nhom!"*.
-3. **`Affinity` ($A$ — Độ gắn kết & Tin cậy)**:
+3. **`Bond` ($B$ — Độ gắn kết & Tin cậy; bản thiết kế cũ gọi là `Affinity`)**:
    - Quyết định **Attachment Style (Kiểu gắn bó tâm lý)** của Mochi với bạn:
-     - $A \in [80, 100]$ (**Gắn bó An toàn & Quấn quýt**): Khi bạn vừa ngồi vào bàn (cảm biến siêu âm `HC-SR04` phát hiện khoảng cách `< 60cm` hoặc Mac mở khóa), Mochi lập tức reo lên vui sướng (`loving` 😍 / `laughing` 😆).
-     - $A \in [40, 79]$ (**Bình thường / Tinh nghịch**): Hay trêu đùa (`winking` 😉 / `silly` 😜).
-     - $A < 25$ do bị bỏ mặc cả ngày không tương tác (**Dỗi / Tsundere**): Khi bạn gọi *"Hi, Tell me"*, Mochi hiện mặt `angry` 😠 hoặc `confused` 🙄, trả lời cộc lốc 1 câu: *"Bận cả ngày giờ mới nhớ tới người ta hả?"* rồi bắt bạn phải dỗ dành 2 câu mới vui trở lại!
-4. **`Curiosity` ($C$ — Sự tò mò Tự phát)**:
-   - Tăng dần khi bàn làm việc yên tĩnh. Khi $C > 85$ và thấy bạn đang ngồi trước bàn nhưng không họp, Mochi sẽ **tự khởi xướng một câu hỏi ngắn (Spontaneous Thought)**:
+     - $B \in [80, 100]$ (**Gắn bó An toàn & Quấn quýt**): Khi bạn vừa ngồi vào bàn (cảm biến siêu âm `HC-SR04` phát hiện khoảng cách `< 60cm` hoặc Mac mở khóa), Mochi lập tức reo lên vui sướng (`loving` 😍 / `laughing` 😆).
+     - $B \in [40, 79]$ (**Bình thường / Tinh nghịch**): Hay trêu đùa (`winking` 😉 / `silly` 😜).
+     - $B < 25$ do bị bỏ mặc cả ngày không tương tác (**Dỗi / Tsundere**): Khi bạn gọi *"Hi, Tell me"*, Mochi hiện mặt `angry` 😠 hoặc `confused` 🙄, trả lời cộc lốc 1 câu: *"Bận cả ngày giờ mới nhớ tới người ta hả?"* rồi bắt bạn phải dỗ dành 2 câu mới vui trở lại!
+4. **`Curiosity` (Sự tò mò Tự phát) — chỉ là ý tưởng thiết kế, `engine.py` hiện không có biến này**:
+   - Trong engine, hành vi tương tự được kích hoạt bởi `hunger` cao (xem mục 2), không phải bởi một chỉ số tò mò riêng.
+   - Ý tưởng gốc: tăng dần khi bàn làm việc yên tĩnh. Khi chỉ số này vượt 85 và thấy bạn đang ngồi trước bàn nhưng không họp, Mochi sẽ **tự khởi xướng một câu hỏi ngắn (Spontaneous Thought)**:
      - *"bạn ơi, tự nhiên mình thắc mắc: tại sao con người lại thích uống cà phê đắng vậy?"*
      - Hoặc nhận xét về thời tiết / một ghi chú cũ trong `.brv`: *"Hôm qua thấy bạn đang làm dở phần giao diện kia, nay xong chưa?"*
 
@@ -189,7 +199,7 @@ Mỗi đêm vào lúc **02:00 sáng** (khi robot đang ở trạng thái `sleepy
    - Hôm nay bạn ngồi vào bàn lúc mấy giờ?
    - Đã nói chuyện với Mochi mấy lần? Về chủ đề gì?
    - Đã hoàn thành bao nhiêu Git commits?
-   - Chỉ số `Affinity` và `Energy` cao nhất/thấp nhất lúc nào?
+   - Chỉ số `bond` và `energy` cao nhất/thấp nhất lúc nào?
 2. **Sinh "Giấc mơ" (Dream Generation)**:
    - LLM kết hợp một sự kiện có thật trong ngày với trí tưởng tượng của một sinh vật số (ví dụ: *"Đêm qua Mochi mơ thấy mình đang bơi trong một dòng sông toàn mã hex `0x42023ce8` cùng với bạn để đi bắt con bọ `0% Pin`..."*).
    - Tùy chọn: Sinh một tấm ảnh minh họa giấc mơ `240x320` lưu sẵn để sáng hôm sau khi bạn đánh thức câu đầu tiên, Mochi khoe bức tranh giấc mơ lên màn hình qua `self.screen.preview_image`!
@@ -218,17 +228,17 @@ sequenceDiagram
     Daemon-->>Robot: {"type": "hello", "session_id": "mochi-soul-01"}
 
     Note over Git,Daemon: 2. Sự kiện Cộng sinh (Developer vừa git commit!)
-    Git->>Daemon: Hook: New commit in design-os-robotics (+15 Satiety, +10 XP)
+    Git->>Daemon: Hook: New commit in design-os-robotics (−15 hunger, +10 XP)
     Daemon->>Robot: {"type": "alert", "status": "+15 Code Byte 🍙", "message": "Commit ngon quá!", "emotion": "delicious"}
 
     Note over Robot,AI: 3. Tương tác Đàm thoại Có Nội tâm (Stateful Soul Prompt)
     Robot->>Daemon: Binary Opus Stream (User nói)
-    Daemon->>AI: STT + System Prompt (Inject: Energy=78, Satiety=90, Affinity=85, Stage=2, Memories)
+    Daemon->>AI: STT + System Prompt (Inject: energy=78, hunger=10, bond=85, Stage=2, Memories)
     AI-->>Daemon: Reply Text + Emotion="loving" + F5-TTS Audio
     Daemon->>Robot: {"type": "llm", "emotion": "loving"}
     Daemon->>Robot: {"type": "tts", "state": "start"} + Opus Audio Frames
 
-    Note over Daemon,Robot: 4. Hành vi Tự phát (Spontaneous Impulse khi Curiosity > 85)
+    Note over Daemon,Robot: 4. Hành vi Tự phát (Spontaneous Impulse khi hunger ≥ 75, theo engine.py)
     Daemon->>Robot: {"type": "notify", "audio_url": "http://192.0.2.2:8765/spontaneous.webm", "subtitles": [...]}
 ```
 
@@ -242,9 +252,8 @@ sequenceDiagram
   "born_at": "2026-11-02T19:00:00+07:00",
   "homeostasis": {
     "energy": 82.5,
-    "satiety": 75.0,
-    "affinity": 88.0,
-    "curiosity": 45.0,
+    "hunger": 25.0,
+    "bond": 88.0,
     "valence": 0.65,
     "arousal": 0.25
   },
@@ -270,7 +279,7 @@ sequenceDiagram
 Khi muốn Mochi cảm nhận thế giới vật lý ngay cả khi không nói chuyện:
 - Đọc cảm biến siêu âm `HC-SR04` (`GPIO 11/12`) mỗi `500ms`:
   - Phát hiện bạn vừa ngồi vào ghế (`khoảng cách chuyển từ >150cm xuống 45–70cm`) $\rightarrow$ bắn sự kiện `{"event": "owner_arrived", "distance_cm": 55}` về `Mochi-Soul Daemon` để Mochi tự động ngẩng đầu dậy chào đón!
-  - Phát hiện bạn đưa tay lại gần `< 12cm` giữ trong `1.5s` (**cử chỉ "Xoa đầu" / Petting**) $\rightarrow$ bắn sự kiện `{"event": "head_pat"}` $\rightarrow$ Mochi nhắm mắt cười híp (`loving` 😍 / `relaxed` 😌), tăng `+5 Affinity` và kêu *"Ưm~ thích quá!"*.
+  - Phát hiện bạn đưa tay lại gần `< 12cm` giữ trong `1.5s` (**cử chỉ "Xoa đầu" / Petting**) $\rightarrow$ bắn sự kiện `{"event": "head_pat"}` $\rightarrow$ Mochi nhắm mắt cười híp (`loving` 😍 / `relaxed` 😌), tăng `+5 bond` và kêu *"Ưm~ thích quá!"*.
 
 ---
 
