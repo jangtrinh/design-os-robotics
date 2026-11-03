@@ -9,7 +9,8 @@
     "python": "3.13.5",
     "scope": "Shared Linux VM. The benchmark is single-threaded Python, so one core is busy during a run."
   },
-  "load_note": "The VM was not dedicated. The 1-minute load average before each run was 1.07-1.39 on 8 cores (other agents ran light jobs), so 'idle' here means no heavy work competing for the benchmark core, not a quiet machine. Runs 8 and 9 (about 1.5 us/tick) overlapped with other activity on the host and are kept in the file, flagged as contended, not dropped. Results are host-CPU numbers, not device speed.",
+  "load_note": "The VM was not dedicated, so 'idle' means no heavy work was competing for the benchmark core, not a quiet machine. Only the 1-minute load average before each run was recorded (1.07-1.39 on 8 cores); no after-run load, steal time or CPU-time data was captured. The load average does not separate the slow runs from the fast ones: runs 8 and 9 started at 1.18 and 1.08, inside the same band as the other runs, so the cause of their ~1.5 us/tick is not established. Run 5 has a normal tick (0.751 us) but a slow SQLite write (6.52 us) and read (5.94 us); the cause is also not established. No run was dropped. Results are host-CPU numbers, not device speed.",
+  "outlier_rule": "A run is flagged tick_outlier when its us_per_math_tick is above 1.5x the median of all 12 runs, and sqlite_write_outlier when its us_per_sqlite_write is above 1.5x the median of all 12 runs. The flags are a statistical filter, not a claim about the cause.",
   "runs": [
     {
       "run": 1,
@@ -18,7 +19,8 @@
       "ticks_per_sec": 1233567.6,
       "us_per_sqlite_write": 3.641,
       "us_per_sqlite_read": 3.774,
-      "contended": false
+      "tick_outlier": false,
+      "sqlite_write_outlier": false
     },
     {
       "run": 2,
@@ -27,7 +29,8 @@
       "ticks_per_sec": 1301456.0,
       "us_per_sqlite_write": 4.253,
       "us_per_sqlite_read": 4.152,
-      "contended": false
+      "tick_outlier": false,
+      "sqlite_write_outlier": false
     },
     {
       "run": 3,
@@ -36,7 +39,8 @@
       "ticks_per_sec": 1384492.5,
       "us_per_sqlite_write": 3.867,
       "us_per_sqlite_read": 4.164,
-      "contended": false
+      "tick_outlier": false,
+      "sqlite_write_outlier": false
     },
     {
       "run": 4,
@@ -45,7 +49,8 @@
       "ticks_per_sec": 1279610.2,
       "us_per_sqlite_write": 4.023,
       "us_per_sqlite_read": 4.076,
-      "contended": false
+      "tick_outlier": false,
+      "sqlite_write_outlier": false
     },
     {
       "run": 5,
@@ -54,7 +59,8 @@
       "ticks_per_sec": 1331538.4,
       "us_per_sqlite_write": 6.52,
       "us_per_sqlite_read": 5.943,
-      "contended": false
+      "tick_outlier": false,
+      "sqlite_write_outlier": true
     },
     {
       "run": 6,
@@ -63,7 +69,8 @@
       "ticks_per_sec": 1321363.5,
       "us_per_sqlite_write": 4.078,
       "us_per_sqlite_read": 4.218,
-      "contended": false
+      "tick_outlier": false,
+      "sqlite_write_outlier": false
     },
     {
       "run": 7,
@@ -72,7 +79,8 @@
       "ticks_per_sec": 1289693.7,
       "us_per_sqlite_write": 3.925,
       "us_per_sqlite_read": 4.37,
-      "contended": false
+      "tick_outlier": false,
+      "sqlite_write_outlier": false
     },
     {
       "run": 8,
@@ -81,7 +89,8 @@
       "ticks_per_sec": 667404.3,
       "us_per_sqlite_write": 4.181,
       "us_per_sqlite_read": 3.967,
-      "contended": true
+      "tick_outlier": true,
+      "sqlite_write_outlier": false
     },
     {
       "run": 9,
@@ -90,7 +99,8 @@
       "ticks_per_sec": 681055.7,
       "us_per_sqlite_write": 6.587,
       "us_per_sqlite_read": 7.601,
-      "contended": true
+      "tick_outlier": true,
+      "sqlite_write_outlier": true
     },
     {
       "run": 10,
@@ -99,7 +109,8 @@
       "ticks_per_sec": 1387415.1,
       "us_per_sqlite_write": 3.677,
       "us_per_sqlite_read": 3.941,
-      "contended": false
+      "tick_outlier": false,
+      "sqlite_write_outlier": false
     },
     {
       "run": 11,
@@ -108,7 +119,8 @@
       "ticks_per_sec": 1383262.9,
       "us_per_sqlite_write": 3.716,
       "us_per_sqlite_read": 3.766,
-      "contended": false
+      "tick_outlier": false,
+      "sqlite_write_outlier": false
     },
     {
       "run": 12,
@@ -117,24 +129,37 @@
       "ticks_per_sec": 1422950.8,
       "us_per_sqlite_write": 3.736,
       "us_per_sqlite_read": 3.919,
-      "contended": false
+      "tick_outlier": false,
+      "sqlite_write_outlier": false
     }
   ],
   "summary": {
     "runs": 12,
-    "uncontended_runs": 10,
-    "us_per_math_tick_uncontended": {
+    "us_per_math_tick_all_runs": {
+      "min": 0.703,
+      "median": 0.7625,
+      "max": 1.498
+    },
+    "us_per_math_tick_without_tick_outliers": {
+      "runs": 10,
+      "excluded_runs": [
+        8,
+        9
+      ],
       "min": 0.703,
       "median": 0.754,
       "max": 0.811
     },
-    "us_per_math_tick_all_runs": {
-      "min": 0.703,
-      "median": 0.762,
-      "max": 1.498
+    "us_per_sqlite_write_all_runs": {
+      "min": 3.641,
+      "median": 3.974,
+      "max": 6.587,
+      "sqlite_write_outlier_runs": [
+        5,
+        9
+      ]
     },
-    "us_per_sqlite_write_uncontended_median": 3.896,
-    "ticks_per_sec_uncontended_median": 1326450.9,
-    "readme_figure": "~0.75 us/tick (median of the uncontended runs, rounded)"
+    "ticks_per_sec_all_runs_median": 1311409.8,
+    "readme_figure": "~0.75 us/tick = median of the 10 runs without tick outliers (0.754). The median of all 12 runs is 0.7625 us/tick. SQLite WAL write: ~4.0 us/tx = median of all 12 runs (3.974)."
   }
 }

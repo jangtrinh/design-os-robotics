@@ -13,10 +13,8 @@ FREE + source-available (PolyForm Shield 1.0.0)
 
 [![Licence: PolyForm Shield 1.0.0](https://img.shields.io/badge/licence-PolyForm_Shield_1.0.0-202020?style=for-the-badge&labelColor=09090b)](./LICENSE)
 ![Hardware: ESP32-S3](https://img.shields.io/badge/hardware-ESP32--S3-202020?style=for-the-badge&labelColor=09090b)
-[![Avatar pack: 244.71 KB](https://img.shields.io/badge/avatar_pack-244.71_KB-202020?style=for-the-badge&labelColor=09090b)](./plans/reports/benchmark-avatar-perf.json)
-[![Soul engine: ~0.75 µs/tick measured idle](https://img.shields.io/badge/soul_engine-%7E0.75_us%2Ftick_measured_idle-202020?style=for-the-badge&labelColor=09090b)](./plans/reports/benchmark-mochi-soul-engine.json)
-
-![design:os by Jang](./docs/assets/brand/showcase.png)
+![Avatar pack: 244.71 KB](https://img.shields.io/badge/avatar_pack-244.71_KB-202020?style=for-the-badge&labelColor=09090b)
+![Soul engine: ~0.75 µs/tick measured idle](https://img.shields.io/badge/soul_engine-%7E0.75_us%2Ftick_measured_idle-202020?style=for-the-badge&labelColor=09090b)
 
 Inspect USB-JTAG health, compile a 244.71 KB code-drawn face pack, and flash NVS at `0x9000`.
 The Mochi-Soul engine holds a 4D state `S(t)=[E,V,B,C]` with a 60 Hz spring reflex.
@@ -27,32 +25,25 @@ Pin map and partition offsets are for `RB5320XZ78AI` (`ESP32-S3-WROOM-1U-N16R8`,
 - **No-reset health audit.** Four non-intrusive layers via `robotctl.py health`.
 - **NVS control.** `robotctl.py optimize --flash` writes the NVS partition at `0x9000`.
 - **Procedural Mochi-21 avatar.** 244.71 KB, −90.4% versus the default GIF pack.
-- **Mochi-Soul engine.** 4D state `S(t)=[E,V,B,C]`, ~0.75 µs/tick measured idle, 1.31M ticks/s. SQLite WAL 3.84 µs/tx. Quiet hours 23:00-07:00. Proactive MCP/WebSocket bridge 1.22 ms HUD card. 60 Hz spring reflex 2.36 µs/frame.
+- **Mochi-Soul engine.** 4D state `S(t)=[E,V,B,C]`, ~0.75 µs/tick measured idle, 1.31M ticks/s. SQLite WAL ~4.0 µs/tx. Quiet hours 23:00–07:30. Proactive MCP/WebSocket bridge 1.22 ms HUD card. 60 Hz spring reflex 2.36 µs/frame.
 
-Benchmarks are host-CPU numbers (Python 3 on a Linux x86 machine), not device speed. The soul engine runs at ~0.75 µs/tick, measured idle. Sources: plans/reports/benchmark-mochi-soul-engine.json (single run, 0.765 µs/tick, 1.31M ticks/s, 3.84 µs per SQLite WAL write) and plans/reports/benchmark-mochi-soul-engine-idle-runs.json (12 repeated runs with machine spec and load note: 0.70–0.81 µs/tick over the 10 uncontended runs, median 0.754; two runs near 1.5 µs overlapped with other host activity and are kept, flagged as contended). The VM was not dedicated, so "idle" means no heavy work competing for the benchmark core. Run `python3 tools/mochi-soul-engine/engine.py benchmark` to measure on your own machine.
+Benchmark sources and caveats are listed under [Benchmarks](#benchmarks).
 
 ## Quick start
 
-Requires macOS or Linux, Python 3.10+, Pillow, esptool, and pyserial.
+Requires macOS or Linux, Python 3.10+, [uv](https://docs.astral.sh/uv/) (the flash step runs `uvx esptool`), Pillow, and pyserial.
+
+> **Back up NVS before you flash.** `optimize --flash` writes the NVS partition at `0x9000`, which holds the board's saved settings, Wi-Fi included. Read that partition back from the board with esptool first, using the partition size from your own partition table, and keep the file. `optimize` also takes such a dump as its input, at `profiles/example-esp32s3-n16r8/partitions/03-nvs-0x009000.bin`.
 
 ```bash
 git clone https://github.com/jangtrinh/design-os-robotics.git
 cd design-os-robotics
 python3 -m pip install pillow esptool pyserial
+python3 tools/cook-procedural-avatar.py
+./tools/robotctl.py optimize --flash
 ```
 
-1. **Health.** Run `./tools/robotctl.py health`.
-2. **Compile.** Run `python3 tools/cook-procedural-avatar.py`.
-3. **Verify.** Run the four benchmark suites.
-
-```bash
-python3 tools/benchmark-avatar-perf.py
-python3 tools/mochi-soul-engine/engine.py benchmark
-python3 tools/mochi-soul-engine/bridge.py benchmark
-python3 tools/mochi-soul-engine/reflex_60fps.py
-```
-
-4. **Flash.** Run `./tools/robotctl.py optimize --flash`.
+With the board connected, run the no-reset health check from [How it works](#how-it-works) before you flash.
 
 ![Terminal health dashboard: four layers, no reset](./docs/assets/brand/health-dashboard.png)
 
@@ -98,6 +89,34 @@ Drawn entirely by code (`tools/cook-procedural-avatar.py`).
 Full-bleed 240×240 on the 240×320 ST7789.
 244.71 KB, 12-colour indexed LZW, checksum `0x5867`. Sources live in [./themes/procedural-mochi/](./themes/procedural-mochi/).
 
+## Benchmarks
+
+Benchmarks are host-CPU numbers (Python 3 on a Linux x86 VM), not device speed. The JSON reports are in this repository:
+
+- `plans/reports/benchmark-avatar-perf.json`: flash footprint, 244.71 KB versus 2,560.27 KB for the default GIF pack.
+- `plans/reports/benchmark-mochi-soul-engine.json`: a single run, 0.765 µs/tick, 1.31M ticks/s, 3.84 µs per SQLite WAL write.
+- `plans/reports/benchmark-mochi-soul-engine-idle-runs.json`: 12 repeated runs with machine spec and load note.
+
+The ~0.75 µs/tick headline is the median of the 10 runs without tick outliers (0.754). The median of all 12 runs is 0.76 µs/tick, range 0.70–1.50. Runs 8 and 9 (about 1.5 µs/tick) are kept and flagged as outliers; their cause is not established, and the recorded load average does not explain them. The ~4.0 µs/tx SQLite figure is the median of all 12 runs; runs 5 and 9 are slow outliers (about 6.5 µs). The VM was not dedicated, so "idle" means no heavy work was competing for the benchmark core.
+
+Run the four suites on your own machine:
+
+```bash
+python3 tools/benchmark-avatar-perf.py
+python3 tools/mochi-soul-engine/engine.py benchmark
+python3 tools/mochi-soul-engine/bridge.py benchmark
+python3 tools/mochi-soul-engine/reflex_60fps.py
+```
+
+## Voice
+
+The voice pipeline itself is not part of this repository: there is no speech recognition, text-to-speech or voice-cloning code here. What the repository touches:
+
+- **Audio hardware.** INMP441 microphone, MAX98357A and PCM5102A I2S DACs (see [Supported hardware](#supported-hardware)).
+- **Health checks.** `robotctl.py health` checks TLS reachability to the voice server and never toggles DTR/RTS, so a health run does not reset the chip during a voice conversation.
+- **Lip-sync.** `tools/mochi-soul-engine/reflex_60fps.py` turns an audio RMS value into the mouth-open channel of the face.
+- **Bridge.** `tools/mochi-soul-engine/bridge.py` validates the `notify`, `alert`, `llm`, `tts` and `mcp` JSON messages.
+
 ## Tools reference
 
 | Tool | Role |
@@ -134,13 +153,15 @@ design-os-robotics/
 
 Health checks are non-intrusive by design. The tools do not toggle DTR/RTS and do not reset the chip on a health run.
 
-The pin map and partition offsets are calibrated for `RB5320XZ78AI` only. Back up NVS before flashing.
+The pin map and partition offsets are calibrated for `RB5320XZ78AI` only. Back up NVS before flashing (see [Quick start](#quick-start)).
 
 If you only need a browser reflash, or you are building firmware for a different board, you may not need this toolchain.
 
 ## Licence
 
-Free to use, study and modify for personal, academic or internal commercial work. You may not resell it or offer a product that competes with it. See [PolyForm Shield 1.0.0](./LICENSE).
+PolyForm Shield 1.0.0, source-available. Any purpose is permitted except providing a product that competes with this software, or with a product the licensor provides using it. You may use, study, modify and distribute it if you keep the licence terms (or their URL) and the `Required Notice:` line. The [LICENSE](./LICENSE) text is the only binding statement; this paragraph is a summary.
+
+Third-party works in this repository keep their own licences: the Be Vietnam Pro typeface (SIL OFL 1.1) and three.js (MIT). See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
 
 ## Ecosystem
 
@@ -159,3 +180,12 @@ Free to use, study and modify for personal, academic or internal commercial work
 If this toolchain saves you time on the board, you can support continued work.
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy_Me_A_Coffee-202020?style=for-the-badge&logo=buy-me-a-coffee&logoColor=white&labelColor=09090b)](https://www.buymeacoffee.com/jangtrinh)
+
+## Credits
+
+- Design and code: Jang Trinh ([@jangtrinh](https://github.com/jangtrinh)).
+- Be Vietnam Pro typeface, © The Be Vietnam Pro Project Authors, SIL Open Font License 1.1, self-hosted under `docs/assets/fonts/`.
+- three.js (MIT) powers the 3D viewer on the docs site.
+- Badges are rendered by [shields.io](https://shields.io/).
+
+Full third-party details: [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
