@@ -226,8 +226,9 @@ Promo files are delivered with the post, not committed here, but they follow the
 - **Timing:** enter in 300 to 500 ms, hold at least 2 seconds, exit in 200 to 300 ms. A headline stays on screen long enough to be read twice.
 - **No flashing**, no strobing cuts, no parallax, no camera shake. Nothing blinks faster than 3 times a second.
 - **Step badges:** the numbered badges in the beat-3 list follow the secondary minimum of the format. In the 9:16 cut the digits are set at 40 px.
-  Source: `b_motion.py`, `fs`. Measured on the render: 29 px digit height.
-- **Capture beats:** a light capture never pops in on the dark canvas. It cross-fades in and out through a dark card. The designed ramp is 0.9 s in and 0.8 s out (`b_motion.py:108`).
+  Source: the motion script's font-size constant (outside this repo). Measured on the render: 29 px digit height.
+- **Capture beats:** a light capture never pops in on the dark canvas. It cross-fades in and out through a dark card.
+  The designed ramp is 0.9 s in and 0.8 s out (the motion script's ramp constants, outside this repo).
 - **Measured fades:** a measured fade time must state its threshold (for example 2 to 98 % of the step) and its ROI (the panel or the whole frame). Without both, quote the designed ramp only.
 - **Render:** from HTML or SVG frames at exactly 30 fps. Check the last frame, the beat boundaries and a mid-spring frame before export.
 
@@ -270,9 +271,10 @@ Before opening a PR, grep the added lines of the diff:
 
 ```bash
 git diff origin/main --no-color -U0 -- . ':!docs/assets' ':!docs/ART-DIRECTION.md' | rg '^\+' \
-  | rg "([0-9a-f]{2}[:-]){5}[0-9a-f]{2}|\b[0-9a-f]{12}\b|robot-[0-9a-f]{12}|\b[0-9]{1,3}(\.[0-9]{1,3}){3}\b|/Users/|file:///|usbmodem|:[0-9]{4,5}\b"
+  | rg "([0-9a-f]{2}[:-]){5}[0-9a-f]{2}|\b[0-9a-f]{12}\b|robot-[0-9a-f]{12}|\b[0-9]{1,3}(\.[0-9]{1,3}){3}\b|[/]Users[/]|file:[/]{3}|usbmodem|:[0-9]{4,5}\b"
 ```
 
+The two bracket-class alternatives match local home-directory paths and file URLs. They are written that way so this document does not contain those strings literally.
 No output means clean. Then open every new image and read it.
 
 ## 11. Wording
