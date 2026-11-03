@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-FileCopyrightText: 2026 Jang Trinh
 """
 benchmark-avatar-perf.py — Quantitative Performance & Compression Benchmark Suite
 for RoBot.5320 (ESP32-S3 240MHz + ST7789 240x320 + esp_mmap_assets lv_gif).
@@ -16,14 +18,15 @@ import io
 import itertools
 import json
 import struct
+import sys
 import time
 from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
 FACTORY_BIN = ROOT / "profiles/example-esp32s3-n16r8/partitions/08-assets-0xAA0000.bin"
-VIDEO_REF_BIN = ROOT / "themes/video-ref-240x320.bin"
 PROCEDURAL_BIN = ROOT / "themes/procedural-mochi-fullvien-240x320.bin"
+LOOSE_GIF_DIR = ROOT / "themes/procedural-mochi"
 PARTITION_MAX_BYTES = 0x540000  # 5,505,024 bytes (5.25 MB)
 
 
@@ -63,6 +66,27 @@ def unpack_mmap_assets(bin_path: Path) -> dict:
         "entries": entries,
         "index": idx,
     }
+
+
+def load_loose_gifs(gif_dir: Path) -> dict | None:
+    """Build the same structure as unpack_mmap_assets() from the committed GIFs (no .bin needed).
+
+    Returns None when the folder has no GIFs. Flash-image fields are None because no .bin exists.
+    """
+    # The spring-transition clip is a demo, not one of the 21 faces.
+    files = sorted(p for p in gif_dir.glob("*.gif") if "transition" not in p.name)
+    if not files:
+        return None
+    entries = {}
+    for f in files:
+        payload = f.read_bytes()
+        entries[f.name] = {
+            "size": len(payload),
+            "sha256": hashlib.sha256(payload).hexdigest()[:12],
+            "payload": payload,
+        }
+    idx = {"emoji_collection": [{"name": f.stem, "file": f.name} for f in files]}
+    return {"total_bytes": None, "checksum": None, "checksum_valid": None, "entries": entries, "index": idx}
 
 
 def analyze_gif_metrics(gif_bytes: bytes, decode_iters: int = 6) -> dict:
@@ -149,8 +173,7 @@ def main() -> None:
 
     packs = [
         ("1. Factory Default (21 GIFs)", FACTORY_BIN),
-        ("2. Video-Cut Pack (6 GIFs -> 21)", VIDEO_REF_BIN),
-        ("3. Procedural Mochi-21 (Code)", PROCEDURAL_BIN),
+        ("2. Procedural Mochi-21 (Code)", PROCEDURAL_BIN),
     ]
 
     summary_rows = []
@@ -160,10 +183,24 @@ def main() -> None:
     print("  ROBOT.5320 AVATAR PERFORMANCE & COMPRESSION BENCHMARK SUITE (ESP32-S3 240MHz · 240x320 ST7789)")
     print("=" * 110)
 
-    for label, path in packs:
-        if not path.exists():
-            continue
-        info = unpack_mmap_assets(path)
+    present = [(label, path) for label, path in packs if path.exists()]
+    if not present:
+        # The .bin packs are built locally and are not tracked; fall back to the committed GIFs.
+        print(
+            "Note: no avatar .bin pack found (profiles/.../08-assets-0xAA0000.bin or "
+            "themes/procedural-mochi-fullvien-240x320.bin). They are gitignored and built locally; "
+            "see README, 'Procedural Mochi-21 avatar'.\n"
+            f"Benchmarking the committed GIFs in {LOOSE_GIF_DIR.relative_to(ROOT)}/ instead. "
+            "Flash-image rows show n/a."
+        )
+        loose = load_loose_gifs(LOOSE_GIF_DIR)
+        if loose is None:
+            print(f"error: no GIFs in {LOOSE_GIF_DIR}", file=sys.stderr)
+            sys.exit(2)
+        present = [(packs[1][0], loose)]
+
+    for label, path in present:
+        info = path if isinstance(path, dict) else unpack_mmap_assets(path)
         entries = info["entries"]
         idx = info["index"]
 
@@ -196,9 +233,11 @@ def main() -> None:
         row = {
             "label": label,
             "total_bin_bytes": info["total_bytes"],
-            "total_bin_mb": info["total_bytes"] / (1024 * 1024),
-            "flash_free_mb": (PARTITION_MAX_BYTES - info["total_bytes"]) / (1024 * 1024),
-            "checksum": f"0x{info['checksum']:04x}",
+            "total_bin_mb": None if info["total_bytes"] is None else info["total_bytes"] / (1024 * 1024),
+            "flash_free_mb": None
+            if info["total_bytes"] is None
+            else (PARTITION_MAX_BYTES - info["total_bytes"]) / (1024 * 1024),
+            "checksum": None if info["checksum"] is None else f"0x{info['checksum']:04x}",
             "checksum_valid": info["checksum_valid"],
             "unique_emotions": len(unique_hashes),
             "total_gif_bytes": total_gif_bytes,
@@ -227,16 +266,16 @@ def main() -> None:
             },
         }
 
-    print("\n[1] 3-WAY ARCHITECTURE & PERFORMANCE COMPARISON")
+    print("\n[1] 2-WAY ARCHITECTURE & PERFORMANCE COMPARISON")
     print("-" * 110)
-    print(
-        f"{'Metric':38s} | {'1. Factory (21 GIFs)':21s} | {'2. Video-Cut (6->21)':23s} | {'3. Procedural Mochi-21':22s}"
-    )
+    heads = ["1. Factory (21 GIFs)", "2. Procedural Mochi-21"]
+    shown = [heads[0] if r["label"].startswith("1.") else heads[1] for r in summary_rows]
+    print(f"{'Metric':38s} | " + " | ".join(f"{h:22s}" for h in shown))
     print("-" * 110)
 
     def fmt_row(title: str, key: str, fmt: str, unit: str = "") -> None:
-        vals = [f"{r[key]:{fmt}}{unit}" for r in summary_rows]
-        print(f"{title:38s} | {vals[0]:21s} | {vals[1]:23s} | {vals[2]:22s}")
+        vals = ["n/a" if r[key] is None else f"{r[key]:{fmt}}{unit}" for r in summary_rows]
+        print(f"{title:38s} | " + " | ".join(f"{v:22s}" for v in vals))
 
     fmt_row("Unique Emotion Animations", "unique_emotions", "d", " / 21")
     fmt_row("Total 21-GIF Payload Size", "total_gif_kb", ",.2f", " KB")
@@ -253,7 +292,7 @@ def main() -> None:
     fmt_row("ESP32-S3 Est. CPU Load @ 12.5 FPS", "avg_esp32_cpu_pct", ".1f", " %")
     print("-" * 110)
 
-    proc_label = "3. Procedural Mochi-21 (Code)"
+    proc_label = "2. Procedural Mochi-21 (Code)"
     if proc_label in detailed_by_pack:
         print("\n[2] PER-EMOTION TELEMETRY FOR PROCEDURAL MOCHI-21 (ALL 21 STATES AT 240x320)")
         print("-" * 110)

@@ -1,10 +1,12 @@
-import os
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-FileCopyrightText: 2026 Jang Trinh
 """
 reflex_60fps.py — Spec 04: 60FPS Spring-Damper Parametric Face Engine,
 Real-Time 16kHz Audio RMS Lip-Sync, HC-SR04 Proximity Gaze Reflex & C++17 Header Generator.
 """
 import argparse
+import os
 import io
 import json
 import math
@@ -467,5 +469,15 @@ def run_spec04_benchmark() -> dict:
     return report
 
 
-if __name__ == "__main__":
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Spec-04 benchmark: 60fps spring reflex, lip-sync and C++ header generation. "
+        "Running it (no arguments) overwrites plans/reports/benchmark-reflex-60fps.json; "
+        "restore with 'git checkout plans/reports'."
+    )
+    parser.parse_args()
     run_spec04_benchmark()
+
+
+if __name__ == "__main__":
+    main()

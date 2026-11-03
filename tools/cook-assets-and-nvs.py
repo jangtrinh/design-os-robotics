@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-FileCopyrightText: 2026 Jang Trinh
 """
 Cook full-screen 240x320 esp_mmap_assets binary + HUD-enabled NVS image for RoBot.5320 (ESP32-S3 N16R8).
 """
+import argparse
 import binascii
 import json
 import struct
@@ -103,6 +106,10 @@ def patch_nvs_hud(nvs_in: Path, nvs_out: Path, p_bat: int = -1, p_chg: int = -1)
 
 
 if __name__ == "__main__":
+    argparse.ArgumentParser(
+        description="Cook the full-screen 240x320 assets image and the HUD-enabled NVS image. "
+        "Reads the base images from themes/ and profiles/ (your own local dumps, git-ignored) and takes no options."
+    ).parse_args()
     build_fullvien_240x320(
         ROOT / "themes/mochi-240x320.bin",
         ROOT / "themes/mochi-fullvien-240x240.bin",
