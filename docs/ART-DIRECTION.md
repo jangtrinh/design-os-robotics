@@ -173,6 +173,18 @@ The faces are the product's identity. They are **code-drawn only**.
 
 <img src="./assets/brand/social-preview.png" alt="design:os by Jang" width="480">
 
+### Real hardware photos
+
+Photos of the physical build live in `docs/assets/hardware/real/`. They are documentation, not brand art, so the flat dark canvas rule does not apply to the photo itself; the page around it still does.
+
+- **Names:** `NN-short-name.webp` (full) and `NN-short-name-thumb.webp` (thumbnail). Lower-case, digits and hyphens only.
+- **Sizes:** full 1200x1600 and thumbnail 480x640 (3:4 portrait), WebP. Aim for 150 KB or less per full file and 40 KB or less per thumbnail. A noisy photo may go over with a reason: `01-face-listening.webp` is about 168 KB because its wood-grain background is noisy and a lower quality visibly smears the face.
+- **Metadata:** every file is rebuilt from pixels. No EXIF, GPS, XMP, ICC or comment. Check with `exiftool -a -G1 <file>`: only File and RIFF/Composite size fields may remain.
+- **Alt text and caption:** alt starts with `design:os by Jang. Real hardware: ` and then one factual English sentence. The caption is `design:os by Jang · <short title>`.
+- **Originals** stay outside the repository. Never commit an unredacted version: git history keeps every file.
+- **Own material only.** Use the owner's own photos. See `THIRD_PARTY_NOTICES.md`.
+- **Third-party art on the board.** Silkscreen logos and posters printed on a board belong to someone else (section 12). Blur them with a heavy mosaic and blur before export, so only the owner's own hardware stays recognisable.
+
 ## 7. Promo formats
 
 Promo files are delivered with the post, not committed here, but they follow the same rules. Use these names.
@@ -263,6 +275,9 @@ Never show, store or commit any of these, in any image, frame, SVG, alt text, JS
 - Serial port names and TCP/UDP ports
 - Local paths such as a home directory, a user name or a file URL
 - Tokens, keys, or cloud account names
+- QR codes, and the serial number, MAC or ID printed on a board, a label or a screen
+- GPS, EXIF and any other metadata inside a photo, and faces, rooms, documents or screens in the background
+- The original of a redacted photo. Redact with a solid bar or a heavy mosaic and blur, then keep the original outside the repo.
 
 Use neutral placeholders instead of real values, such as `<device-id>`. Blur is not enough: re-render without the value. Check images by viewing them, because text inside a PNG is not searchable.
 
