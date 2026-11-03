@@ -249,7 +249,7 @@ sequenceDiagram
     Daemon-->>Robot: {"type": "hello", "session_id": "mochi-soul-01"}
 
     Note over Git,Daemon: 2. Sự kiện Cộng sinh (Developer vừa git commit!)
-    Git->>Daemon: Hook: New commit in design-os-robotics (−15 hunger, +10 XP; *design: engine cộng +15 xp cho mỗi sự kiện, và không có hook Git*)
+    Git->>Daemon: Hook: New commit in design-os-robotics (−15 hunger, +10 XP, design only: engine cộng +15 xp cho mỗi sự kiện và không có hook Git)
     Daemon->>Robot: {"type": "alert", "status": "+15 Code Byte 🍙", "message": "Commit ngon quá!", "emotion": "delicious"}
 
     Note over Robot,AI: 3. Tương tác Đàm thoại Có Nội tâm (Stateful Soul Prompt)
