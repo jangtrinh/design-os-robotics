@@ -25,7 +25,7 @@ Pin map and partition offsets are for `RB5320XZ78AI` (`ESP32-S3-WROOM-1U-N16R8`,
 - **No-reset health audit.** Four non-intrusive layers via `robotctl.py health`.
 - **NVS control.** `robotctl.py optimize --flash` writes the NVS partition at `0x9000` (needs your own NVS dump; known issue, fix pending).
 - **Procedural Mochi-21 avatar.** 244.71 KB, −90.4% versus the default GIF pack.
-- **Mochi-Soul engine.** 4D state `S(t)=[E,V,B,C]`, ~0.76 µs/tick measured idle, 1.31M ticks/s. SQLite WAL ~4.0 µs/tx. Quiet hours 23:00–07:30. Proactive MCP/WebSocket bridge 1.22 ms HUD card. 60 Hz spring reflex 2.36 µs/frame.
+- **Mochi-Soul engine.** 4D state `S(t)=[E,V,B,C]`, ~0.76 µs/tick measured idle, 1.31M ticks/s. SQLite WAL ~4.0 µs/tx. Quiet hours 23:00–07:30. Proactive MCP/WebSocket bridge 1.22 ms HUD card (single run). 60 Hz spring reflex 2.36 µs/frame (single run).
 
 Benchmark sources and caveats are listed under [Benchmarks](#benchmarks).
 
@@ -47,9 +47,9 @@ python3 tools/mochi-soul-engine/engine.py benchmark
 
 > **Back up NVS before you flash.** `optimize --flash` writes the NVS partition at `0x9000`, which holds the board's saved settings, Wi-Fi included. Read that partition back from the board with esptool first, using the partition size from your own partition table, and keep the file.
 
-The avatar build and the flash step do not work on a clean clone today. Dev owns the fixes. Until they land:
+The avatar build and the flash step need files that are not in the repository. Dev owns the fixes. This list stays true whether or not PR #3 has merged:
 
-- `python3 tools/cook-procedural-avatar.py` stops with `NameError: name 'os' is not defined`. The finished GIFs are already committed in `themes/procedural-mochi/`.
+- `python3 tools/cook-procedural-avatar.py` needs a base assets dump at `profiles/example-esp32s3-n16r8/partitions/08-assets-0xAA0000.bin`. That file is not in the repo, so the script exits with an error on a clean clone. A tree without PR #3 stops even earlier, with `NameError: name 'os' is not defined` (fixed in #3). The finished GIFs are already committed in `themes/procedural-mochi/`.
 - `robotctl.py status`, `optimize` and `optimize --flash` stop with `FileNotFoundError`. They read `profiles/example-esp32s3-n16r8/partitions/03-nvs-0x009000.bin`, which is gitignored and not in the repo. You must supply your own dump of the NVS partition at that path. `--flash` then writes only NVS at `0x9000`, through `uvx esptool`, so it needs [uv](https://docs.astral.sh/uv/).
 
 ![Terminal health dashboard: four layers, no reset](./docs/assets/brand/health-dashboard.png)
@@ -92,7 +92,7 @@ python3 tools/robotctl.py dashboard
 
 ![21 code-drawn faces](./docs/assets/brand/faces-21.png)
 
-Drawn entirely by code. The GIFs in `themes/procedural-mochi/` come from `tools/cook-procedural-avatar.py`; running that script on a clean clone fails today (known issue, fix pending).
+Drawn entirely by code. The GIFs in `themes/procedural-mochi/` come from `tools/cook-procedural-avatar.py`; running that script needs an external assets dump (see [Flashing and NVS backup](#flashing-and-nvs-backup-known-issue-fix-pending)), so it does not run on a clean clone.
 Full-bleed 240×240 on the 240×320 ST7789.
 244.71 KB, 8-colour indexed LZW, checksum `0x5867`. Sources live in [./themes/procedural-mochi/](./themes/procedural-mochi/).
 
@@ -104,7 +104,7 @@ Benchmarks are host-CPU numbers (Python 3 on a Linux x86 VM), not device speed. 
 - `plans/reports/benchmark-mochi-soul-engine.json`: a single run, 0.765 µs/tick, 1.31M ticks/s, 3.84 µs per SQLite WAL write.
 - `plans/reports/benchmark-mochi-soul-engine-idle-runs.json`: 12 repeated runs with machine spec, per-run load and the outlier rule.
 
-One method is used for every headline figure: the median of all 12 runs, for ticks and for SQLite writes. Ticks: 0.76 µs/tick (range 0.70–1.50). Writes: ~4.0 µs/tx (range 3.6–6.6). Outliers stay in and are disclosed: runs 8 and 9 for ticks (about 1.5 µs/tick), runs 5 and 9 for writes (about 6.5 µs). Without the two tick outliers the tick median is 0.754. The outlier rule (above 1.5× the all-12 median) was set after the data had been seen, and its threshold comes from the same data, so it describes the runs; it is not a pre-registered test. The recorded load average does not explain the outliers. The VM was not dedicated, so "idle" means no heavy work was competing for the benchmark core.
+The repeated-run figures (ticks and SQLite writes) use one method: the median of all 12 runs. Ticks: 0.76 µs/tick (range 0.70–1.50). Writes: ~4.0 µs/tx (range 3.6–6.6). Outliers stay in and are disclosed: runs 8 and 9 for ticks (about 1.5 µs/tick), runs 5 and 9 for writes (about 6.5 µs). Without the two tick outliers the tick median is 0.754. The outlier rule (above 1.5× the all-12 median) was set after the data had been seen, and its threshold comes from the same data, so it describes the runs; it is not a pre-registered test. The recorded load average does not explain the outliers. The VM was not dedicated, so "idle" means no heavy work was competing for the benchmark core. The other figures on this page, 2.36 µs/frame (`benchmark-reflex-60fps.json`) and 1.22 ms per HUD card (`benchmark-proactive-bridge.json`), are single runs, not medians.
 
 Two suites run and exit 0 on a clean clone:
 
@@ -113,7 +113,7 @@ python3 tools/mochi-soul-engine/engine.py benchmark
 python3 tools/mochi-soul-engine/reflex_60fps.py
 ```
 
-Two suites fail today (known issue, fix pending): `tools/benchmark-avatar-perf.py` stops with `IndexError`, because the factory and video-cut theme sets it compares are not in the repo, and `tools/mochi-soul-engine/bridge.py benchmark` stops with `NameError`, the same missing `import os` as the cook script. The avatar figures above come from the committed `benchmark-avatar-perf.json` and cannot be reproduced from this repo yet. Each suite that runs overwrites its committed JSON report.
+Two suites fail on a tree without PR #3 and are fixed in #3: `tools/benchmark-avatar-perf.py` stops with `IndexError`, because the factory and video-cut theme sets it compares are not in the repo, and `tools/mochi-soul-engine/bridge.py benchmark` stops with `NameError`, a missing `import os`. The avatar figures above come from the committed `benchmark-avatar-perf.json`; the suite that produced them cannot be re-run from a tree without #3. Each suite that runs overwrites its committed JSON report.
 
 ## Voice
 
@@ -130,11 +130,11 @@ The voice pipeline itself is not part of this repository: there is no speech rec
 |:---|:---|
 | `tools/robotctl.py` | NVS inspect and patch, OTA slot switch, four-layer health dashboard, and 240×320 theme flashing. |
 | `tools/cook-assets-and-nvs.py` | Cooks a full-screen 240×320 `esp_mmap_assets` binary and a HUD-enabled NVS image. |
-| `tools/cook-procedural-avatar.py` | Draws all 21 Procedural Mochi emotions in code and packs the 240×320 asset binary. Fails on a clean clone today (known issue, fix pending). |
-| `tools/benchmark-avatar-perf.py` | Measures flash footprint, LZW/RLE, decode speed, and estimated SPI/CPU load for avatar packs. Fails on a clean clone today (known issue, fix pending). |
+| `tools/cook-procedural-avatar.py` | Draws all 21 Procedural Mochi emotions in code and packs the 240×320 asset binary. Needs an external assets dump; the `NameError` is fixed in #3. |
+| `tools/benchmark-avatar-perf.py` | Measures flash footprint, LZW/RLE, decode speed, and estimated SPI/CPU load for avatar packs. Fails with `IndexError` on a tree without #3 (fixed in #3). |
 | `tools/xtensa-disasm.py` | Zero-dependency Xtensa LX7 disassembler and xref analyzer for ESP-IDF application partitions. |
 | `tools/mochi-soul-engine/engine.py` | 4D homeostasis engine, 21-emotion router, SQLite WAL memory, and benchmark suite. |
-| `tools/mochi-soul-engine/bridge.py` | Proactive robot bridge, 240×320 HUD renderer, and `ota_1` protocol validator. `benchmark` fails on a clean clone today (known issue, fix pending). |
+| `tools/mochi-soul-engine/bridge.py` | Proactive robot bridge, 240×320 HUD renderer, and `ota_1` protocol validator. `benchmark` fails with `NameError` on a tree without #3 (fixed in #3). |
 | `tools/mochi-soul-engine/reflex_60fps.py` | 60 fps spring-damper face engine, audio RMS lip-sync, and C++17 header generator. |
 
 ## Repository map
@@ -146,12 +146,12 @@ design-os-robotics/
 ├── LICENSE
 ├── THIRD_PARTY_NOTICES.md
 ├── docs/                          GitHub Pages site and brand assets
-├── plans/                         Specs, wayfinder map, and benchmark JSON
+├── plans/                         Internal notes; benchmark JSON in plans/reports/
 ├── tools/                         Host CLI, compilers, and Mochi-Soul engine
 ├── themes/
-│   ├── procedural-mochi/          21 code-drawn GIFs and contact sheet
-│   └── procedural-mochi-fullvien-240x320.bin
-├── knowledge/                     Hardware, NVS, MCP, Xtensa, and Mochi-Soul notes
+│   ├── procedural-mochi/          22 GIFs: 21 code-drawn faces and a spring transition
+│   └── procedural-mochi-fullvien-240x320.bin   Factory pack (removed in #3)
+├── knowledge/                     Internal research notes
 └── profiles/
     └── example-esp32s3-n16r8/     Example board profile
 ```
