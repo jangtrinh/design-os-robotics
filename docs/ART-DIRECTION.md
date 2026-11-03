@@ -12,7 +12,7 @@ Every asset carries the same alt text and caption: `design:os by Jang`.
 ## 1. Principles
 
 1. **Dark, flat, one accent.** Near-black canvas, zinc greys, a single orange. No gradients, no glow, no drop shadows on art. The one exception is the shaded block mark
-   raster and the five files that embed it (section 4).
+   raster, the six repo files that embed it, and the promo stills and MP4s that show it (section 4).
 2. **Real or absent.** A number, a face, a terminal line or a board view is either real output from this repository or it is not shown.
 3. **Chunky and simple.** Big shapes, few of them, rough rather than polished. If a detail disappears at 64 px, remove it.
 4. **Silent and quiet.** No sound by default, no loops that flash, no decorative motion.
@@ -98,9 +98,10 @@ version in the lockup is a flat `#fca849` rounded rectangle (144 px square, 40 p
 - The lockup wordmark is outlined paths, so it does not depend on an installed font.
 - Do not redraw, tilt, recolour, outline, add a face to it or add a shadow of your own to it.
 - **Approved exception: the shaded block mark.** The shaded raster mark breaks the no-gradient and no-shadow rule in sections 1 and 2. The exception covers exactly the
-  five files that embed it: `design-os-robotics.webp`, `hero-dark.png`, `social-preview.png`, `favicon-64.png` and `apple-touch-icon-180.png`. It does not cover the
-  vector mark, `logo-lockup.svg`, diagrams, backgrounds or any other art. It is pending Jang's decision on the mark. If that decision changes, the exception and all five
-  files change with it.
+  six repo files that embed it: `design-os-robotics.webp`, `hero-dark.png`, `hero-light.png`, `social-preview.png`, `favicon-64.png` and `apple-touch-icon-180.png`.
+  The promo stills (`x-image-16x9` and `square-1x1`, EN and VI) and the MP4s that show the mark are covered by the same pending exception, because section 7 says promo files follow the same rules.
+  It does not cover the vector mark, `logo-lockup.svg`, diagrams, backgrounds or any other art. It is pending Jang's decision on the mark. If that decision changes,
+  the exception and all of those files change with it.
 
 ### Lockup
 
@@ -213,7 +214,8 @@ Promo files are delivered with the post, not committed here, but they follow the
   - No bounce on text, no linear moves, no elastic overshoot beyond the spring above.
 - **Timing:** enter in 300 to 500 ms, hold at least 2 seconds, exit in 200 to 300 ms. A headline stays on screen long enough to be read twice.
 - **No flashing**, no strobing cuts, no parallax, no camera shake. Nothing blinks faster than 3 times a second.
-- **Step badges:** the numbered badges in the beat-3 list follow the secondary minimum of the format. In the 9:16 cut they are 40 px or more.
+- **Step badges:** the numbered badges in the beat-3 list follow the secondary minimum of the format. In the 9:16 cut the digits are set at 40 px.
+- **Capture beats:** a light capture never pops in on the dark canvas. It cross-fades in and out through a dark card over 0.8 to 1.0 s.
 - **Render:** from HTML or SVG frames at exactly 30 fps. Check the last frame, the beat boundaries and a mid-spring frame before export.
 
 ## 9. Data rules
