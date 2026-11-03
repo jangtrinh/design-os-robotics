@@ -15,7 +15,7 @@ The `5.25 MB` flash partition at `0xAA0000` (`08-assets-0xAA0000.bin`) formatted
 _Avoid_: SPIFFS theme, SD card assets.
 
 **`Procedural Mochi-21`**:
-The 21-state code-drawn `240x320` avatar pack (`252,271 bytes` / `246.36 KB` total across 21 unique 16-frame GIFs) generated deterministically by `tools/cook-procedural-avatar.py` using parametric geometry, boolean eyelid masking, and harmonic motion in an 8-color flat palette (`Mode P`).
+The 21-state code-drawn `240x320` avatar pack (`250,580 bytes` / `244.71 KB` total across 21 unique 16-frame GIFs) generated deterministically by `tools/cook-procedural-avatar.py` using parametric geometry, boolean eyelid masking, and harmonic motion in an 8-color flat palette (`Mode P`).
 _Avoid_: video-ripped GIFs, 6-state duplicated theme.
 
 **`Mochi-Soul Engine`**:

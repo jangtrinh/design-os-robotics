@@ -1,7 +1,7 @@
 # Brainstorm — Spec 01: Procedural Mochi-21 Avatar Pack (`01-procedural-mochi-21-avatar`)
 
 ## 1. Press Release (Amazon Method)
-**Hôm nay, `RoBot.5320` chính thức sở hữu bộ mặt `Procedural Mochi-21` — đầy đủ 21 trạng thái cảm xúc riêng biệt 100% ở độ phân giải tràn viền `240x320`, được vẽ hoàn toàn bằng toán học với tổng dung lượng chỉ `246.36 KB` (nhẹ hơn 90.4% so với ảnh GIF truyền thống).**
+**Hôm nay, `RoBot.5320` chính thức sở hữu bộ mặt `Procedural Mochi-21` — đầy đủ 21 trạng thái cảm xúc riêng biệt 100% ở độ phân giải tràn viền `240x320`, được vẽ hoàn toàn bằng toán học với tổng dung lượng chỉ `244.71 KB` (nhẹ hơn 90.4% so với ảnh GIF truyền thống).**
 Trước đây, để nhét vừa phân vùng Flash `0xAA0000` và tránh tràn bộ nhớ, bộ giao diện `Procedural Mochi-21` cắt từ video phải gom 21 trạng thái cảm xúc của Xiaozhi vào chỉ 6 file GIF lặp đi lặp lại (nặng `782.46 KB`), khiến robot biểu lộ cùng một khuôn mặt cho cả `happy`, `winking`, `cool`, `delicious` và `kissy`. Với trình biên dịch hình học tham số [`tools/cook-procedural-avatar.py`](../../../tools/cook-procedural-avatar.py), mỗi cảm xúc trong 21 trạng thái nay có một hoạt cảnh 16 khung hình độc bản (từ kính râm `cool`, mắt trái tim `loving`, thác nước mắt `crying`, mắt lác thè lưỡi `silly` đến bong bóng ngủ `sleepy`) mà tổng dung lượng chỉ bằng 1/3 bộ 6 GIF cũ và giải mã nhanh gấp 4 lần trên CPU `ESP32-S3`.
 
 ## 2. User Stories

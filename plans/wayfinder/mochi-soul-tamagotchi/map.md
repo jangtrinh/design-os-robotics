@@ -14,7 +14,7 @@ Transform `RoBot.5320` (`ESP32-S3` + `240x320` LCD + 6-DOF Quadruped + `HC-SR04`
 
 ```mermaid
 flowchart LR
-    S1["Spec 01: Procedural Mochi-21 Avatar\n(21 Code-Drawn States · 246 KB\nFlash to 0xAA0000 & Verify)"]
+    S1["Spec 01: Procedural Mochi-21 Avatar\n(21 Code-Drawn States · 244.71 KB\nFlash to 0xAA0000 & Verify)"]
     S2["Spec 02: Mochi-Soul Engine Core\n(4D Homeostasis dS/dt · SQLite\nEpisodic Memory · Quiet Hours)"]
     S3["Spec 03: Proactive Robot Bridge\n(Zero-Mod notify/alert/preview_image\nHUD Card & Autonomous Speech)"]
     S4["Spec 04: Embodied Reflex & 60FPS\n(HC-SR04 Presence · 6-DOF Servo\nChoreography · Native C++ Face)"]

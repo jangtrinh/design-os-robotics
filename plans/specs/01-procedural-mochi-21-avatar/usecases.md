@@ -31,7 +31,7 @@ Scenario: AC-01 — Đủ 21 trạng thái cảm xúc độc lập và siêu nh�
   Given script "tools/cook-procedural-avatar.py" được thực thi
   When kiểm tra thư mục "themes/procedural-mochi/" và "themes/procedural-mochi-fullvien-240x320.bin"
   Then phải có đúng 21 file .gif riêng biệt có độ phân giải 240x320 và 16 khung hình mỗi file
-  And tổng dung lượng của cả 21 file .gif phải nhỏ hơn 300,000 bytes (thực tế: 252,271 bytes)
+  And tổng dung lượng của cả 21 file .gif phải nhỏ hơn 300,000 bytes (thực tế: 250,580 bytes)
   And cả 21 mục trong "index.json" phải trỏ tới 21 nội dung GIF khác nhau hoàn toàn
 
 Scenario: AC-02 — Toàn vẹn cấu trúc esp_mmap_assets và tài nguyên hệ thống
