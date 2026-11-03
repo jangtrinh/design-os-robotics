@@ -14,7 +14,7 @@ FREE + source-available (PolyForm Shield 1.0.0)
 [![Licence: PolyForm Shield 1.0.0](https://img.shields.io/badge/licence-PolyForm_Shield_1.0.0-202020?style=for-the-badge&labelColor=09090b)](./LICENSE)
 ![Hardware: ESP32-S3](https://img.shields.io/badge/hardware-ESP32--S3-202020?style=for-the-badge&labelColor=09090b)
 ![Avatar pack: 244.71 KB](https://img.shields.io/badge/avatar_pack-244.71_KB-202020?style=for-the-badge&labelColor=09090b)
-![Soul engine: ~0.76 µs/tick measured idle](https://img.shields.io/badge/soul_engine-%7E0.76_us%2Ftick_measured_idle-202020?style=for-the-badge&labelColor=09090b)
+![Soul engine: ~0.76 µs/tick median, measured idle](https://img.shields.io/badge/soul_engine-%7E0.76_us%2Ftick_median_idle-202020?style=for-the-badge&labelColor=09090b)
 
 Inspect USB-JTAG health, compile a 244.71 KB code-drawn face pack, and flash NVS at `0x9000`.
 The Mochi-Soul engine holds a 4D state `S(t)=[E,V,B,C]` with a 60 Hz spring reflex.
@@ -25,7 +25,7 @@ Pin map and partition offsets are for `RB5320XZ78AI` (`ESP32-S3-WROOM-1U-N16R8`,
 - **No-reset health audit.** Four non-intrusive layers via `robotctl.py health`.
 - **NVS control.** `robotctl.py optimize --flash` writes the NVS partition at `0x9000` (needs your own NVS dump; known issue, fix pending).
 - **Procedural Mochi-21 avatar.** 244.71 KB, −90.4% versus the default GIF pack.
-- **Mochi-Soul engine.** 4D state `S(t)=[E,V,B,C]`, ~0.76 µs/tick measured idle, 1.31M ticks/s. SQLite WAL ~4.0 µs/tx. Quiet hours 23:00–07:30. Proactive MCP/WebSocket bridge 1.22 ms HUD card (single run). 60 Hz spring reflex 2.36 µs/frame (single run).
+- **Mochi-Soul engine.** 4D state `S(t)=[E,V,B,C]`, ~0.76 µs/tick (median of 12 runs, measured idle), 1.31M ticks/s. SQLite WAL ~4.0 µs/tx (median of 12 runs). Quiet hours 23:00–07:30. Proactive MCP/WebSocket bridge 1.22 ms HUD card (single run). 60 Hz spring reflex 2.36 µs/frame (single run).
 
 Benchmark sources and caveats are listed under [Benchmarks](#benchmarks).
 
