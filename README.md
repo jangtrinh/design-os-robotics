@@ -68,6 +68,23 @@ The avatar build and the flash step read your own device dumps. Dumps and built 
 | Assets partition | 0xAA0000 |
 | NVS | 0x9000 |
 
+## Real hardware
+
+Photos of the physical RB5320XZ78AI build, taken by the repository owner. The network name, setup address, serial prints, QR codes and third-party silkscreen art are blurred or removed from every image, and the files carry no metadata. Select a photo for the full-size version.
+
+<table>
+<tr>
+<td align="center" width="33%"><a href="./docs/assets/hardware/real/01-face-listening.webp"><img src="./docs/assets/hardware/real/01-face-listening-thumb.webp" alt="design:os by Jang. Real hardware: the robot board on a wooden desk, its 240x320 screen showing a white Mochi face with closed smiling eyes and the Vietnamese status text Đang lắng nghe (listening), with USB cables and earphones around it" width="240"></a><br><sub>design:os by Jang · Listening face</sub></td>
+<td align="center" width="33%"><a href="./docs/assets/hardware/real/02-face-bokeh.webp"><img src="./docs/assets/hardware/real/02-face-bokeh-thumb.webp" alt="design:os by Jang. Real hardware: close, low-angle view of the same board with a shallow depth of field, the screen showing a calm white Mochi face with closed eyes, a USB-C cable plugged in below" width="240"></a><br><sub>design:os by Jang · Calm face, close view</sub></td>
+<td align="center" width="33%"><a href="./docs/assets/hardware/real/03-uwu-board-bg.webp"><img src="./docs/assets/hardware/real/03-uwu-board-bg-thumb.webp" alt="design:os by Jang. Real hardware: the board held upright on a desk, the screen showing a dark interface with two green U-shaped eyes above a line-art board drawing" width="240"></a><br><sub>design:os by Jang · Dark interface on the screen</sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><a href="./docs/assets/hardware/real/04-chat-bubble.webp"><img src="./docs/assets/hardware/real/04-chat-bubble-thumb.webp" alt="design:os by Jang. Real hardware: the board on a desk with a chat bubble of Vietnamese text across the bottom of the screen, a face and line art above it" width="240"></a><br><sub>design:os by Jang · Chat bubble on the screen</sub></td>
+<td align="center" width="33%"><a href="./docs/assets/hardware/real/05-back-hardware.webp"><img src="./docs/assets/hardware/real/05-back-hardware-thumb.webp" alt="design:os by Jang. Real hardware: the back of the robot held in a hand, showing an ESP32-S3 module with two USB-C ports, a round speaker, three push buttons, two purple I2S audio breakout boards and a blue charging board" width="240"></a><br><sub>design:os by Jang · Back of the board</sub></td>
+<td align="center" width="33%"><a href="./docs/assets/hardware/real/06-wifi-setup.webp"><img src="./docs/assets/hardware/real/06-wifi-setup-thumb.webp" alt="design:os by Jang. Real hardware: the board held in a hand, the screen showing the Wi-Fi setup page titled Chế độ cấu hình Wi-Fi; the network name and setup address are covered by a black bar" width="240"></a><br><sub>design:os by Jang · Wi-Fi setup screen (details covered)</sub></td>
+</tr>
+</table>
+
 ## How it works
 
 ![Workflow: inspect, build, flash, verify](./docs/assets/brand/workflow.svg)
