@@ -14,7 +14,7 @@ FREE + source-available (PolyForm Shield 1.0.0)
 [![Licence: PolyForm Shield 1.0.0](https://img.shields.io/badge/licence-PolyForm_Shield_1.0.0-202020?style=for-the-badge&labelColor=09090b)](./LICENSE)
 [![Hardware: ESP32-S3](https://img.shields.io/badge/hardware-ESP32--S3-202020?style=for-the-badge&labelColor=09090b)](./knowledge/07-connected-robot-hardware-profile.md)
 [![Avatar pack: 244.71 KB](https://img.shields.io/badge/avatar_pack-244.71_KB-202020?style=for-the-badge&labelColor=09090b)](./plans/reports/benchmark-avatar-perf.json)
-[![Soul engine: 1.24 µs/tick host benchmark](https://img.shields.io/badge/soul_engine-1.24_us%2Ftick_host_benchmark-202020?style=for-the-badge&labelColor=09090b)](./plans/reports/benchmark-mochi-soul-engine.json)
+[![Soul engine: ~0.75 µs/tick measured idle](https://img.shields.io/badge/soul_engine-%7E0.75_us%2Ftick_measured_idle-202020?style=for-the-badge&labelColor=09090b)](./plans/reports/benchmark-mochi-soul-engine.json)
 
 ![design:os by Jang](./docs/assets/brand/showcase.png)
 
@@ -27,9 +27,9 @@ Pin map and partition offsets are for `RB5320XZ78AI` (`ESP32-S3-WROOM-1U-N16R8`,
 - **No-reset health audit.** Four layers in about 1.8 s.
 - **NVS control.** `robotctl.py optimize --flash` writes the NVS partition at `0x9000` in 0.1 s.
 - **Procedural Mochi-21 avatar.** 244.71 KB, −90.4% versus the default GIF pack.
-- **Mochi-Soul engine.** 4D state `S(t)=[E,V,B,C]`, 1.24 µs/tick host benchmark, 0.81M ticks/s. SQLite WAL 2.52 µs/tx. Quiet hours 23:00-07:00. Proactive MCP/WebSocket bridge 1.22 ms HUD card. 60 Hz spring reflex 2.36 µs/frame.
+- **Mochi-Soul engine.** 4D state `S(t)=[E,V,B,C]`, ~0.75 µs/tick measured idle, 1.31M ticks/s. SQLite WAL 3.84 µs/tx. Quiet hours 23:00-07:00. Proactive MCP/WebSocket bridge 1.22 ms HUD card. 60 Hz spring reflex 2.36 µs/frame.
 
-Benchmarks are host-CPU numbers (Python 3 on a shared Linux x86 machine), not device speed. 1.24 µs/tick is the figure measured on 2026-11-03; repeat runs on an idle machine have given 0.73–0.76 µs, and the committed JSON in plans/reports/ comes from an earlier run (0.471 µs). Run `python3 tools/mochi-soul-engine/engine.py benchmark` to measure on your own machine.
+Benchmarks are host-CPU numbers (Python 3 on a Linux x86 machine), not device speed. The soul engine runs at ~0.75 µs/tick, measured idle (plans/reports/benchmark-mochi-soul-engine.json: 0.765 µs/tick, 1.31M ticks/s, 3.84 µs per SQLite WAL write, single run; repeated idle runs gave 0.70–0.88 µs). Run `python3 tools/mochi-soul-engine/engine.py benchmark` to measure on your own machine.
 
 ## Quick start
 
@@ -109,7 +109,7 @@ Full-bleed 240×240 on the 240×320 ST7789.
 | `tools/voice-studio.py` | Extracts Ogg Opus streams from `ota_1`, builds studio reference audio, and writes custom wake-up responses. |
 | `tools/patch-ota1-voice.py` | Synthesizes on-device voice prompts, encodes them as Ogg Opus, and patches them into the `ota_1` firmware with checksums. |
 | `tools/xtensa-disasm.py` | Zero-dependency Xtensa LX7 disassembler and xref analyzer for ESP-IDF application partitions. |
-| `tools/mochi-soul-engine/engine.py` | 4D homeostasis engine, 21-emotion router, SQLite WAL memory, and host benchmark suite. |
+| `tools/mochi-soul-engine/engine.py` | 4D homeostasis engine, 21-emotion router, SQLite WAL memory, and benchmark suite. |
 | `tools/mochi-soul-engine/bridge.py` | Proactive robot bridge, 240×320 HUD renderer, and `ota_1` protocol validator. |
 | `tools/mochi-soul-engine/reflex_60fps.py` | 60 fps spring-damper face engine, audio RMS lip-sync, and C++17 header generator. |
 
