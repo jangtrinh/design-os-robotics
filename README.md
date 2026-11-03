@@ -147,7 +147,7 @@ design-os-robotics/
 ├── CONTEXT.md
 ├── LICENSE
 ├── THIRD_PARTY_NOTICES.md
-├── docs/                          GitHub Pages site and brand assets
+├── docs/                          GitHub Pages site, brand assets, ART-DIRECTION.md
 ├── plans/                         Internal notes; benchmark JSON in plans/reports/
 ├── tools/                         Host CLI, compilers, and Mochi-Soul engine
 ├── themes/
@@ -190,5 +190,6 @@ Third-party works in this repository keep their own licences: the Be Vietnam Pro
 - Be Vietnam Pro typeface, © The Be Vietnam Pro Project Authors, SIL Open Font License 1.1, self-hosted under `docs/assets/fonts/`.
 - three.js (MIT) powers the 3D viewer on the docs site.
 - Badges are rendered by [shields.io](https://shields.io/).
+- Making an image, diagram, promo or motion? Follow [docs/ART-DIRECTION.md](./docs/ART-DIRECTION.md): colour and type tokens, logo, faces, asset specs, data and privacy rules.
 
 Full third-party details: [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
