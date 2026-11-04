@@ -115,7 +115,8 @@ def analyze_gif_metrics(gif_bytes: bytes, decode_iters: int = 6) -> dict:
     sample_frames = min(n_frames, 16)
     for f in range(sample_frames):
         im.seek(f)
-        p_im = im.convert("RGB").quantize(colors=256, dither=Image.Dither.NONE)
+        im.load()
+        p_im = im if im.mode == "P" else im.convert("RGB").quantize(colors=256, dither=Image.Dither.NONE)
         raw = p_im.tobytes()
         unique_colors.update(raw)
         # Count horizontal runs per scanline using itertools.groupby on each row slice

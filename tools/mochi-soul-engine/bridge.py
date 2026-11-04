@@ -19,6 +19,7 @@ import sys
 import threading
 import time
 import urllib.request
+from collections import OrderedDict
 from pathlib import Path
 from PIL import Image, ImageDraw
 
@@ -222,7 +223,8 @@ class MochiProactiveBridge:
     _FACE_THUMB_CACHE: dict[str, Image.Image] = {}
     _FONT_CACHE: dict[tuple[str, int], object] = {}
     _STATIC_BASE_CARD: Image.Image | None = None
-    _HUD_PNG_CACHE: dict[tuple, bytes] = {}
+    _HUD_PNG_CACHE: OrderedDict[tuple, bytes] = OrderedDict()
+    _CACHE_LOCK = threading.Lock()
 
     @classmethod
     def _get_font(cls, role: str, size: int):
@@ -304,9 +306,11 @@ class MochiProactiveBridge:
             round(state.valence, 2),
             recent_memory[:30],
         )
-        cached = cls._HUD_PNG_CACHE.get(cache_key)
-        if cached is not None:
-            return cached
+        with cls._CACHE_LOCK:
+            cached = cls._HUD_PNG_CACHE.get(cache_key)
+            if cached is not None:
+                cls._HUD_PNG_CACHE.move_to_end(cache_key)
+                return cached
 
         card = cls._get_base_card().copy()
         d = ImageDraw.Draw(card)
@@ -318,11 +322,13 @@ class MochiProactiveBridge:
         d.text((138, 15), f"S{state.stage} · {state.xp} XP", fill=(161, 161, 170), font=font_sm)
 
         # 2. Mini Mochi Face OLED Viewport (y = 41..156)
-        if state.emotion not in cls._FACE_THUMB_CACHE:
+        thumb = cls._FACE_THUMB_CACHE.get(state.emotion)
+        if thumb is None:
             p_idx = 1 if state.emotion in ("relaxed", "delicious") else (2 if state.emotion in ("thinking", "winking") else 3)
             face_frame = render_emotion_frame(state.emotion, frame_idx=p_idx, num_frames=10).convert("RGB")
-            cls._FACE_THUMB_CACHE[state.emotion] = face_frame.resize((104, 104), Image.Resampling.NEAREST)
-        card.paste(cls._FACE_THUMB_CACHE[state.emotion], (68, 47))
+            thumb = face_frame.resize((104, 104), Image.Resampling.NEAREST)
+            cls._FACE_THUMB_CACHE[state.emotion] = thumb
+        card.paste(thumb, (68, 47))
 
         # Status & Clock Pill text
         h_int = int((state.sim_minute // 60) % 24)
@@ -355,9 +361,11 @@ class MochiProactiveBridge:
         buf = io.BytesIO()
         quantized.save(buf, format="PNG", compress_level=1)
         out_bytes = buf.getvalue()
-        if len(cls._HUD_PNG_CACHE) > 64:
-            cls._HUD_PNG_CACHE.clear()
-        cls._HUD_PNG_CACHE[cache_key] = out_bytes
+        with cls._CACHE_LOCK:
+            cls._HUD_PNG_CACHE[cache_key] = out_bytes
+            cls._HUD_PNG_CACHE.move_to_end(cache_key)
+            while len(cls._HUD_PNG_CACHE) > 64:
+                cls._HUD_PNG_CACHE.popitem(last=False)
         return out_bytes
 
 
@@ -467,14 +475,16 @@ def run_bridge_benchmark() -> dict:
     srv_thread.start()
 
     live_bridge = MochiProactiveBridge(f"http://127.0.0.1:{port}")
-    # Warm up cache & measure 20 HTTP loopback round-trips
-    MochiProactiveBridge.render_hud_card_png(eng.state)
-    t0 = time.perf_counter()
+    # Warm up cache & measure 50 cached LRU hits
+    MochiProactiveBridge.render_hud_card_png(
+        eng.state, recent_memory="Spec-03 HUD Render Verified"
+    )
+    t_cached = time.perf_counter()
     for _ in range(50):
         hud_bytes = MochiProactiveBridge.render_hud_card_png(
             eng.state, recent_memory="Spec-03 HUD Render Verified"
         )
-    hud_ms = ((time.perf_counter() - t0) / 50.0) * 1000.0
+    hud_cached_us = ((time.perf_counter() - t_cached) / 50.0) * 1e6
     HUD_OUT_PATH.write_bytes(hud_bytes)
     if ARTIFACT_DIR and ARTIFACT_DIR.exists():
         shutil.copyfile(HUD_OUT_PATH, ARTIFACT_DIR / "mochi_hud_card_240x320.png")
@@ -484,14 +494,14 @@ def run_bridge_benchmark() -> dict:
     t_e2e = time.perf_counter()
     fetched_hud = b""
     ok_mcp = False
+    conn = http.client.HTTPConnection("127.0.0.1", port, timeout=2.0)
     for _ in range(20):
         mcp_pkt = live_bridge.build_mcp_preview_image("hud/mochi_hud_card_240x320.png")
         ok_mcp, _, _ = FirmwareProtocolValidator.validate_incoming_json(mcp_pkt)
-        conn = http.client.HTTPConnection("127.0.0.1", port, timeout=2.0)
         conn.request("GET", "/hud/mochi_hud_card_240x320.png")
         resp = conn.getresponse()
         fetched_hud = resp.read()
-        conn.close()
+    conn.close()
     e2e_rtt_ms = ((time.perf_counter() - t_e2e) / 20.0) * 1000.0
     httpd.shutdown()
     httpd.server_close()
@@ -504,7 +514,7 @@ def run_bridge_benchmark() -> dict:
 
     print("\n[1] SPEC-03 PERFORMANCE & PROTOCOL CONTRACT METRICS")
     print("-" * 108)
-    print(f"  240x320 Tamagotchi HUD Render Time   : {hud_ms:8.2f} ms/card  (Target < 5.0 ms)   [AC-02 {'PASS' if hud_ms < 5.0 else 'FAIL'}]")
+    print(f"  240x320 Tamagotchi HUD Render Time   : {hud_ms:8.2f} ms/card (cold) | {hud_cached_us:.2f} us/card (LRU) [AC-02 {'PASS' if hud_ms < 5.0 else 'FAIL'}]")
     print(f"  240x320 Tamagotchi HUD PNG Size      : {len(hud_bytes):8,d} bytes ({len(hud_bytes)/1024:.2f} KB, dims={hud_dims[0]}x{hud_dims[1]}) [AC-02 {'PASS' if len(hud_bytes) < 15000 else 'FAIL'}]")
     print(f"  ota_1 JSON Contract Validation Speed : {val_us_per_msg:8.2f} us/packet")
     print(f"  Valid Proactive Packets Accepted     : {valid_pass_count:4d} / {valid_total_expected:4d} (44 distinct message templates x 20 passes)")

@@ -17,6 +17,7 @@ import os
 import re
 import sqlite3
 import tempfile
+import threading
 import time
 from collections import Counter, deque
 from dataclasses import asdict, dataclass
@@ -332,6 +333,7 @@ class MochiSoulEngine:
         if not in_memory:
             resolved_path.parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        self._db_lock = threading.RLock()
         if not in_memory and resolved_path.exists():
             try:
                 os.chmod(resolved_path, 0o600)
@@ -492,6 +494,14 @@ class MochiSoulEngine:
             self.conn.execute("PRAGMA user_version = 1;")
             self.conn.commit()
 
+        # Ensure composite indexes exist on all databases (v0 upgraded or fresh v1)
+        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_mem_wall ON episodic_memories(wall_ts);")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_mem_source_wall ON episodic_memories(source, wall_ts);"
+        )
+        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_hw_wall ON hardware_events(wall_ts);")
+        self.conn.commit()
+
     def _load_or_create_state(self) -> SoulState:
         row = self.conn.execute(
             "SELECT sim_minute, energy, hunger, bond, valence, arousal, emotion, "
@@ -549,77 +559,79 @@ class MochiSoulEngine:
 
     def _save_genome(self, gen: Optional[PersonalityGenome] = None, commit: bool = True) -> None:
         g = gen or self.genome
-        self.conn.execute(
-            """
-            INSERT INTO personality_genome (
-                id, curiosity, affection, playfulness, resilience, chronotype_shift,
-                base_curiosity, base_affection, base_playfulness, base_resilience,
-                genome_rev, last_consolidated_memory_id, last_dream_wall_ts,
-                day_key, day_abs_delta, updated_wall_ts
-            ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-                curiosity=excluded.curiosity,
-                affection=excluded.affection,
-                playfulness=excluded.playfulness,
-                resilience=excluded.resilience,
-                chronotype_shift=excluded.chronotype_shift,
-                base_curiosity=excluded.base_curiosity,
-                base_affection=excluded.base_affection,
-                base_playfulness=excluded.base_playfulness,
-                base_resilience=excluded.base_resilience,
-                genome_rev=excluded.genome_rev,
-                last_consolidated_memory_id=excluded.last_consolidated_memory_id,
-                last_dream_wall_ts=excluded.last_dream_wall_ts,
-                day_key=excluded.day_key,
-                day_abs_delta=excluded.day_abs_delta,
-                updated_wall_ts=excluded.updated_wall_ts
-            """,
-            (
-                g.curiosity, g.affection, g.playfulness, g.resilience, g.chronotype_shift,
-                g.base_curiosity, g.base_affection, g.base_playfulness, g.base_resilience,
-                g.genome_rev, g.last_consolidated_memory_id, g.last_dream_wall_ts,
-                g.day_key, g.day_abs_delta, g.updated_wall_ts,
-            ),
-        )
-        if commit:
-            self.conn.commit()
+        with self._db_lock:
+            self.conn.execute(
+                """
+                INSERT INTO personality_genome (
+                    id, curiosity, affection, playfulness, resilience, chronotype_shift,
+                    base_curiosity, base_affection, base_playfulness, base_resilience,
+                    genome_rev, last_consolidated_memory_id, last_dream_wall_ts,
+                    day_key, day_abs_delta, updated_wall_ts
+                ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    curiosity=excluded.curiosity,
+                    affection=excluded.affection,
+                    playfulness=excluded.playfulness,
+                    resilience=excluded.resilience,
+                    chronotype_shift=excluded.chronotype_shift,
+                    base_curiosity=excluded.base_curiosity,
+                    base_affection=excluded.base_affection,
+                    base_playfulness=excluded.base_playfulness,
+                    base_resilience=excluded.base_resilience,
+                    genome_rev=excluded.genome_rev,
+                    last_consolidated_memory_id=excluded.last_consolidated_memory_id,
+                    last_dream_wall_ts=excluded.last_dream_wall_ts,
+                    day_key=excluded.day_key,
+                    day_abs_delta=excluded.day_abs_delta,
+                    updated_wall_ts=excluded.updated_wall_ts
+                """,
+                (
+                    g.curiosity, g.affection, g.playfulness, g.resilience, g.chronotype_shift,
+                    g.base_curiosity, g.base_affection, g.base_playfulness, g.base_resilience,
+                    g.genome_rev, g.last_consolidated_memory_id, g.last_dream_wall_ts,
+                    g.day_key, g.day_abs_delta, g.updated_wall_ts,
+                ),
+            )
+            if commit:
+                self.conn.commit()
         self.phenotype = compute_phenotype(self.state.stage, g)
 
     def save_state(self, st: Optional[SoulState] = None, commit: bool = True) -> None:
         s = st or self.state
-        self.conn.execute(
-            """
-            INSERT INTO soul_state (
-                id, sim_minute, energy, hunger, bond, valence, arousal, emotion,
-                stage, stage_name, xp, minutes_since_interaction, last_impulse_minute,
-                transient_emotion, transient_ttl_minutes, last_tick_wall_ts
-            ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-                sim_minute=excluded.sim_minute,
-                energy=excluded.energy,
-                hunger=excluded.hunger,
-                bond=excluded.bond,
-                valence=excluded.valence,
-                arousal=excluded.arousal,
-                emotion=excluded.emotion,
-                stage=excluded.stage,
-                stage_name=excluded.stage_name,
-                xp=excluded.xp,
-                minutes_since_interaction=excluded.minutes_since_interaction,
-                last_impulse_minute=excluded.last_impulse_minute,
-                transient_emotion=excluded.transient_emotion,
-                transient_ttl_minutes=excluded.transient_ttl_minutes,
-                last_tick_wall_ts=excluded.last_tick_wall_ts
-            """,
-            (
-                s.sim_minute, s.energy, s.hunger, s.bond, s.valence, s.arousal,
-                s.emotion, s.stage, s.stage_name, s.xp,
-                s.minutes_since_interaction, s.last_impulse_minute,
-                s.transient_emotion, s.transient_ttl_minutes, s.last_tick_wall_ts,
-            ),
-        )
-        if commit:
-            self.conn.commit()
+        with self._db_lock:
+            self.conn.execute(
+                """
+                INSERT INTO soul_state (
+                    id, sim_minute, energy, hunger, bond, valence, arousal, emotion,
+                    stage, stage_name, xp, minutes_since_interaction, last_impulse_minute,
+                    transient_emotion, transient_ttl_minutes, last_tick_wall_ts
+                ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    sim_minute=excluded.sim_minute,
+                    energy=excluded.energy,
+                    hunger=excluded.hunger,
+                    bond=excluded.bond,
+                    valence=excluded.valence,
+                    arousal=excluded.arousal,
+                    emotion=excluded.emotion,
+                    stage=excluded.stage,
+                    stage_name=excluded.stage_name,
+                    xp=excluded.xp,
+                    minutes_since_interaction=excluded.minutes_since_interaction,
+                    last_impulse_minute=excluded.last_impulse_minute,
+                    transient_emotion=excluded.transient_emotion,
+                    transient_ttl_minutes=excluded.transient_ttl_minutes,
+                    last_tick_wall_ts=excluded.last_tick_wall_ts
+                """,
+                (
+                    s.sim_minute, s.energy, s.hunger, s.bond, s.valence, s.arousal,
+                    s.emotion, s.stage, s.stage_name, s.xp,
+                    s.minutes_since_interaction, s.last_impulse_minute,
+                    s.transient_emotion, s.transient_ttl_minutes, s.last_tick_wall_ts,
+                ),
+            )
+            if commit:
+                self.conn.commit()
 
     @staticmethod
     def compute_stage(xp: int, bond: float) -> tuple[int, str]:
@@ -1197,134 +1209,139 @@ class MochiSoulEngine:
           - Deletes consolidated memories & impulses older than 30 days
         """
         ts_now = float(now_ts if now_ts is not None else self.now_fn())
-        if self.conn.in_transaction:
-            self.conn.commit()
+        with self._db_lock:
+            if self.conn.in_transaction:
+                self.conn.commit()
 
-        self.conn.execute("BEGIN IMMEDIATE")
-        try:
-            gen = self._load_or_create_genome()
-            key = self._dream_key(trigger, ts_now, gen.last_consolidated_memory_id, gen.genome_rev)
-            existing = self.conn.execute(
-                "SELECT id FROM dream_journal WHERE dream_key = ?", (key,)
-            ).fetchone()
-            if existing:
+            self.conn.execute("BEGIN IMMEDIATE")
+            try:
+                gen = self._load_or_create_genome()
+                key = self._dream_key(trigger, ts_now, gen.last_consolidated_memory_id, gen.genome_rev)
+                existing = self.conn.execute(
+                    "SELECT id FROM dream_journal WHERE dream_key = ?", (key,)
+                ).fetchone()
+                if existing:
+                    self.conn.rollback()
+                    return {"ok": True, "skipped": "duplicate", "dream_id": existing[0], "dream_key": key}
+
+                rows = self.conn.execute(
+                    "SELECT id, sim_minute, event_type, source, wall_ts "
+                    "FROM episodic_memories WHERE id > ? ORDER BY id ASC LIMIT 5000",
+                    (gen.last_consolidated_memory_id,),
+                ).fetchall()
+
+                ev = self._extract_evidence(rows)
+                if gen.last_dream_wall_ts is not None:
+                    dt_days = max(0.0, (ts_now - gen.last_dream_wall_ts) / 86400.0)
+                else:
+                    dt_days = 1.0 if trigger in ("quiet_hours", "missed_night") else 0.25
+
+                new_gen, delta_l1 = self.evolve_genome_pure(gen, ev, dt_days, trigger, ts_now)
+                new_gen.chronotype_shift = self._compute_chronotype_shift(ts_now, gen.chronotype_shift)
+                if rows:
+                    mem_from_id = int(rows[0][0])
+                    mem_to_id = int(rows[-1][0])
+                    new_gen.last_consolidated_memory_id = mem_to_id
+                else:
+                    mem_from_id = gen.last_consolidated_memory_id
+                    mem_to_id = gen.last_consolidated_memory_id
+
+                milestone = self._detect_milestones(gen, new_gen)
+                summary = self._build_privacy_safe_dream_summary(ev["raw_counts"], len(rows), milestone)
+                ph_info = phenotype_params(self.state.stage, new_gen, quantize=False)
+                ph_hash = ph_info["hash"]
+
+                before_json = json.dumps(
+                    {
+                        "curiosity": round(gen.curiosity, 4),
+                        "affection": round(gen.affection, 4),
+                        "playfulness": round(gen.playfulness, 4),
+                        "resilience": round(gen.resilience, 4),
+                        "chronotype_shift": round(gen.chronotype_shift, 4),
+                    },
+                    sort_keys=True,
+                )
+                after_json = json.dumps(
+                    {
+                        "curiosity": round(new_gen.curiosity, 4),
+                        "affection": round(new_gen.affection, 4),
+                        "playfulness": round(new_gen.playfulness, 4),
+                        "resilience": round(new_gen.resilience, 4),
+                        "chronotype_shift": round(new_gen.chronotype_shift, 4),
+                    },
+                    sort_keys=True,
+                )
+
+                if dry_run:
+                    self.conn.rollback()
+                    return {
+                        "ok": True,
+                        "dry_run": True,
+                        "dream_key": key,
+                        "trigger": trigger,
+                        "mem_count": len(rows),
+                        "delta_l1": delta_l1,
+                        "milestone": milestone,
+                        "summary": summary,
+                        "genome_before": json.loads(before_json),
+                        "genome_after": json.loads(after_json),
+                        "phenotype_hash": ph_hash,
+                    }
+
+                self._save_genome(new_gen, commit=False)
+                cur = self.conn.execute(
+                    """
+                    INSERT INTO dream_journal (
+                        dream_key, trigger, wall_ts, sim_minute,
+                        mem_from_id, mem_to_id, mem_count,
+                        genome_before, genome_after, delta_l1,
+                        stage, milestone, summary, phenotype_hash
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        key,
+                        trigger,
+                        int(ts_now),
+                        self.state.sim_minute,
+                        mem_from_id,
+                        mem_to_id,
+                        len(rows),
+                        before_json,
+                        after_json,
+                        delta_l1,
+                        self.state.stage,
+                        milestone,
+                        summary,
+                        ph_hash,
+                    ),
+                )
+                dream_id = cur.lastrowid
+
+                # 30-day retention cleanup for consolidated rows & hardware logs
+                cutoff_30d = int(ts_now - 30 * 86400)
+                self.conn.execute(
+                    "DELETE FROM episodic_memories WHERE id <= ? AND wall_ts IS NOT NULL AND wall_ts < ?",
+                    (new_gen.last_consolidated_memory_id, cutoff_30d),
+                )
+                self.conn.execute(
+                    "DELETE FROM proactive_impulses WHERE wall_ts IS NOT NULL AND wall_ts < ?",
+                    (cutoff_30d,),
+                )
+                self.conn.execute(
+                    "DELETE FROM hardware_events WHERE wall_ts < ?",
+                    (cutoff_30d,),
+                )
+
+                if milestone:
+                    self._pending_dream_milestone = milestone
+                self.save_state(self.state, commit=False)
+                self.conn.commit()
+            except Exception:
                 self.conn.rollback()
-                return {"ok": True, "skipped": "duplicate", "dream_id": existing[0], "dream_key": key}
+                raise
 
-            rows = self.conn.execute(
-                "SELECT id, sim_minute, event_type, source, wall_ts "
-                "FROM episodic_memories WHERE id > ? ORDER BY id ASC LIMIT 5000",
-                (gen.last_consolidated_memory_id,),
-            ).fetchall()
-
-            ev = self._extract_evidence(rows)
-            if gen.last_dream_wall_ts is not None:
-                dt_days = max(0.0, (ts_now - gen.last_dream_wall_ts) / 86400.0)
-            else:
-                dt_days = 1.0 if trigger in ("quiet_hours", "missed_night") else 0.25
-
-            new_gen, delta_l1 = self.evolve_genome_pure(gen, ev, dt_days, trigger, ts_now)
-            new_gen.chronotype_shift = self._compute_chronotype_shift(ts_now, gen.chronotype_shift)
-            if rows:
-                mem_from_id = int(rows[0][0])
-                mem_to_id = int(rows[-1][0])
-                new_gen.last_consolidated_memory_id = mem_to_id
-            else:
-                mem_from_id = gen.last_consolidated_memory_id
-                mem_to_id = gen.last_consolidated_memory_id
-
-            milestone = self._detect_milestones(gen, new_gen)
-            summary = self._build_privacy_safe_dream_summary(ev["raw_counts"], len(rows), milestone)
-            ph_info = phenotype_params(self.state.stage, new_gen, quantize=False)
-            ph_hash = ph_info["hash"]
-
-            before_json = json.dumps(
-                {
-                    "curiosity": round(gen.curiosity, 4),
-                    "affection": round(gen.affection, 4),
-                    "playfulness": round(gen.playfulness, 4),
-                    "resilience": round(gen.resilience, 4),
-                    "chronotype_shift": round(gen.chronotype_shift, 4),
-                },
-                sort_keys=True,
-            )
-            after_json = json.dumps(
-                {
-                    "curiosity": round(new_gen.curiosity, 4),
-                    "affection": round(new_gen.affection, 4),
-                    "playfulness": round(new_gen.playfulness, 4),
-                    "resilience": round(new_gen.resilience, 4),
-                    "chronotype_shift": round(new_gen.chronotype_shift, 4),
-                },
-                sort_keys=True,
-            )
-
-            if dry_run:
-                self.conn.rollback()
-                return {
-                    "ok": True,
-                    "dry_run": True,
-                    "dream_key": key,
-                    "trigger": trigger,
-                    "mem_count": len(rows),
-                    "delta_l1": delta_l1,
-                    "milestone": milestone,
-                    "summary": summary,
-                    "genome_before": json.loads(before_json),
-                    "genome_after": json.loads(after_json),
-                    "phenotype_hash": ph_hash,
-                }
-
-            self._save_genome(new_gen, commit=False)
-            cur = self.conn.execute(
-                """
-                INSERT INTO dream_journal (
-                    dream_key, trigger, wall_ts, sim_minute,
-                    mem_from_id, mem_to_id, mem_count,
-                    genome_before, genome_after, delta_l1,
-                    stage, milestone, summary, phenotype_hash
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    key,
-                    trigger,
-                    int(ts_now),
-                    self.state.sim_minute,
-                    mem_from_id,
-                    mem_to_id,
-                    len(rows),
-                    before_json,
-                    after_json,
-                    delta_l1,
-                    self.state.stage,
-                    milestone,
-                    summary,
-                    ph_hash,
-                ),
-            )
-            dream_id = cur.lastrowid
-
-            # 30-day retention cleanup for consolidated rows
-            cutoff_30d = int(ts_now - 30 * 86400)
-            self.conn.execute(
-                "DELETE FROM episodic_memories WHERE id <= ? AND wall_ts IS NOT NULL AND wall_ts < ?",
-                (new_gen.last_consolidated_memory_id, cutoff_30d),
-            )
-            self.conn.execute(
-                "DELETE FROM proactive_impulses WHERE wall_ts IS NOT NULL AND wall_ts < ?",
-                (cutoff_30d,),
-            )
-
-            if milestone:
-                self._pending_dream_milestone = milestone
-            self.save_state(self.state, commit=False)
-            self.conn.commit()
-        except Exception:
-            self.conn.rollback()
-            raise
-
-        self.genome = new_gen
-        self.phenotype = compute_phenotype(self.state.stage, self.genome)
+            self.genome = new_gen
+            self.phenotype = compute_phenotype(self.state.stage, self.genome)
         return {
             "ok": True,
             "dream_id": dream_id,

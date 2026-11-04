@@ -1,10 +1,10 @@
 {
   "metrics": {
-    "us_per_math_tick": 0.765,
-    "ticks_per_sec": 1306785.7,
-    "us_per_sqlite_write": 3.842,
-    "us_per_sqlite_read": 3.742,
-    "sim_24h_walltime_ms": 6.42,
+    "us_per_math_tick": 0.613,
+    "ticks_per_sec": 1632408.9,
+    "us_per_sqlite_write": 3.03,
+    "us_per_sqlite_read": 2.566,
+    "sim_24h_walltime_ms": 5.06,
     "emotions_covered_count": 21,
     "emotions_covered": [
       "angry",

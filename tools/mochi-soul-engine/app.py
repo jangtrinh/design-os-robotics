@@ -18,7 +18,10 @@ Fixed Localhost Port Contract: port 4185 on localhost
 from __future__ import annotations
 
 import argparse
+import copy
 import datetime
+import gzip
+import hashlib
 import http.server
 import importlib.util
 import json
@@ -67,6 +70,29 @@ LOCAL_HOST = "localhost"
 DEFAULT_PORT = int(os.environ.get("MOCHI_STUDIO_PORT", "4185"))
 REPORT_JSON = ROOT / "plans/reports/benchmark-live-companion-app.json"
 ARTIFACT_DIR = Path(os.environ["ARTIFACT_DIR"]) if os.environ.get("ARTIFACT_DIR") else None
+
+_VECTORS_PAYLOAD = {
+    "palette": [
+        "#000000",
+        "#eafcff",
+        "#b8e6f8",
+        "#e080e4",
+        "#eee46e",
+        "#e6312e",
+        "#7644a8",
+        "#4c1a24",
+    ],
+    "src_w": mochi_canonical_vectors.FACE_SRC_W,
+    "src_h": mochi_canonical_vectors.FACE_SRC_H,
+    "emotions": mochi_canonical_vectors.decode_all_emotion_scanlines(),
+}
+_CACHED_VECTORS_JSON: bytes = json.dumps(_VECTORS_PAYLOAD, separators=(",", ":")).encode("utf-8")
+_CACHED_VECTORS_GZIP: bytes = gzip.compress(_CACHED_VECTORS_JSON, compresslevel=6)
+_CACHED_VECTORS_ETAG: str = f'"{hashlib.sha256(_CACHED_VECTORS_JSON).hexdigest()[:16]}"'
+MAX_BODY_BYTES = 65536
+_SYNTH_CARRIER_64: tuple[float, ...] = tuple(
+    math.sin(2.0 * math.pi * 440.0 * i / 16000.0) for i in range(64)
+)
 
 WORKSPACE_SYMBIOSIS_TABLE: dict[str, dict] = {
     "git_commit": {
@@ -202,7 +228,7 @@ class MochiCompanionApp:
         self.supervisor.stop()
 
     def _record_hardware_event(self, ev: serial_supervisor.HardwareEventRecord) -> None:
-        with self.lock:
+        with self.lock, self.soul._db_lock:
             self.soul.conn.execute(
                 "INSERT INTO hardware_events "
                 "(wall_ts, kind, signature, uptime_ms, fw_version, rescue_mode, note) "
@@ -340,14 +366,16 @@ class MochiCompanionApp:
             e1 = self._emit_and_validate(pkt_llm, f"interact:{event_type}")
             e2 = self._emit_and_validate(pkt_alert, f"interact:{event_type}")
             dt_us = (time.perf_counter() - t0) * 1e6
-            return {
-                "ok": e1["valid"] and e2["valid"],
-                "emotion": emo,
-                "latency_us": round(dt_us, 2),
-                "pose": [round(v, 3) for v in pose],
-                "packets": [e1, e2],
-                "state": self.get_state_dict(),
-            }
+            pose_rounded = [round(v, 3) for v in pose]
+        state_snapshot = self.get_state_dict()
+        return {
+            "ok": e1["valid"] and e2["valid"],
+            "emotion": emo,
+            "latency_us": round(dt_us, 2),
+            "pose": pose_rounded,
+            "packets": [e1, e2],
+            "state": state_snapshot,
+        }
 
     def handle_workspace_event(self, ws_event: str, detail: str = "") -> dict:
         t0 = time.perf_counter()
@@ -388,15 +416,18 @@ class MochiCompanionApp:
                 self._emit_and_validate(p_led, f"workspace:{ws_event}"),
             ]
             dt_us = (time.perf_counter() - t0) * 1e6
-            return {
-                "ok": all(x["valid"] for x in emitted),
-                "workspace_event": ws_event,
-                "emotion": self.soul.state.emotion,
-                "latency_us": round(dt_us, 2),
-                "pose": [round(v, 3) for v in pose],
-                "packets": emitted,
-                "state": self.get_state_dict(),
-            }
+            emo_out = self.soul.state.emotion
+            pose_rounded = [round(v, 3) for v in pose]
+        state_snapshot = self.get_state_dict()
+        return {
+            "ok": all(x["valid"] for x in emitted),
+            "workspace_event": ws_event,
+            "emotion": emo_out,
+            "latency_us": round(dt_us, 2),
+            "pose": pose_rounded,
+            "packets": emitted,
+            "state": state_snapshot,
+        }
 
     def handle_reflex_step(
         self,
@@ -447,7 +478,7 @@ class MochiCompanionApp:
             if audio_rms is not None:
                 self.audio_rms = max(0.0, float(audio_rms))
                 amp = min(32000, int(self.audio_rms * math.sqrt(2.0)))
-                pcm = [int(amp * math.sin(2.0 * math.pi * 440.0 * i / 16000.0)) for i in range(64)]
+                pcm = [int(amp * s) for s in _SYNTH_CARRIER_64]
                 self.lip_aperture = self.lipsync.process_pcm16_frame(pcm)
             else:
                 self.lip_aperture = -1.0
@@ -743,8 +774,9 @@ class MochiCompanionRequestHandler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def _send_static_file(self, base_dir: Path, rel_path: str) -> None:
+        base_resolved = base_dir.resolve()
         target = (base_dir / rel_path).resolve()
-        if not str(target).startswith(str(base_dir.resolve())) or not target.is_file():
+        if not target.is_relative_to(base_resolved) or not target.is_file():
             self._send_json({"error": f"Asset not found: {rel_path}"}, status=404)
             return
         data = target.read_bytes()
@@ -787,11 +819,20 @@ class MochiCompanionRequestHandler(http.server.BaseHTTPRequestHandler):
         return None
 
     def _read_json_body(self) -> dict:
-        length = int(self.headers.get("Content-Length", "0"))
+        raw_len = self.headers.get("Content-Length", "0")
+        try:
+            length = int(raw_len)
+        except ValueError as exc:
+            raise ValueError("Invalid Content-Length header") from exc
         if length <= 0:
             return {}
+        if length > MAX_BODY_BYTES:
+            raise ValueError(f"Payload exceeds maximum allowed size ({MAX_BODY_BYTES} bytes)")
         raw = self.rfile.read(length)
-        return json.loads(raw.decode("utf-8"))
+        parsed = json.loads(raw.decode("utf-8"))
+        if not isinstance(parsed, dict):
+            raise ValueError("JSON body must be an object")
+        return parsed
 
     def do_GET(self) -> None:
         parsed_url = urllib.parse.urlparse(self.path)
@@ -829,32 +870,34 @@ class MochiCompanionRequestHandler(http.server.BaseHTTPRequestHandler):
         elif path == "/api/watchdog":
             self._send_json(self.server.app.supervisor.snapshot())
         elif path == "/api/mochi-vectors":
-            self._send_json(
-                {
-                    "palette": [
-                        "#000000",
-                        "#eafcff",
-                        "#b8e6f8",
-                        "#e080e4",
-                        "#eee46e",
-                        "#e6312e",
-                        "#7644a8",
-                        "#4c1a24",
-                    ],
-                    "src_w": mochi_canonical_vectors.FACE_SRC_W,
-                    "src_h": mochi_canonical_vectors.FACE_SRC_H,
-                    "emotions": mochi_canonical_vectors.decode_all_emotion_scanlines(),
-                }
-            )
+            if self.headers.get("If-None-Match") == _CACHED_VECTORS_ETAG:
+                self.send_response(304)
+                self.send_header("ETag", _CACHED_VECTORS_ETAG)
+                self.send_header("Cache-Control", "public, max-age=86400, immutable")
+                self.end_headers()
+                return
+            accept_enc = (self.headers.get("Accept-Encoding") or "").lower()
+            use_gzip = "gzip" in accept_enc
+            payload_bytes = _CACHED_VECTORS_GZIP if use_gzip else _CACHED_VECTORS_JSON
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            if use_gzip:
+                self.send_header("Content-Encoding", "gzip")
+            self.send_header("Content-Length", str(len(payload_bytes)))
+            self.send_header("ETag", _CACHED_VECTORS_ETAG)
+            self.send_header("Cache-Control", "public, max-age=86400, immutable")
+            self.end_headers()
+            self.wfile.write(payload_bytes)
         elif path == "/api/hardware":
             self._send_json(self.server.app.probe_hardware_summary(force=True))
         elif path == "/api/hud.png":
             with self.server.app.lock:
+                state_snapshot = copy.copy(self.server.app.soul.state)
                 mems = self.server.app.get_recent_memories(1)
                 recent_txt = mems[0]["detail"][:26] if mems else "Workspace Symbiosis Ready"
-                png_bytes = bridge.MochiProactiveBridge.render_hud_card_png(
-                    self.server.app.soul.state, recent_memory=recent_txt
-                )
+            png_bytes = bridge.MochiProactiveBridge.render_hud_card_png(
+                state_snapshot, recent_memory=recent_txt
+            )
             self.send_response(200)
             self.send_header("Content-Type", "image/png")
             self.send_header("Content-Length", str(len(png_bytes)))

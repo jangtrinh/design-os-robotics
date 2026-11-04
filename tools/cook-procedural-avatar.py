@@ -138,6 +138,11 @@ def draw_star(d: ImageDraw.ImageDraw, cx: int, cy: int, r_out: int, color: int =
     d.polygon(pts, fill=color)
 
 
+_COLOR_RUNS: tuple[tuple[bytes, ...], ...] = tuple(
+    tuple(bytes([c]) * w for w in range(241)) for c in range(8)
+)
+
+
 def render_emotion_frame(
     emotion: str,
     frame_idx: int,
@@ -160,6 +165,7 @@ def render_emotion_frame(
     out_w, out_h = 240, 240
     y_off = (out_h - int(_VEC_MOD.FACE_SRC_H)) // 2
     buf = bytearray(out_w * out_h)
+    color_runs = _COLOR_RUNS
 
     blush_pad = 0
     if not morph.is_identity and morph.blush_q != 1.0:
@@ -179,7 +185,7 @@ def render_emotion_frame(
             continue
         row_base = ry * out_w
         span_len = nx1 - nx0
-        buf[row_base + nx0 : row_base + nx1] = bytes([color]) * span_len
+        buf[row_base + nx0 : row_base + nx1] = color_runs[color][span_len]
         if eye_thicken and color in (1, 2) and 34 <= y_src <= 104 and ry > 0:
             up_base = (ry - 1) * out_w
             for x_pos in range(nx0, nx1):

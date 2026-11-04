@@ -434,6 +434,7 @@ class SerialSupervisor:
         self.on_voice_wake = on_voice_wake
         self.enabled = enabled
         self._fd: Optional[int] = None
+        self._active_port: Optional[str] = None
         self._stop_event = threading.Event()
         self._thread: Optional[threading.Thread] = None
         self._last_proc_check: float = 0.0
@@ -450,7 +451,10 @@ class SerialSupervisor:
 
     def stop(self) -> None:
         self._stop_event.set()
-        self._close_fd()
+        if self._thread and self._thread.is_alive() and self._thread is not threading.current_thread():
+            self._thread.join(timeout=1.5)
+        with self.lock:
+            self._close_fd()
 
     def _close_fd(self) -> None:
         if self._fd is not None:
@@ -459,6 +463,7 @@ class SerialSupervisor:
             except OSError:
                 pass
             self._fd = None
+        self._active_port = None
 
     @staticmethod
     def _discover_port() -> Optional[str]:
@@ -481,6 +486,7 @@ class SerialSupervisor:
             attrs[4] = termios.B115200
             attrs[5] = termios.B115200
             termios.tcsetattr(fd, termios.TCSANOW, attrs)
+            self._active_port = port_path
             return fd
         except OSError:
             return None
@@ -503,24 +509,43 @@ class SerialSupervisor:
         except OSError:
             self._close_fd()
 
+    def _drain_emitted_events_locked(self) -> list[HardwareEventRecord]:
+        if not self.fsm.events_emitted:
+            return []
+        pending = list(self.fsm.events_emitted)
+        self.fsm.events_emitted.clear()
+        return pending
+
+    def _dispatch_emitted_events(self, events: list[HardwareEventRecord]) -> None:
+        if not events or not self.on_hardware_event:
+            return
+        for ev in events:
+            try:
+                self.on_hardware_event(ev)
+            except Exception:
+                pass
+
     def _flush_emitted_events(self) -> None:
-        while self.fsm.events_emitted:
-            ev = self.fsm.events_emitted.pop(0)
-            if self.on_hardware_event:
-                try:
-                    self.on_hardware_event(ev)
-                except Exception:
-                    pass
+        with self.lock:
+            pending = self._drain_emitted_events_locked()
+        self._dispatch_emitted_events(pending)
 
     def _run_loop(self) -> None:
         line_buf = ""
         while not self._stop_event.is_set():
             now = time.time()
-            if (now - self._last_proc_check) >= 1.0:
+            if (now - self._last_proc_check) >= 5.0:
                 self._flash_active_cached = is_flash_lock_held() or is_flasher_process_running()
                 self._last_proc_check = now
+            elif is_flash_lock_held():
+                self._flash_active_cached = True
 
-            port_path = self._discover_port()
+            port_path = (
+                self._active_port
+                if (self._fd is not None and self._active_port and os.path.exists(self._active_port))
+                else self._discover_port()
+            )
+            pending_events: list[HardwareEventRecord] = []
             with self.lock:
                 self.fsm.set_external_status(
                     port_present=bool(port_path),
@@ -528,7 +553,9 @@ class SerialSupervisor:
                 )
                 if self.fsm.state == "YIELDED":
                     self._close_fd()
-                    self._flush_emitted_events()
+                    pending_events = self._drain_emitted_events_locked()
+            if pending_events:
+                self._dispatch_emitted_events(pending_events)
 
             if self.fsm.state == "YIELDED":
                 time.sleep(0.25)
@@ -546,6 +573,8 @@ class SerialSupervisor:
                             self._close_fd()
                         else:
                             line_buf += chunk.decode("utf-8", errors="replace")
+                            if len(line_buf) > 65536:
+                                line_buf = line_buf[-4096:]
                             while "\n" in line_buf:
                                 line, line_buf = line_buf.split("\n", 1)
                                 wake_sig = None
@@ -554,7 +583,9 @@ class SerialSupervisor:
                                     if self.fsm.state == "PULSING":
                                         self._execute_atomic_rts_pulse()
                                         self.fsm.complete_pulse_io()
-                                    self._flush_emitted_events()
+                                    pending_events = self._drain_emitted_events_locked()
+                                if pending_events:
+                                    self._dispatch_emitted_events(pending_events)
                                 if wake_sig == "voice_wake" and self.on_voice_wake:
                                     try:
                                         self.on_voice_wake()
@@ -572,11 +603,17 @@ class SerialSupervisor:
                 if self.fsm.state == "PULSING":
                     self._execute_atomic_rts_pulse()
                     self.fsm.complete_pulse_io()
-                self._flush_emitted_events()
+                pending_events = self._drain_emitted_events_locked()
+            if pending_events:
+                self._dispatch_emitted_events(pending_events)
 
     def snapshot(self) -> dict:
         with self.lock:
-            port_path = self._discover_port()
+            port_path = (
+                self._active_port
+                if (self._fd is not None and self._active_port and os.path.exists(self._active_port))
+                else self._discover_port()
+            )
             self.fsm.port_present = bool(port_path)
             self.fsm.step_clock()
             return self.fsm.snapshot()
