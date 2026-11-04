@@ -566,6 +566,81 @@
         </article>
       </section>
 
+      <!-- 2C. SELF-AWARENESS Q&A & UNIFIED BRAIN BRIDGE (PATH A MCP + PATH B LAN GATEWAY) -->
+      <section class="telemetry-split" aria-labelledby="self-awareness-title" style="border-bottom: 1px solid var(--border); padding-bottom: var(--s-6); margin-bottom: var(--s-6);">
+        <article>
+          <header class="register-head">
+            <h2 id="self-awareness-title" class="ds-heading" data-level="2">Hỏi Mochi Về Bản Thân (Self-Awareness Q&amp;A)</h2>
+            <span class="register-sub mono" id="self-qa-latency">MCP Self-Introspection · 0.08 ms</span>
+          </header>
+          <p class="act-pill-bar" style="margin-top: var(--s-4);">
+            <button class="ds-btn-pill" type="button" onclick="askMochiSelf('Bạn là ai và phần cứng của bạn gồm những gì?')">
+              <span>Bạn là ai?</span>
+            </button>
+            <button class="ds-btn-pill" type="button" onclick="askMochiSelf('Em đang ở cấp mấy, bao nhiêu XP và tiến hoá thế nào?')">
+              <span>Cấp độ &amp; XP?</span>
+            </button>
+            <button class="ds-btn-pill" type="button" onclick="askMochiSelf('Năng lượng, độ no, độ gắn kết và tâm trạng hiện tại của em ra sao?')">
+              <span>Năng lượng &amp; Tâm trạng?</span>
+            </button>
+            <button class="ds-btn-pill" type="button" onclick="askMochiSelf('Tính cách Genome của em thế nào và đêm qua em mơ thấy gì?')">
+              <span>Tính cách &amp; Giấc mơ?</span>
+            </button>
+            <button class="ds-btn-pill" type="button" onclick="askMochiSelf('Kỷ niệm gần đây và sức khoẻ phần cứng Watchdog thế nào?')">
+              <span>Ký ức &amp; Watchdog?</span>
+            </button>
+          </p>
+          <div style="display: flex; gap: 8px; margin-top: var(--s-4);">
+            <input
+              id="self-question-input"
+              type="text"
+              placeholder="Nhập câu hỏi bất kỳ về bản thân Mochi (VD: Em đang ở cấp mấy, năng lượng bao nhiêu?)..."
+              style="flex: 1; background: var(--bg-1); color: var(--fg-0); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font: inherit;"
+              onkeydown="if(event.key==='Enter') submitSelfQuestion()"
+            />
+            <button class="ds-btn-pill" type="button" onclick="submitSelfQuestion()">
+              <span>Hỏi Mochi</span>
+            </button>
+          </div>
+          <div
+            id="self-answer-box"
+            style="margin-top: var(--s-4); padding: 12px 14px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; color: var(--fg-0); line-height: 1.55; font-size: 0.9rem;"
+          >
+            Bấm một câu hỏi nhanh hoặc nhập câu hỏi để Mochi tự truy vấn hồ sơ nội tâm thời gian thực (`Stage`, `XP`, `4D Homeostasis`, `Genome`, `Dream Journal`, `RoBot.5320 Hardware`).
+          </div>
+        </article>
+
+        <article>
+          <header class="register-head">
+            <h2 class="ds-heading" data-level="2">Cầu Nối Hợp Nhất Não Bộ (Path A MCP &amp; Path B LAN Gateway)</h2>
+            <span class="register-sub mono" id="brain-bridge-readout">MCP: 25 tools · WS Clients: 0</span>
+          </header>
+          <p class="act-pill-bar" style="margin-top: var(--s-4);">
+            <span class="ds-chip" data-variant="mono" id="mcp-pipe-chip">Path A MCP Server: /api/mcp (Ready)</span>
+            <span class="ds-chip" data-variant="mono" id="ws-gateway-chip">Path B WS Gateway: ws://localhost:4390/ws</span>
+            <button class="ds-btn-pill" type="button" id="btn-copy-prompt" onclick="copyXiaozhiPrompt()">
+              <span>Copy System Prompt (xiaozhi.me)</span>
+            </button>
+          </p>
+          <div style="display: flex; gap: 8px; margin-top: var(--s-4);">
+            <input
+              id="mcp-endpoint-input"
+              type="text"
+              placeholder="Dán wss://api.tenclass.net/mcp/?token=... (Path A Xiaozhi MCP Pipe)"
+              style="flex: 1; background: var(--bg-1); color: var(--fg-0); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-family: var(--font-mono); font-size: 0.8rem;"
+            />
+            <button class="ds-btn-pill" type="button" onclick="connectMcpPipe()">
+              <span>Kết nối MCP Pipe</span>
+            </button>
+          </div>
+          <pre
+            id="self-context-preview"
+            class="mono"
+            style="margin-top: var(--s-4); padding: 10px 12px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; color: var(--fg-1); font-size: 0.75rem; white-space: pre-wrap; word-break: break-word; max-height: 112px; overflow-y: auto;"
+          >[MOCHI_SOUL_SELF_STATE] Đang tải ngữ cảnh tự nhận thức thời gian thực...</pre>
+        </article>
+      </section>
+
       <!-- 3. OUTBOUND OTA_1 PACKET REGISTER & SQLITE WAL EPISODIC MEMORY -->
       <section class="telemetry-split" aria-labelledby="telemetry-title">
         <article>
@@ -908,6 +983,72 @@
       }
     });
 
+    async function askMochiSelf(questionText) {
+      const box = document.getElementById("self-answer-box");
+      const latEl = document.getElementById("self-qa-latency");
+      try {
+        const res = await fetch("/api/self/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: questionText })
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (box && data.answer) {
+          box.textContent = data.answer;
+        }
+        if (latEl && typeof data.latency_us === "number") {
+          latEl.textContent = `MCP Self-Introspection · ${(data.latency_us / 1000).toFixed(2)} ms · ${data.emotion}`;
+        }
+        if (data.compact_context) {
+          const ctxEl = document.getElementById("self-context-preview");
+          if (ctxEl) ctxEl.textContent = data.compact_context;
+        }
+        if (data.state) {
+          applyState(data.state);
+        }
+      } catch (_) {}
+    }
+
+    function submitSelfQuestion() {
+      const inp = document.getElementById("self-question-input");
+      const q = (inp && inp.value.trim()) || "Bạn là ai và trạng thái hiện tại của bạn ra sao?";
+      askMochiSelf(q);
+    }
+
+    async function copyXiaozhiPrompt() {
+      const btn = document.getElementById("btn-copy-prompt");
+      try {
+        const res = await fetch("/api/self-prompt");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.system_prompt_vi && navigator.clipboard) {
+          await navigator.clipboard.writeText(data.system_prompt_vi);
+          if (btn) btn.innerHTML = "<span>Đã Copy System Prompt!</span>";
+          setTimeout(() => {
+            if (btn) btn.innerHTML = "<span>Copy System Prompt (xiaozhi.me)</span>";
+          }, 2200);
+        }
+        if (data.compact_context) {
+          const ctxEl = document.getElementById("self-context-preview");
+          if (ctxEl) ctxEl.textContent = data.compact_context;
+        }
+      } catch (_) {}
+    }
+
+    async function connectMcpPipe() {
+      const inp = document.getElementById("mcp-endpoint-input");
+      const ep = (inp && inp.value.trim()) || "";
+      try {
+        await fetch("/api/self/mcp-pipe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint_url: ep })
+        });
+        fetchStatus();
+      } catch (_) {}
+    }
+
     function applyState(payload) {
       const st = Object.assign({}, currentState, payload.state || payload);
       currentState = st;
@@ -1075,6 +1216,25 @@
           tr.append(tdTrig, tdSum, tdDelta);
           dreamTbody.appendChild(tr);
         });
+      }
+
+      if (st.self_awareness) {
+        const sa = st.self_awareness;
+        const pipe = sa.mcp_pipe || {};
+        const bReadout = document.getElementById("brain-bridge-readout");
+        if (bReadout) {
+          bReadout.textContent = `MCP: ${sa.mcp_tools_count ?? 25} tools · WS Clients: ${sa.ws_clients ?? 0}`;
+        }
+        const pChip = document.getElementById("mcp-pipe-chip");
+        if (pChip) {
+          pChip.textContent = pipe.connected
+            ? `Path A MCP Pipe: Connected (${pipe.requests_served || 0} calls)`
+            : (pipe.configured ? `Path A MCP Pipe: Reconnecting...` : `Path A MCP Server: /api/mcp (Ready)`);
+        }
+        const wsChip = document.getElementById("ws-gateway-chip");
+        if (wsChip) {
+          wsChip.textContent = `Path B WS Gateway: ${window.location.host}/ws (${sa.ws_clients ?? 0} live)`;
+        }
       }
 
       if (viewMode === 2) {
@@ -1281,6 +1441,12 @@
 
     fetchMochiVectors();
     fetchStatus();
+    fetch("/api/self-prompt").then((r) => r.ok ? r.json() : null).then((d) => {
+      if (d && d.compact_context) {
+        const ctxEl = document.getElementById("self-context-preview");
+        if (ctxEl) ctxEl.textContent = d.compact_context;
+      }
+    }).catch(() => {});
     setInterval(() => {
       if (!document.hidden) fetchStatus();
     }, 5000);

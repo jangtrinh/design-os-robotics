@@ -28,6 +28,7 @@ import json
 import math
 import mimetypes
 import os
+import socket
 import socketserver
 import sys
 import threading
@@ -48,6 +49,7 @@ import bridge  # noqa: E402
 import engine  # noqa: E402
 import mochi_canonical_vectors  # noqa: E402
 import reflex_60fps  # noqa: E402
+import self_awareness  # noqa: E402
 import serial_supervisor  # noqa: E402
 
 bridge.FirmwareProtocolValidator.VALID_MCP_TOOLS.update(
@@ -171,6 +173,7 @@ class MochiCompanionApp:
         in_memory_db: bool = False,
         db_path: Path | str | None = None,
         wdt_rescue_mode: Optional[str] = None,
+        mcp_endpoint: Optional[str] = None,
         start_background_threads: bool = False,
     ):
         self.lock = threading.RLock()
@@ -200,6 +203,9 @@ class MochiCompanionApp:
         self.packet_log: deque[dict] = deque(maxlen=50)
         self.hardware_cache: dict = {}
         self.hardware_cache_ts: float = 0.0
+        self.ws_clients: set[socket.socket] = set()
+        self.ws_lock = threading.Lock()
+        self.mcp_pipe = self_awareness.XiaozhiMcpPipeBridge(self, endpoint_url=mcp_endpoint)
 
         self.supervisor = serial_supervisor.SerialSupervisor(
             mode=wdt_rescue_mode,
@@ -218,6 +224,7 @@ class MochiCompanionApp:
         if start_background_threads:
             self._catch_up_downtime_and_missed_dreams()
             self.supervisor.start()
+            self.mcp_pipe.start_if_configured()
             self._ticker_thread = threading.Thread(
                 target=self._run_minute_ticker, name="mochi-soul-ticker", daemon=True
             )
@@ -225,7 +232,37 @@ class MochiCompanionApp:
 
     def close(self) -> None:
         self._ticker_stop.set()
+        self.mcp_pipe.stop()
         self.supervisor.stop()
+        with self.ws_lock:
+            for ws_sock in list(self.ws_clients):
+                try:
+                    ws_sock.close()
+                except OSError:
+                    pass
+            self.ws_clients.clear()
+
+    @staticmethod
+    def bridge_valid_tools() -> set[str]:
+        return set(bridge.FirmwareProtocolValidator.VALID_MCP_TOOLS)
+
+    def broadcast_ws_text(self, raw_json: str) -> int:
+        frame = self_awareness.ws_encode_frame(raw_json, opcode=0x1, mask=False)
+        sent = 0
+        dead: list[socket.socket] = []
+        with self.ws_lock:
+            clients = list(self.ws_clients)
+        for sock in clients:
+            try:
+                sock.sendall(frame)
+                sent += 1
+            except OSError:
+                dead.append(sock)
+        if dead:
+            with self.ws_lock:
+                for d_sock in dead:
+                    self.ws_clients.discard(d_sock)
+        return sent
 
     def _record_hardware_event(self, ev: serial_supervisor.HardwareEventRecord) -> None:
         with self.lock, self.soul._db_lock:
@@ -316,6 +353,8 @@ class MochiCompanionApp:
         }
         self.req_counter += 1
         self.packet_log.appendleft(entry)
+        if ok:
+            self.broadcast_ws_text(raw_json)
         return entry
 
     def build_mcp_call(self, tool_name: str, arguments: dict) -> str:
@@ -531,6 +570,7 @@ class MochiCompanionApp:
 
     def build_ota_discovery_response(self, host_header: str = f"{LOCAL_HOST}:{DEFAULT_PORT}") -> dict:
         now_ms = int(time.time() * 1000)
+        snap = self_awareness.build_self_identity_snapshot(self)
         return {
             "server_time": {
                 "timestamp": now_ms,
@@ -544,6 +584,8 @@ class MochiCompanionApp:
                 "url": f"ws://{host_header}/ws",
                 "token": "mochi-soul-local-hub",
             },
+            "mcp_endpoint": f"http://{host_header}/api/mcp",
+            "mochi_soul_context": self_awareness.format_compact_context_block(snap),
         }
 
     def probe_hardware_summary(self, force: bool = False) -> dict:
@@ -715,6 +757,9 @@ class MochiCompanionApp:
     def get_state_dict(self) -> dict:
         hw = self.probe_hardware_summary(force=False)
         wdt = self.supervisor.snapshot()
+        mcp_snap = self.mcp_pipe.snapshot()
+        with self.ws_lock:
+            ws_cnt = len(self.ws_clients)
         with self.lock:
             s = self.soul.state
             satiety = engine.clamp(100.0 - s.hunger, 0.0, 100.0)
@@ -746,6 +791,11 @@ class MochiCompanionApp:
                 "phenotype": genome_payload["phenotype"],
                 "dreams": self.soul.get_recent_dreams(5),
                 "watchdog": wdt,
+                "self_awareness": {
+                    "mcp_pipe": mcp_snap,
+                    "ws_clients": ws_cnt,
+                    "mcp_tools_count": len(self_awareness.MCP_SELF_TOOLS_SCHEMA) + len(self.bridge_valid_tools()),
+                },
             }
 
 
@@ -834,10 +884,115 @@ class MochiCompanionRequestHandler(http.server.BaseHTTPRequestHandler):
             raise ValueError("JSON body must be an object")
         return parsed
 
+    def _handle_websocket_upgrade(self) -> None:
+        """
+        Path B Native RFC 6455 WebSocket Gateway (`/ws`, `/xiaozhi/v1/`):
+          - Accepts robot or studio WebSocket connections.
+          - Streams proactive `llm` / `alert` / `notify` / `mcp` packets to the robot.
+          - Answers incoming `hello`, `mcp`, and `listen`/`chat`/`self_query` frames with
+            Mochi's real-time `[MOCHI_SOUL_SELF_STATE]` context injected.
+        """
+        sec_key = self.headers.get("Sec-WebSocket-Key")
+        if not sec_key:
+            self._send_json({"error": "Missing Sec-WebSocket-Key header"}, status=400)
+            return
+        accept_val = self_awareness.ws_compute_accept_key(sec_key)
+        self.send_response(101, "Switching Protocols")
+        self.send_header("Upgrade", "websocket")
+        self.send_header("Connection", "Upgrade")
+        self.send_header("Sec-WebSocket-Accept", accept_val)
+        self.end_headers()
+
+        sock = self.connection
+        sock.settimeout(60.0)
+        app = self.server.app
+        with app.ws_lock:
+            app.ws_clients.add(sock)
+
+        try:
+            # Push initial self-identity greeting state frame
+            snap = self_awareness.build_self_identity_snapshot(app)
+            welcome_pkt = {
+                "type": "hello",
+                "transport": "websocket",
+                "session_id": f"mochi-ws-{int(time.time())}",
+                "mochi_soul_context": self_awareness.format_compact_context_block(snap),
+            }
+            sock.sendall(
+                self_awareness.ws_encode_frame(json.dumps(welcome_pkt, ensure_ascii=False), opcode=0x1)
+            )
+            while True:
+                try:
+                    frame = self_awareness.ws_recv_frame(sock)
+                except socket.timeout:
+                    sock.sendall(self_awareness.ws_encode_frame(b"ping", opcode=0x9))
+                    continue
+                if frame is None:
+                    break
+                opcode, payload = frame
+                if opcode == 0x8:  # Close
+                    break
+                if opcode == 0x9:  # Ping
+                    sock.sendall(self_awareness.ws_encode_frame(payload, opcode=0xA))
+                    continue
+                if opcode == 0x1:  # Text JSON
+                    try:
+                        msg = json.loads(payload.decode("utf-8"))
+                    except Exception:
+                        continue
+                    mtype = msg.get("type", "")
+                    if mtype == "hello":
+                        reply = {
+                            "type": "hello",
+                            "transport": "websocket",
+                            "session_id": "mochi-local-hub",
+                            "audio_params": {"format": "opus", "sample_rate": 16000, "channels": 1},
+                            "mochi_soul_context": self_awareness.format_compact_context_block(
+                                self_awareness.build_self_identity_snapshot(app)
+                            ),
+                        }
+                        sock.sendall(
+                            self_awareness.ws_encode_frame(json.dumps(reply, ensure_ascii=False), opcode=0x1)
+                        )
+                    elif mtype == "mcp" or "jsonrpc" in msg:
+                        inner = msg.get("payload") if mtype == "mcp" else msg
+                        if isinstance(inner, dict) and "method" in inner:
+                            rpc_out = self_awareness.handle_mcp_jsonrpc(app, inner)
+                            wrapped = {"type": "mcp", "payload": rpc_out} if mtype == "mcp" else rpc_out
+                            sock.sendall(
+                                self_awareness.ws_encode_frame(
+                                    json.dumps(wrapped, ensure_ascii=False), opcode=0x1
+                                )
+                            )
+                    elif mtype in ("listen", "chat", "self_query", "iot"):
+                        q_text = str(msg.get("text") or msg.get("question") or "")
+                        ans = self_awareness.answer_self_question(app, q_text)
+                        tts_pkt = {
+                            "type": "tts",
+                            "state": "sentence_start",
+                            "text": ans["answer"],
+                            "emotion": ans["emotion"],
+                            "mochi_soul_context": ans["compact_context"],
+                        }
+                        sock.sendall(
+                            self_awareness.ws_encode_frame(json.dumps(tts_pkt, ensure_ascii=False), opcode=0x1)
+                        )
+        finally:
+            with app.ws_lock:
+                app.ws_clients.discard(sock)
+
     def do_GET(self) -> None:
         parsed_url = urllib.parse.urlparse(self.path)
         path = parsed_url.path
         qs = urllib.parse.parse_qs(parsed_url.query)
+
+        if (self.headers.get("Upgrade") or "").lower() == "websocket" and path in (
+            "/ws",
+            "/xiaozhi/v1/",
+            "/xiaozhi/v1",
+        ):
+            self._handle_websocket_upgrade()
+            return
 
         if path in ("/", "/index.html", "/studio.html"):
             body = (THIS_DIR / "studio.html").read_text(encoding="utf-8").encode("utf-8")
@@ -869,6 +1024,12 @@ class MochiCompanionRequestHandler(http.server.BaseHTTPRequestHandler):
             self._send_json({"dreams": self.server.app.get_dreams_list(limit=limit_i)})
         elif path == "/api/watchdog":
             self._send_json(self.server.app.supervisor.snapshot())
+        elif path == "/api/self":
+            self._send_json(self_awareness.build_self_identity_snapshot(self.server.app))
+        elif path == "/api/self-prompt":
+            host = self.headers.get("Host", f"{LOCAL_HOST}:{DEFAULT_PORT}")
+            snap = self_awareness.build_self_identity_snapshot(self.server.app)
+            self._send_json(self_awareness.build_xiaozhi_system_prompt(snap, f"http://{host}"))
         elif path == "/api/mochi-vectors":
             if self.headers.get("If-None-Match") == _CACHED_VECTORS_ETAG:
                 self.send_response(304)
@@ -942,9 +1103,18 @@ class MochiCompanionRequestHandler(http.server.BaseHTTPRequestHandler):
                 self.server.app.handle_reflex_step(distance_cm=dist, audio_rms=rms)
             )
         elif path == "/api/mcp":
-            tool = body.get("tool", "self.Otto.stop")
-            args = body.get("arguments", {})
-            self._send_json(self.server.app.handle_mcp_dispatch(tool, arguments=args))
+            self._send_json(self_awareness.handle_mcp_jsonrpc(self.server.app, body))
+        elif path == "/api/self/ask":
+            q = str(body.get("question", ""))
+            self._send_json(self_awareness.answer_self_question(self.server.app, q))
+        elif path == "/api/self/mcp-pipe":
+            ep_url = str(body.get("endpoint_url", ""))
+            if not ep_url:
+                self.server.app.mcp_pipe.stop()
+                self._send_json({"ok": True, "stopped": True, "pipe": self.server.app.mcp_pipe.snapshot()})
+            else:
+                res = self.server.app.mcp_pipe.configure_and_start(ep_url)
+                self._send_json(res, status=200 if res.get("ok", True) else 400)
         elif path == "/api/genome":
             status_code, payload = self.server.app.handle_genome_mutation(body)
             self._send_json(payload, status=status_code)
@@ -1173,6 +1343,12 @@ def main() -> None:
         help="Watchdog rescue mode (default: observe, or MOCHI_WDT_RESCUE env)",
     )
     parser.add_argument(
+        "--mcp-endpoint",
+        type=str,
+        default=None,
+        help="Optional Xiaozhi WebSocket mcp_endpoint URL (Path A bridge)",
+    )
+    parser.add_argument(
         "--benchmark",
         action="store_true",
         help="Run Spec 05 quantitative benchmark suite",
@@ -1194,6 +1370,7 @@ def main() -> None:
         base_http_url=f"http://{LOCAL_HOST}:{args.port}",
         db_path=args.db,
         wdt_rescue_mode=args.wdt_rescue,
+        mcp_endpoint=args.mcp_endpoint,
         start_background_threads=not is_oneshot,
     )
     if args.event:
