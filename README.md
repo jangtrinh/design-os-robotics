@@ -30,7 +30,7 @@ Stock Xiaozhi `mmap_assets` packs ship 21 video-ripped GIFs (`2,560.27 KB`) or r
 | :--- | :--- | :--- | :--- |
 | **21 emotion animations** | 21 video-ripped GIFs (`2,560.27 KB` total) | Often 6 unique GIFs duplicated across 21 slots | **21 unique 100% authentic Mochi GIFs in `217.67 KB`** (`222,892` bytes, `-91.3%`) reconstructed from `108,522` SoA scanline spans ([report](plans/reports/benchmark-avatar-perf.json)) |
 | **Palette & LZW density** | Unconstrained 256-color palettes (`min_code_size = 8`) | Mixed resolutions (`128×128` to `320×240`) | **8-color `MOCHI_PALETTE_8` Global Color Table** (`LZW min_code_size = 3`, `4.03` RLE spans/scanline, `122.3×` vs raw RGB565) |
-| **Wake-word + 21 GIFs fit in `0xAA0000`** | WakeNet9 only (`1.07 MB` `srmodels.bin`) | Often overflows `5.25 MB` when paired with MultiNet | **Fits `ESP-SR MultiNet6` (`"Hey J / Hello J / Hi J"`, `3.67 MB`) + all 21 Mochi GIFs** inside `0xAA0000` with `+64.9 KB` headroom |
+| **Wake-word + 21 GIFs fit in `0xAA0000`** | WakeNet9 only (`1.07 MB` `srmodels.bin`) | Often overflows `5.25 MB` when paired with MultiNet | **Fits `ESP-SR MultiNet6` (`"Mochi / Hey Mochi / Hi Mochi"`, `3.67 MB`) + all 21 Mochi GIFs** inside `0xAA0000` with `+64.9 KB` headroom |
 | **Idle behavior & self-evolution** | Waits for wake word; stateless | Static loops | **Host-side 4D homeostasis + `EVO-01..03` Self-Evolution** (Relative-Share Genome, Dual-Track Phenotype, SQLite WAL Dream Consolidation) |
 | **USB-JTAG serial health & WDT rescue** | Manual `esptool` / serial monitor resets board | None | **Single-owner passive `SerialSupervisor` (`DTR=False, RTS=False`) + 12-state Watchdog Auto-Rescue FSM** (`serial_supervisor.py`) |
 | **Local dev studio** | Cloud console only | None | **Local studio on `127.0.0.1:4390`** with 60fps authentic Mochi vector canvas, `/api/evolve`, `/api/dream`, `/api/wdt`, `/ota` bypass, and `/api/hud.png` |
@@ -103,7 +103,7 @@ python3 tools/mochi_canonical_vectors.py
 # Generate all 21 GIFs into themes/procedural-mochi/ (and repack 0xAA0000 if a base .bin is present):
 python3 tools/cook-procedural-avatar.py
 
-# Optional: Bake EVO-02 Stage 4 (Mochi-Ascendant) phenotype traits + English "Hey J / Hello J / Hi J" MultiNet6 wake word:
+# Optional: Bake EVO-02 Stage 4 (Mochi-Ascendant) phenotype traits + "Mochi / Hey Mochi / Hi Mochi" MultiNet6 wake word:
 python3 tools/cook-procedural-avatar.py --stage 4 --curiosity 0.85 --affection 0.90 --playfulness 0.80 \
   --srmodels firmware/srmodels/srmodels_mn6_en.bin
 ```

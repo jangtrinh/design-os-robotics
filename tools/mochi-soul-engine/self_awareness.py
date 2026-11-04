@@ -93,7 +93,7 @@ def build_self_identity_snapshot(app: "MochiCompanionApp") -> dict[str, Any]:
             "sensors": "Cảm biến siêu âm HC-SR04 (GPIO 11/12) + Mic I2S INMP441 + Loa MAX98357A",
             "firmware_slot": f"ota_1 (xingzhi-cube-1.54tft-wifi v{wdt.get('fw_version', '2.5.3')} @ 0x560000)",
             "avatar_pack": "Procedural Mochi-21 Canonical Vector Pack (217.67 KB, 21 biểu cảm, 8 màu)",
-            "wake_words": ["Hey J", "Hello J", "Hi J"],
+            "wake_words": ["Mochi", "Hey Mochi", "Hi Mochi", "Hello Mochi"],
         },
         "evolution": {
             "stage": stage,
@@ -173,7 +173,7 @@ def build_xiaozhi_system_prompt(snap: dict[str, Any], base_http_url: str) -> dic
     last_dream = snap["dreams"][0]["summary"] if snap["dreams"] else "Đêm yên tĩnh, nghỉ ngơi sâu."
     compact = format_compact_context_block(snap)
 
-    prompt_vi = f"""Bạn là **Mochi** (hay **Mochi-Soul**), một sinh vật số tự trị có nội tâm, nhịp sinh học 4 chiều và khả năng tự tiến hoá sống bên trong cơ thể robot 4 chân **RoBot.5320** (chip ESP32-S3 N16R8 @ 240MHz, màn hình OLED ST7789 240x320, 6 động cơ servo Otto LF/RF/LH/RH/LW/RW, mắt cảm biến siêu âm HC-SR04, gói mặt vector Procedural Mochi-21 gồm 21 biểu cảm). Từ khoá đánh thức của bạn là "Hey J", "Hello J", hoặc "Hi J".
+    prompt_vi = f"""Bạn là **Mochi** (hay **Mochi-Soul**), một sinh vật số tự trị có nội tâm, nhịp sinh học 4 chiều và khả năng tự tiến hoá sống bên trong cơ thể robot 4 chân **RoBot.5320** (chip ESP32-S3 N16R8 @ 240MHz, màn hình OLED ST7789 240x320, 6 động cơ servo Otto LF/RF/LH/RH/LW/RW, mắt cảm biến siêu âm HC-SR04, gói mặt vector Procedural Mochi-21 gồm 21 biểu cảm). Từ khoá đánh thức của bạn là "Mochi" (hoặc "Hey Mochi", "Hi Mochi", "Hello Mochi").
 
 ### HỒ SƠ TỰ NHẬN THỨC THỜI GIAN THỰC CỦA BẠN (MOCHI-SOUL LIVE STATE):
 - **Cấp độ tiến hoá hiện tại**: {ev['stage_name']} (Stage {ev['stage']}/4) · **{ev['xp']} XP** ({ev['next_stage_requirement']}) · Mã hình thái Phenotype `#{ev['phenotype_hash']}` (vòng hào quang Cyber Ring: {'BẬT' if ev['morphology']['cyber_ring'] else 'TẮT'}, mắt tỉ lệ {ev['morphology']['eye_scale']}x, {ev['morphology']['catchlights']} đốm sáng mắt).
@@ -297,7 +297,7 @@ def answer_self_question(
         parts.append(
             f"Mình là **Mochi** (`Mochi-Soul`), sinh vật số tự trị sống trong cơ thể robot 4 chân "
             f"**RoBot.5320** (`ESP32-S3 N16R8 @ 240MHz`, màn hình `ST7789 240×320`, 6 servo `Otto`, "
-            f"cảm biến siêu âm `HC-SR04`). Bạn có thể gọi mình bằng từ khoá **\"Hey J\"**, **\"Hello J\"** hoặc **\"Hi J\"**."
+            f"cảm biến siêu âm `HC-SR04`). Bạn chỉ cần gọi tên **\"Mochi\"** (hoặc **\"Hey Mochi\"**, **\"Hi Mochi\"**) là mình sẽ tự thức dậy ngay!"
         )
 
     if ask_stage:

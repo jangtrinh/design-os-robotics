@@ -15,7 +15,7 @@ The `5.25 MB` flash partition at `0xAA0000` (`08-assets-0xAA0000.bin`) formatted
 _Avoid_: SPIFFS theme, SD card assets.
 
 **`Procedural Mochi-21`**:
-The 21-state code-reconstructed canonical Mochi avatar pack (`222,892 bytes` / `217.67 KB` in total, `-91.3%` vs the `2,560.27 KB` default pack; the sum of 21 unique GIFs of `240x240` px with 10 frames each, shown full-bleed on the `240x320` display; the demo `mochi_60fps_spring_transition.gif` is not counted) generated deterministically by `tools/cook-procedural-avatar.py` and `tools/mochi_canonical_vectors.py` (`108,522` Structure-of-Arrays scanline spans `(y, x0, w, color)` across 210 frames in an 8-color `MOCHI_PALETTE_8` Global Color Table with `LZW min_code_size = 3`), plus optional `EVO-02` phenotype traits and `ESP-SR MultiNet6` (`"Hey J / Hello J / Hi J"`) wake-word model packing.
+The 21-state code-reconstructed canonical Mochi avatar pack (`222,892 bytes` / `217.67 KB` in total, `-91.3%` vs the `2,560.27 KB` default pack; the sum of 21 unique GIFs of `240x240` px with 10 frames each, shown full-bleed on the `240x320` display; the demo `mochi_60fps_spring_transition.gif` is not counted) generated deterministically by `tools/cook-procedural-avatar.py` and `tools/mochi_canonical_vectors.py` (`108,522` Structure-of-Arrays scanline spans `(y, x0, w, color)` across 210 frames in an 8-color `MOCHI_PALETTE_8` Global Color Table with `LZW min_code_size = 3`), plus optional `EVO-02` phenotype traits and `ESP-SR MultiNet6` (`"Mochi / Hey Mochi / Hi Mochi"`) wake-word model packing.
 _Avoid_: video-ripped GIFs, 6-state duplicated theme.
 
 **`Mochi-Soul Engine`**:

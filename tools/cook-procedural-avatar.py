@@ -313,13 +313,27 @@ def build_all_21_procedural_gifs(
 
 
 DEFAULT_WAKE_COMMANDS = [
-    {"command": "HEY J", "text": "Hey J", "action": "wake"},
-    {"command": "HEY JAY", "text": "Hey J", "action": "wake"},
-    {"command": "HELLO J", "text": "Hello J", "action": "wake"},
-    {"command": "HELLO JAY", "text": "Hello J", "action": "wake"},
-    {"command": "HI J", "text": "Hi J", "action": "wake"},
-    {"command": "HI JAY", "text": "Hi J", "action": "wake"},
+    {"command": "MOCHI", "text": "Mochi", "action": "wake"},
+    {"command": "MO CHI", "text": "Mochi", "action": "wake"},
+    {"command": "MOCHY", "text": "Mochi", "action": "wake"},
+    {"command": "HEY MOCHI", "text": "Mochi", "action": "wake"},
+    {"command": "HI MOCHI", "text": "Mochi", "action": "wake"},
+    {"command": "HELLO MOCHI", "text": "Mochi", "action": "wake"},
 ]
+
+# Exact 56-byte FST command table replacement for srmodels_mn6_en.bin
+# (preserves offsets 316..372 and 372..428 so mn6_data at offset 587 is unshifted).
+SRMODELS_MOCHI_FST_56B = b"1,MOCHI\n2,MO CHI\n3,MOCHY\n4,HEY MOCHI\n5,HI MOCHI\n6,MOCHI\n"
+assert len(SRMODELS_MOCHI_FST_56B) == 56
+
+
+def patch_srmodels_mochi_fst(raw_srmodels: bytes) -> bytes:
+    if len(raw_srmodels) == 3778695 and raw_srmodels[4:7] == b"fst":
+        buf = bytearray(raw_srmodels)
+        buf[316:372] = SRMODELS_MOCHI_FST_56B
+        buf[372:428] = SRMODELS_MOCHI_FST_56B
+        return bytes(buf)
+    return raw_srmodels
 
 
 def compute_mmap_assets_21_bytes(
@@ -358,11 +372,11 @@ def compute_mmap_assets_21_bytes(
     idx_obj["skin"]["dark"]["background_color"] = "#000000"
 
     if srmodels_bin is not None and srmodels_bin.is_file():
-        srmodels_payload = srmodels_bin.read_bytes()
+        srmodels_payload = patch_srmodels_mochi_fst(srmodels_bin.read_bytes())
         idx_obj["multinet_model"] = {
             "language": "en",
             "duration": 3000,
-            "threshold": 0.45,
+            "threshold": 0.40,
             "commands": DEFAULT_WAKE_COMMANDS,
         }
         if not quiet:
@@ -371,7 +385,7 @@ def compute_mmap_assets_21_bytes(
                 f"({len(srmodels_payload):,d} bytes, commands={[c['command'] for c in DEFAULT_WAKE_COMMANDS]})"
             )
     else:
-        srmodels_payload = base_files["srmodels.bin"][0]
+        srmodels_payload = patch_srmodels_mochi_fst(base_files["srmodels.bin"][0])
 
     file_to_emotion = {}
     for item in idx_obj["emoji_collection"]:

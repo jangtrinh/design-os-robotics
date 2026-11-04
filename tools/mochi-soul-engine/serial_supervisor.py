@@ -43,7 +43,8 @@ RE_VER = re.compile(r"App version:\s+(\S+)")
 RE_ELF = re.compile(r"ELF file SHA256:\s+([0-9a-f]{8,})")
 RE_UPTIME = re.compile(r"\((\d+)\)\s+[A-Za-z0-9_]+:")
 RE_VOICE_WAKE = re.compile(
-    r"(?:Wake word detected|Command \d+:\s*(?:HEY|HELLO|HI)\s+J)", re.IGNORECASE
+    r"(?:Wake word detected|Command \d+:\s*(?:(?:HEY|HELLO|HI)\s+)?(?:MOCHI|MO\s+CHI|MOCHY|J\b))",
+    re.IGNORECASE,
 )
 
 TIOCMSET = 0x8004746D
