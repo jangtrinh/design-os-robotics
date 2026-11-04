@@ -313,17 +313,47 @@ def build_all_21_procedural_gifs(
 
 
 DEFAULT_WAKE_COMMANDS = [
+    # Direct 3-token BPE spellings (▁MO + CH + I/Y/E)
     {"command": "MOCHI", "text": "Mochi", "action": "wake"},
-    {"command": "MO CHI", "text": "Mochi", "action": "wake"},
     {"command": "MOCHY", "text": "Mochi", "action": "wake"},
+    {"command": "MOCHE", "text": "Mochi", "action": "wake"},
+    # High-prior 2-token BPE spellings in srmodels_mn6_en.bin vocab (496 tokens)
+    {"command": "MO CHI", "text": "Mochi", "action": "wake"},
+    {"command": "MO SHE", "text": "Mochi", "action": "wake"},
+    {"command": "MORE CHI", "text": "Mochi", "action": "wake"},
+    {"command": "MORE SHE", "text": "Mochi", "action": "wake"},
+    {"command": "MUCHY", "text": "Mochi", "action": "wake"},
+    {"command": "MUCHI", "text": "Mochi", "action": "wake"},
+    {"command": "MUCHE", "text": "Mochi", "action": "wake"},
+    {"command": "MO SEE", "text": "Mochi", "action": "wake"},
+    {"command": "MO SE", "text": "Mochi", "action": "wake"},
+    {"command": "MO TI", "text": "Mochi", "action": "wake"},
+    {"command": "MO TE", "text": "Mochi", "action": "wake"},
+    {"command": "MO KI", "text": "Mochi", "action": "wake"},
+    {"command": "MO JE", "text": "Mochi", "action": "wake"},
+    {"command": "MOCI", "text": "Mochi", "action": "wake"},
+    {"command": "MOCE", "text": "Mochi", "action": "wake"},
+    # Open-vowel Vietnamese /mɔ tɕi/ & fast-speech variants
+    {"command": "MA CHI", "text": "Mochi", "action": "wake"},
+    {"command": "MA SHE", "text": "Mochi", "action": "wake"},
+    {"command": "MACHI", "text": "Mochi", "action": "wake"},
+    {"command": "MACHY", "text": "Mochi", "action": "wake"},
+    {"command": "MACHE", "text": "Mochi", "action": "wake"},
+    {"command": "MY CHI", "text": "Mochi", "action": "wake"},
+    {"command": "MY SHE", "text": "Mochi", "action": "wake"},
+    # Natural call prefixes
     {"command": "HEY MOCHI", "text": "Mochi", "action": "wake"},
     {"command": "HI MOCHI", "text": "Mochi", "action": "wake"},
+    {"command": "OK MOCHI", "text": "Mochi", "action": "wake"},
     {"command": "HELLO MOCHI", "text": "Mochi", "action": "wake"},
+    {"command": "HEY MO CHI", "text": "Mochi", "action": "wake"},
+    {"command": "HI MO CHI", "text": "Mochi", "action": "wake"},
+    {"command": "HEY MO SHE", "text": "Mochi", "action": "wake"},
 ]
 
 # Exact 56-byte FST command table replacement for srmodels_mn6_en.bin
 # (preserves offsets 316..372 and 372..428 so mn6_data at offset 587 is unshifted).
-SRMODELS_MOCHI_FST_56B = b"1,MOCHI\n2,MO CHI\n3,MOCHY\n4,HEY MOCHI\n5,HI MOCHI\n6,MOCHI\n"
+SRMODELS_MOCHI_FST_56B = b"1,MOCHI\n2,MO CHI\n3,MOCHY\n4,MOCHE\n5,MO SHE\n6,HELLO MOCHI\n"
 assert len(SRMODELS_MOCHI_FST_56B) == 56
 
 
@@ -376,7 +406,7 @@ def compute_mmap_assets_21_bytes(
         idx_obj["multinet_model"] = {
             "language": "en",
             "duration": 3000,
-            "threshold": 0.40,
+            "threshold": 0.15,
             "commands": DEFAULT_WAKE_COMMANDS,
         }
         if not quiet:

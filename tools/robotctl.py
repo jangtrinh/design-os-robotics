@@ -116,6 +116,53 @@ def patch_i32_or_u8_in_nvs(
     nvs[off : off + 32] = ent
 
 
+def upsert_i32_in_nvs(nvs: bytearray, ns_id: int, key: str, val: int) -> tuple[int, int]:
+    """Update an existing active i32 (0x14) key in-place across all pages, or allocate an empty slot."""
+    num_pages = len(nvs) // 4096
+    for p in range(num_pages):
+        p_off = p * 4096
+        p_state = struct.unpack("<I", nvs[p_off : p_off + 4])[0]
+        if p_state == 0xFFFFFFFF:
+            continue
+        bm = nvs[p_off + 32 : p_off + 64]
+        i = 0
+        while i < 126:
+            st = (bm[i // 4] >> ((i % 4) * 2)) & 0x3
+            if st != 0x2:
+                i += 1
+                continue
+            off = p_off + 64 + i * 32
+            ent = nvs[off : off + 32]
+            ent_ns, ent_typ, ent_span = ent[0], ent[1], ent[2]
+            ent_key = ent[8:24].split(b"\x00", 1)[0].decode("utf-8", "replace")
+            if ent_ns == ns_id and ent_key == key and ent_typ == 0x14:
+                patch_i32_or_u8_in_nvs(nvs, p, i, val, is_u8=False)
+                return p, i
+            i += max(1, ent_span)
+
+    for p in (0, 1, 2):
+        p_off = p * 4096
+        bm = bytearray(nvs[p_off + 32 : p_off + 64])
+        for i in range(126):
+            st = (bm[i // 4] >> ((i % 4) * 2)) & 0x3
+            if st == 0x3:
+                bm[i // 4] &= ~(1 << ((i % 4) * 2))
+                nvs[p_off + 32 : p_off + 64] = bm
+                ent = bytearray(32)
+                ent[0] = ns_id
+                ent[1] = 0x14  # i32
+                ent[2] = 1  # span=1
+                ent[3] = 0xFF  # chunk_idx
+                ent[8:24] = key.encode("utf-8")[:15].ljust(16, b"\x00")
+                ent[24:28] = struct.pack("<i", val)
+                ent[28:32] = b"\xff\xff\xff\xff"
+                crc = nvs_crc32(bytes(ent))
+                ent[4:8] = struct.pack("<I", crc)
+                nvs[p_off + 64 + i * 32 : p_off + 64 + (i + 1) * 32] = ent
+                return p, i
+    raise RuntimeError(f"No empty NVS slot found for i32 key {key} (ns={ns_id})")
+
+
 def append_u8_to_page1(nvs: bytearray, ns_id: int, key: str, val: int) -> int:
     """Append or update a u8 key in Page 1 if an empty slot (0b11) exists."""
     page_off = 4096
@@ -227,6 +274,15 @@ def cmd_optimize(args: argparse.Namespace) -> None:
     patch_i32_or_u8_in_nvs(nvs, 1, 17, args.wechat, is_u8=False)
     # 1c. Control wifi.pypass_device (Page 1 slot 31, u8): 0 = unbind to personal xiaozhi.me for Voice Cloning, 1 = shared bypass
     patch_i32_or_u8_in_nvs(nvs, 1, 31, args.pypass_device, is_u8=True)
+    # 1d. Hardware audio & wake-word tuning:
+    #   - lcd_cfg.snd_wake (ns=5, i32): 1 = upload wake-word audio so AI immediately greets/replies on wake
+    #   - lcd_cfg.mic_gain (ns=5, i32): for aud_type=0 (INMP441 I2S simplex), right-bit-shift 8..16 (10 = 4x louder than default 12)
+    #   - lcd_cfg.vad_mode (ns=5, i32): 0 = most sensitive VAD mode (0..3)
+    #   - audio.output_volume (ns=11, i32): speaker volume 0..100 (85 = crisp room-filling output)
+    upsert_i32_in_nvs(nvs, 5, "snd_wake", args.snd_wake)
+    upsert_i32_in_nvs(nvs, 5, "mic_gain", args.mic_gain)
+    upsert_i32_in_nvs(nvs, 5, "vad_mode", args.vad_mode)
+    upsert_i32_in_nvs(nvs, 11, "output_volume", args.volume)
     # 2. Switch display.theme (ns=8, Page 1 slot 2) from 'light' to 'dark'
     update_string_in_page1(nvs, 8, "theme", args.theme)
     # 3. Enable weather/clock/lunar idle screen (ns=2 'config', key='enable_weather' = 1)
@@ -244,8 +300,9 @@ def cmd_optimize(args: argparse.Namespace) -> None:
     out_path.write_bytes(nvs)
     print(
         f"Optimized NVS saved to {out_path} "
-        f"(p_bat={args.p_bat}, p_chg={args.p_chg}, theme={args.theme}, "
-        f"enable_weather slot={slot_w}, led_visualizer slot={slot_l}, thumb_song slot={slot_t})"
+        f"(p_bat={args.p_bat}, p_chg={args.p_chg}, mic_gain={args.mic_gain}, "
+        f"vad_mode={args.vad_mode}, snd_wake={args.snd_wake}, volume={args.volume}, "
+        f"theme={args.theme}, enable_weather slot={slot_w}, led_visualizer slot={slot_l}, thumb_song slot={slot_t})"
     )
     if args.flash:
         cmd = [
@@ -613,6 +670,10 @@ def main() -> None:
     p_opt.add_argument("--p-chg", type=int, default=-1, help="-1 = disabled (RB5320XZ78AI has no TP4056 CHRG# wire)")
     p_opt.add_argument("--wechat", type=int, default=0, help="0 = Face only, 1 = WeChat bubble chat UI")
     p_opt.add_argument("--pypass-device", type=int, default=1, help="0 = Unbind to personal xiaozhi.me for Voice Cloning, 1 = Shared seller bypass")
+    p_opt.add_argument("--mic-gain", type=int, default=10, help="For aud_type=0 (INMP441 I2S), bit-shift 8..16 (10 = 4x louder than default 12)")
+    p_opt.add_argument("--vad-mode", type=int, default=0, help="VAD sensitivity 0..3 (0 = most sensitive)")
+    p_opt.add_argument("--snd-wake", type=int, default=1, help="1 = Upload wake-word audio so AI immediately answers on wake")
+    p_opt.add_argument("--volume", type=int, default=85, help="Speaker output volume 0..100 (default: 85)")
     p_opt.add_argument("--theme", choices=["dark", "light"], default="dark")
     p_opt.add_argument("--enable-weather", type=int, default=1)
     p_opt.add_argument("--ssid", default=None)

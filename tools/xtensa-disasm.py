@@ -55,14 +55,14 @@ def disasm_range(data: bytes, start_va: int, end_va: int) -> None:
             elif op0 == 0xB:
                 print(f"  0x{pc:08x}: addi.n a{r}, a{s}, {-1 if t == 0 else t}")
             elif op0 == 0xC:
-                i = t | ((r & 0x7) << 4)
-                if (r & 0x8) == 0:
+                if (t & 0x8) == 0:
+                    i = r | ((t & 0x7) << 4)
                     val = i if i < 96 else i - 128
                     print(f"  0x{pc:08x}: movi.n a{s}, {val}")
                 else:
-                    imm6 = t | ((r & 0x3) << 4)
+                    imm6 = r | ((t & 0x3) << 4)
                     tgt = pc + 4 + imm6
-                    btype = "beqz.n" if (r & 0x4) == 0 else "bnez.n"
+                    btype = "beqz.n" if (t & 0x4) == 0 else "bnez.n"
                     print(f"  0x{pc:08x}: {btype} a{s}, 0x{tgt:08x}")
             elif op0 == 0xD:
                 if r == 0:
