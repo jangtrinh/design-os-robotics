@@ -220,75 +220,145 @@ class MochiProactiveBridge:
         )
 
     _FACE_THUMB_CACHE: dict[str, Image.Image] = {}
-    _HUD_PALETTE = [
-        0, 0, 0,          # 0: Pure Black (#000000)
-        234, 252, 255,    # 1: Crisp Mochi White (#EAFCFF)
-        184, 230, 248,    # 2: Mochi Ice-Blue / Cyan (#B8E6F8)
-        224, 128, 228,    # 3: Mochi Orchid-Pink (#E080E4)
-        238, 228, 110,    # 4: Mochi Bee Gold (#EEE46E)
-        230, 49, 46,      # 5: Mochi Bright Red (#E6312E)
-        90, 245, 145,     # 6: Mint Green (#5AF591 — HUD ENERGY bar)
-        18, 24, 36,       # 7: Dark Panel Fill (#121824)
-        45, 58, 80,       # 8: Panel Outline (#2D3A50)
-        200, 215, 235,    # 9: Soft Label Text (#C8D7EB)
-        118, 68, 168,     # 10: Mochi Deep Violet (#7644A8 — remapped from face index 6)
-        76, 26, 36,       # 11: Mochi Dark Maroon (#4C1A24 — remapped from face index 7)
-    ] + [0, 0, 0] * 244
+    _FONT_CACHE: dict[tuple[str, int], object] = {}
+    _STATIC_BASE_CARD: Image.Image | None = None
+    _HUD_PNG_CACHE: dict[tuple, bytes] = {}
+
+    @classmethod
+    def _get_font(cls, role: str, size: int):
+        key = (role, size)
+        if key not in cls._FONT_CACHE:
+            from PIL import ImageFont
+
+            candidates = (
+                [
+                    "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+                    "/System/Library/Fonts/Helvetica.ttc",
+                ]
+                if role == "bold"
+                else [
+                    "/System/Library/Fonts/Helvetica.ttc",
+                    "/System/Library/Fonts/Supplemental/Arial.ttf",
+                ]
+            )
+            font_obj = None
+            for p in candidates:
+                if Path(p).exists():
+                    try:
+                        font_obj = ImageFont.truetype(p, size=size)
+                        break
+                    except Exception:
+                        pass
+            cls._FONT_CACHE[key] = font_obj or ImageFont.load_default()
+        return cls._FONT_CACHE[key]
+
+    @classmethod
+    def _get_base_card(cls) -> Image.Image:
+        if cls._STATIC_BASE_CARD is None:
+            base = Image.new("RGB", (240, 320), (9, 9, 11))  # --bg-0: #09090b
+            d = ImageDraw.Draw(base)
+            font_bold = cls._get_font("bold", 11)
+            font_sm = cls._get_font("reg", 9)
+
+            # Outer card frame (--bg-1: #121215, --border: #27272a)
+            d.rounded_rectangle([6, 6, 233, 313], radius=12, fill=(18, 18, 21), outline=(39, 39, 42), width=1)
+            # Top Header Bar
+            d.line([(7, 34), (232, 34)], fill=(39, 39, 42), width=1)
+            d.ellipse([15, 17, 21, 23], fill=(232, 155, 85))  # --accent: #E89B55
+            d.text((27, 14), "MOCHI-SOUL", fill=(244, 244, 245), font=font_bold)
+            d.rounded_rectangle([130, 12, 224, 28], radius=6, fill=(28, 28, 33), outline=(39, 39, 42), width=1)
+
+            # OLED Face Well & Status Pill shell
+            d.rounded_rectangle([62, 41, 177, 156], radius=12, fill=(0, 0, 0), outline=(39, 39, 42), width=1)
+            d.rounded_rectangle([62, 162, 177, 178], radius=8, fill=(28, 28, 33), outline=(39, 39, 42), width=1)
+            d.ellipse([71, 168, 75, 172], fill=(232, 155, 85))
+
+            # Hairline divider + 4D Homeostasis static labels & tracks
+            d.line([(16, 185), (223, 185)], fill=(39, 39, 42), width=1)
+            y_cursor = 194
+            for label in ("ENERGY", "SATIETY", "BOND", "VALENCE"):
+                d.text((16, y_cursor), label, fill=(161, 161, 170), font=font_sm)
+                d.rounded_rectangle([72, y_cursor + 2, 188, y_cursor + 8], radius=3, fill=(28, 28, 33))
+                y_cursor += 21
+
+            # Episodic Memory Footer shell
+            d.line([(7, 282), (232, 282)], fill=(39, 39, 42), width=1)
+            d.text((16, 293), "MEM", fill=(232, 155, 85), font=font_sm)
+            cls._STATIC_BASE_CARD = base
+        return cls._STATIC_BASE_CARD
 
     @classmethod
     def render_hud_card_png(cls, state: SoulState, recent_memory: str = "Fed Spec-02 notes (+XP)") -> bytes:
         """
-        Render a 240x320 full-bleed Tamagotchi HUD Card directly in 8-bit Indexed Mode 'P'
-        (zero RGB quantization overhead, < 1.5 ms render time, ~2.8 KB PNG).
+        Render a 240x320 full-bleed Tamagotchi HUD Card in the design-os-robotics
+        Swiss/Braun dark monochrome + warm amber (#E89B55) art direction.
         """
-        card = Image.new("P", (240, 320), 0)
-        card.putpalette(cls._HUD_PALETTE)
+        cache_key = (
+            state.stage,
+            state.xp,
+            state.emotion,
+            int(state.sim_minute),
+            round(state.energy),
+            round(state.hunger),
+            round(state.bond),
+            round(state.valence, 2),
+            recent_memory[:30],
+        )
+        cached = cls._HUD_PNG_CACHE.get(cache_key)
+        if cached is not None:
+            return cached
+
+        card = cls._get_base_card().copy()
         d = ImageDraw.Draw(card)
 
-        # 1. Top Header Bar (y = 6..30)
-        d.rounded_rectangle([6, 6, 234, 30], radius=6, fill=7, outline=2, width=1)
-        h_int = int((state.sim_minute // 60) % 24)
-        m_int = int(state.sim_minute % 60)
-        d.text((12, 12), f"MOCHI-SOUL Lv.{state.stage} ({state.xp}XP)", fill=2)
-        d.text((192, 12), f"{h_int:02d}:{m_int:02d}", fill=4)
+        font_reg = cls._get_font("reg", 10)
+        font_sm = cls._get_font("reg", 9)
 
-        # 2. Mini Mochi Face Viewport (y = 36..152) with cached 112x112 palette thumbnail
+        # 1. Stage & XP pill text
+        d.text((138, 15), f"S{state.stage} · {state.xp} XP", fill=(161, 161, 170), font=font_sm)
+
+        # 2. Mini Mochi Face OLED Viewport (y = 41..156)
         if state.emotion not in cls._FACE_THUMB_CACHE:
             p_idx = 1 if state.emotion in ("relaxed", "delicious") else (2 if state.emotion in ("thinking", "winking") else 3)
-            face_frame = render_emotion_frame(state.emotion, frame_idx=p_idx, num_frames=10)
-            lut = [10 if i == 6 else (11 if i == 7 else i) for i in range(256)]
-            remapped = face_frame.point(lut)
-            cls._FACE_THUMB_CACHE[state.emotion] = remapped.resize((112, 112), Image.Resampling.NEAREST)
-        card.paste(cls._FACE_THUMB_CACHE[state.emotion], (64, 36))
-        d.rounded_rectangle([62, 34, 178, 150], radius=10, outline=8, width=1)
-        d.text((82, 154), f"[{state.emotion.upper()}]", fill=3)
+            face_frame = render_emotion_frame(state.emotion, frame_idx=p_idx, num_frames=10).convert("RGB")
+            cls._FACE_THUMB_CACHE[state.emotion] = face_frame.resize((104, 104), Image.Resampling.NEAREST)
+        card.paste(cls._FACE_THUMB_CACHE[state.emotion], (68, 47))
 
-        # 3. 4D Biological Homeostasis Bars (y = 172..282)
+        # Status & Clock Pill text
+        h_int = int((state.sim_minute // 60) % 24)
+        m_int = int(state.sim_minute % 60)
+        d.text((80, 165), f"{state.emotion.upper()} · {h_int:02d}:{m_int:02d}", fill=(244, 244, 245), font=font_sm)
+
+        # 3. 4D Biological Homeostasis Register bar fills & values
+        satiety_pct = clamp(100.0 - state.hunger, 0.0, 100.0)
         mood_pct = clamp((state.valence + 1.0) * 50.0, 0.0, 100.0)
         bars = [
-            ("ENERGY", state.energy, 6),
-            ("CURIOSITY", state.hunger, 4),
-            ("BOND", state.bond, 3),
-            ("MOOD", mood_pct, 2),
+            (state.energy, (232, 155, 85)),    # Warm Amber (#E89B55)
+            (satiety_pct, (244, 244, 245)),    # Primary Zinc-100 (#f4f4f5)
+            (state.bond, (244, 244, 245)),     # Primary Zinc-100 (#f4f4f5)
+            (mood_pct, (161, 161, 170)),       # Secondary Zinc-400 (#a1a1aa)
         ]
-        y_cursor = 174
-        for label, pct, col_idx in bars:
-            d.text((12, y_cursor), f"{label:9s}", fill=9)
-            d.text((196, y_cursor), f"{pct:4.0f}%", fill=col_idx)
-            bx0, by0, bx1, by1 = 78, y_cursor + 2, 190, y_cursor + 11
-            d.rounded_rectangle([bx0, by0, bx1, by1], radius=3, fill=7, outline=8, width=1)
-            fill_w = int(round(((bx1 - bx0 - 2) * clamp(pct, 0.0, 100.0)) / 100.0))
+        y_cursor = 194
+        for pct, fill_rgb in bars:
+            bx0, by0, bx1, by1 = 72, y_cursor + 2, 188, y_cursor + 8
+            fill_w = int(round((bx1 - bx0) * (clamp(pct, 0.0, 100.0) / 100.0)))
             if fill_w > 2:
-                d.rounded_rectangle([bx0 + 1, by0 + 1, bx0 + 1 + fill_w, by1 - 1], radius=2, fill=col_idx)
-            y_cursor += 26
+                d.rounded_rectangle([bx0, by0, bx0 + fill_w, by1], radius=3, fill=fill_rgb)
+            val_col = (244, 244, 245) if fill_rgb != (161, 161, 170) else (161, 161, 170)
+            d.text((195, y_cursor), f"{pct:3.0f}%", fill=val_col, font=font_sm)
+            y_cursor += 21
 
-        # 4. Episodic Memory Footer (y = 284..314)
-        d.rounded_rectangle([6, 284, 234, 314], radius=6, fill=7, outline=8, width=1)
-        d.text((12, 293), f"MEM: {recent_memory[:31]}", fill=9)
+        # 4. Episodic Memory Footer text
+        d.text((44, 293), recent_memory[:30], fill=(161, 161, 170), font=font_reg)
 
+        quantized = card.quantize(colors=48, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
         buf = io.BytesIO()
-        card.save(buf, format="PNG", optimize=False)
-        return buf.getvalue()
+        quantized.save(buf, format="PNG", compress_level=1)
+        out_bytes = buf.getvalue()
+        if len(cls._HUD_PNG_CACHE) > 64:
+            cls._HUD_PNG_CACHE.clear()
+        cls._HUD_PNG_CACHE[cache_key] = out_bytes
+        return out_bytes
 
 
 def clamp(v: float, lo: float, hi: float) -> float:
@@ -301,12 +371,17 @@ def run_bridge_benchmark() -> dict:
     print("=" * 108)
 
     eng = MochiSoulEngine(db_path=DEFAULT_DB)
+    eng.apply_event("git_commit", "Spec-03 Bridge Integration")
     eng.apply_event("praise", "Spec-03 Bridge Integration Test")
+    eng.state.hunger = 14.0
+    eng.state.emotion = "happy"
 
-    # 1. Benchmark 240x320 Tamagotchi HUD Card Generation (50 iterations)
+    # 1. Benchmark 240x320 Tamagotchi HUD Card Generation (50 uncached iterations)
+    MochiProactiveBridge._get_base_card()
     t0 = time.perf_counter()
     hud_bytes = b""
     for _ in range(50):
+        MochiProactiveBridge._HUD_PNG_CACHE.clear()
         hud_bytes = MochiProactiveBridge.render_hud_card_png(
             eng.state, recent_memory="Spec-03 HUD Render Verified"
         )

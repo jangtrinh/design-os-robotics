@@ -6,17 +6,17 @@
     "valid_events": 500,
     "total_packets_emitted": 1500,
     "valid_packets": 1500,
-    "mean_latency_us": 169.55,
-    "p50_latency_us": 164.48,
-    "p99_latency_us": 281.79,
-    "throughput_events_per_sec": 5898.0,
+    "mean_latency_us": 173.77,
+    "p50_latency_us": 171.19,
+    "p99_latency_us": 241.92,
+    "throughput_events_per_sec": 5754.6,
     "pass": true
   },
   "ac02_http_and_local_ota": {
     "http_requests_total": 145,
     "http_200_valid": 145,
-    "mean_json_rtt_ms": 0.603,
-    "mean_hud_png_rtt_ms": 4.128,
+    "mean_json_rtt_ms": 0.795,
+    "mean_hud_png_rtt_ms": 1.976,
     "pass": true
   },
   "ac03_reflex_and_mcp_suite": {
