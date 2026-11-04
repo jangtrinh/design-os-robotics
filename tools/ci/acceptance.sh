@@ -56,7 +56,7 @@ n=$(rg -n -i -e 'access_token' -e 'bearer' -e 'api.?key' -e 'service_role' -e 's
 row S-11 "token/key words or enumerated vendor MCP tool names in knowledge/03" "$n"
 
 ex=(); [ "$PART" = A ] && ex=(-g '!docs/_config.yml')
-n=$(rg -n -e 'local-xiaozhi-server' -e 'deep-dive\.html' -e 'images/cover' . -g '!.git' -g '!tools/ci/' "${ex[@]}" | cnt)
+n=$(rg -n -e 'local-xiaozhi-server' -e 'deep-dive\.html' -e 'images/cover' . -g '!.git' -g '!tools/ci/' ${ex[@]+"${ex[@]}"} | cnt)
 row S-12 "dead refs: local-xiaozhi-server.py, deep-dive.html, images/cover" "$n"
 # S-13: PII in tracked raster images (metadata + OCR for SSID / serial-port path / MAC / LAN IP / home path / email). Count only.
 OCR_PY=${OCR_PY:-python3}
@@ -73,7 +73,13 @@ fi
 # S-14: broken relative .md links in tracked Markdown must not exceed the baseline. Main (c3594f5, after #3) has 2: knowledge/08 and knowledge/10 link a git-ignored firmware dump. The baseline is 2, so any new broken link fails. Count of EXCESS only.
 LINK_BASELINE=${LINK_BASELINE:-2}
 if [ "$PART" = A ]; then lx=(--exclude README.md --exclude THIRD_PARTY_NOTICES.md --exclude docs/); else lx=(); fi
-n=$(python3 "$here/links-check.py" "${lx[@]}" 2>/dev/null | tail -1)
+n=$(python3 "$here/links-check.py" ${lx[@]+"${lx[@]}"} 2>/dev/null | tail -1)
 ex=$(( ${n:-999} > LINK_BASELINE ? ${n:-999} - LINK_BASELINE : 0 ))
 row S-14 "broken relative .md links above main's baseline of $LINK_BASELINE (now ${n:-?})" "$ex"
+
+n=$(git ls-files '*.db' '*.sqlite*' '*.db-wal' '*.db-shm' | cnt)
+row S-15 "tracked SQLite databases or WAL/SHM sidecars" "$n"
+
+n=$( { git grep -n -I -E -e 'robot-[0-9a-fA-F]{12}' -e 'usbmodem[0-9]+' -e '([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}' -- . ':!tools/ci/' || true; } | { rg -v -i -e 'aa:bb:cc:dd:ee:ff' -e '00:00:00:00:00:00' -e 'ff:ff:ff:ff:ff:ff' -e '11:22:33:44:55:66' || true; } | cnt )
+row S-16 "real MAC / robot-<mac> / usbmodem<digits> in tracked files" "$n"
 exit $fail

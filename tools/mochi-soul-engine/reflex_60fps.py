@@ -194,70 +194,69 @@ class ProximityReflexRouter:
         }
 
 
-def render_spring_vector_frame(vec: list[float]) -> Image.Image:
-    """Render a 240x240 Mochi frame directly from the continuous 12-DOF spring vector."""
-    palette = [
-        0, 0, 0,          # 0: Black
-        255, 255, 255,    # 1: White
-        70, 230, 255,     # 2: Cyan
-        255, 110, 165,    # 3: Pink
-        255, 220, 60,     # 4: Gold
-        255, 75, 85,      # 5: Red
-        90, 245, 145,     # 6: Mint
-        24, 32, 48,       # 7: Slate
-    ] + [0, 0, 0] * 248
+_POSTER_FRAME_IDX: dict[str, int] = {
+    "relaxed": 1,
+    "delicious": 1,
+    "thinking": 2,
+    "winking": 2,
+    "surprised": 3,
+}
 
-    im = Image.new("P", (240, 240), 0)
-    im.putpalette(palette)
-    d = ImageDraw.Draw(im)
 
-    gaze_x, gaze_y, open_l, open_r, scale_l, scale_r, slope_l, slope_r, happy_cheek, mouth_curve, mouth_open, blush_opa = vec
-    cx_l = int(round(68 + gaze_x * 22.0))
-    cx_r = int(round(172 + gaze_x * 22.0))
-    cy = int(round(112 + gaze_y * 18.0))
+def _closest_emotion_12dof(vec: list[float]) -> str:
+    best_emo = "neutral"
+    best_dist = float("inf")
+    # Compare structural facial DOFs (indices 2..11: open_l..blush_opa)
+    for emo, target in EMOTION_21_VECTORS.items():
+        d = sum((float(vec[i]) - float(target[i])) ** 2 for i in range(2, 12))
+        if d < best_dist:
+            best_dist = d
+            best_emo = emo
+    return best_emo
 
-    for is_right, (cx, opn, scl, slp) in enumerate(
-        [(cx_l, open_l, scale_l, slope_l), (cx_r, open_r, scale_r, slope_r)]
-    ):
-        w = max(8, int(round(52 * scl)))
-        h = max(4, int(round(58 * scl * max(0.06, opn))))
-        x0, y0, x1, y1 = cx - w // 2, cy - h // 2, cx + w // 2, cy + h // 2
-        d.rounded_rectangle([x0, y0, x1, y1], radius=min(w, h) // 2, fill=1)
-        if opn > 0.35:
-            d.ellipse([cx - 8, cy - 10, cx + 8, cy + 6], fill=2)
-            d.ellipse([x0 + 8, y0 + 6, x0 + 20, y0 + 18], fill=1)
 
-        # Upper eyelid boolean slope mask
-        if abs(slp) > 2.0:
-            dy = int(round(math.tan(math.radians(min(40.0, max(-40.0, slp)))) * (w / 2.0)))
-            if not is_right:
-                d.polygon([(x0 - 4, y0 - 10), (x1 + 4, y0 - 10), (x1 + 4, y0 + max(0, dy)), (x0 - 4, y0 + max(0, -dy))], fill=0)
-            else:
-                d.polygon([(x0 - 4, y0 - 10), (x1 + 4, y0 - 10), (x1 + 4, y0 + max(0, -dy)), (x0 - 4, y0 + max(0, dy))], fill=0)
+def render_spring_vector_frame(vec: list[float], emotion: str | None = None) -> Image.Image:
+    """Render a 240x240 Mode-P Mochi frame from the 12-DOF spring vector using canonical Mochi vectors."""
+    import sys
 
-        # Lower eyelid happy crescent mask
-        if happy_cheek > 0.15:
-            cut_h = int(round(h * 0.65 * happy_cheek))
-            d.ellipse([x0 - 8, y1 - cut_h, x1 + 8, y1 + cut_h], fill=0)
+    tools_dir = str(Path(__file__).resolve().parent.parent)
+    if tools_dir not in sys.path:
+        sys.path.insert(0, tools_dir)
+    from mochi_canonical_vectors import FACE_SRC_H, MOCHI_PALETTE_8, decode_all_emotion_scanlines
 
-    # Blush
-    if blush_opa > 0.25:
-        bw = int(round(14 * blush_opa))
-        d.rounded_rectangle([32 - bw, cy + 30, 32 + bw, cy + 42], radius=6, fill=3)
-        d.rounded_rectangle([208 - bw, cy + 30, 208 + bw, cy + 42], radius=6, fill=3)
+    canonical = decode_all_emotion_scanlines()
+    flat_palette = list(MOCHI_PALETTE_8) + [0, 0, 0] * (256 - len(MOCHI_PALETTE_8) // 3)
 
-    # Mouth (Bezier/Arc + Lip-Sync mouth_open)
-    my = cy + 42
-    mw = 26
-    mh = int(round(4 + mouth_open * 24.0))
-    if mouth_open > 0.18:
-        d.rounded_rectangle([120 - mw, my - mh // 2, 120 + mw, my + mh], radius=min(mw, mh // 2 + 4), fill=5, outline=1, width=3)
+    gaze_x, gaze_y, open_l, open_r, _scale_l, _scale_r, _slope_l, _slope_r, _happy_cheek, _mouth_curve, mouth_open, _blush_opa = vec
+    emo = emotion if (emotion and emotion in canonical) else _closest_emotion_12dof(vec)
+    is_blinking = open_l < 0.28 and open_r < 0.28 and emo not in ("sleepy", "relaxed", "delicious")
+    active_emo = "sleepy" if is_blinking else emo
+    frames = canonical.get(active_emo) or canonical["neutral"]
+
+    base_idx = _POSTER_FRAME_IDX.get(active_emo, 3)
+    if mouth_open > 0.22:
+        idx = (base_idx + int(round(mouth_open * 6.0))) % len(frames)
     else:
-        if mouth_curve >= 0.0:
-            d.arc([120 - mw, my - 10, 120 + mw, my + 12], start=15, end=165, fill=1, width=4)
-        else:
-            d.arc([120 - mw, my - 4, 120 + mw, my + 18], start=195, end=345, fill=1, width=4)
+        idx = base_idx % len(frames)
 
+    y_pad = (240 - FACE_SRC_H) // 2
+    dx = int(round(gaze_x * 18.0))
+    dy = y_pad + int(round(gaze_y * 14.0))
+
+    buf = bytearray(240 * 240)
+    for y, x0, w, col in frames[idx]:
+        ny = y + dy
+        if ny < 0 or ny >= 240:
+            continue
+        nx0 = max(0, x0 + dx)
+        nx1 = min(240, x0 + w + dx)
+        if nx1 <= nx0:
+            continue
+        row_start = ny * 240
+        buf[row_start + nx0 : row_start + nx1] = bytes([col]) * (nx1 - nx0)
+
+    im = Image.frombytes("P", (240, 240), bytes(buf))
+    im.putpalette(flat_palette)
     return im
 
 

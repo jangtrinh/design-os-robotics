@@ -349,7 +349,7 @@
               <span>240×240 OLED</span>
               <span id="fps-counter">60.0 fps · 10-DOF</span>
             </figcaption>
-            <img class="mochi-face-tile" id="mochi-gif" src="../../themes/procedural-mochi/happy.gif" width="240" height="240" alt="Procedural Mochi-21 240x240 OLED expression preview" onerror="this.onerror=null;this.hidden=true">
+            <img class="mochi-face-tile" id="mochi-gif" src="../../themes/procedural-mochi/happy.gif?v=canonical8" width="240" height="240" alt="Procedural Mochi-21 240x240 OLED expression preview" onerror="this.onerror=null;this.hidden=true">
             <canvas class="st7789-canvas" id="lcd-canvas" width="240" height="320" hidden aria-label="Live 240x320 ST7789 Mochi-Soul 60fps spring companion display"></canvas>
             <img class="st7789-canvas" id="hud-img" src="/api/hud.png" width="240" height="320" alt="240x320 Mochi-Soul 4D Homeostasis PNG HUD status card" hidden onerror="this.onerror=null;this.hidden=true">
             <div class="stage-caption">
@@ -505,6 +505,67 @@
         </article>
       </section>
 
+      <!-- 2.5 SELF-EVOLUTION GENOME, DREAM JOURNAL & WATCHDOG SUPERVISOR (EVO-01..03) -->
+      <section class="telemetry-split" aria-labelledby="evo-title">
+        <article>
+          <header class="register-head">
+            <h2 id="evo-title" class="ds-heading" data-level="2">Personality Genome &amp; Phenotype (EVO-01 · EVO-02)</h2>
+            <span class="register-sub mono" id="genome-readout">Rev 0 · Chronotype +0.0h · Phenotype #8753fc94</span>
+          </header>
+          <dl class="metric-list" style="margin-top: var(--s-4);">
+            <div class="metric-item">
+              <dt class="metric-key">Curiosity</dt>
+              <dd class="meter-track"><span class="meter-fill" id="bar-curiosity" style="width: 50%"></span></dd>
+              <dd class="metric-val" id="val-curiosity">50.0%</dd>
+            </div>
+            <div class="metric-item">
+              <dt class="metric-key">Affection</dt>
+              <dd class="meter-track"><span class="meter-fill" id="bar-affection" style="width: 50%"></span></dd>
+              <dd class="metric-val" id="val-affection">50.0%</dd>
+            </div>
+            <div class="metric-item">
+              <dt class="metric-key">Playfulness</dt>
+              <dd class="meter-track"><span class="meter-fill" id="bar-playfulness" style="width: 50%"></span></dd>
+              <dd class="metric-val" id="val-playfulness">50.0%</dd>
+            </div>
+            <div class="metric-item">
+              <dt class="metric-key">Resilience</dt>
+              <dd class="meter-track"><span class="meter-fill" id="bar-resilience" style="width: 50%"></span></dd>
+              <dd class="metric-val" id="val-resilience">50.0%</dd>
+            </div>
+          </dl>
+          <p class="act-pill-bar" style="margin-top: var(--s-5);">
+            <button class="ds-btn-pill" type="button" id="btn-dream-now" onclick="triggerDream(false)">
+              <span>Consolidate Dream Pass</span>
+            </button>
+            <span class="ds-chip" data-variant="mono" id="molt-chip">Device Molt: Synced (Stage 1)</span>
+          </p>
+        </article>
+
+        <article>
+          <header class="register-head">
+            <h2 class="ds-heading" data-level="2">Dream Journal &amp; Watchdog Supervisor (EVO-03)</h2>
+            <span class="register-sub mono" id="wdt-readout">WDT: OBSERVE · MONITORING · 0 rescues/1h</span>
+          </header>
+          <p class="act-pill-bar" style="margin-top: var(--s-4); margin-bottom: var(--s-4);">
+            <span class="ds-chip" data-variant="mono" id="wdt-chip">USB Supervisor: MONITORING</span>
+            <button class="ds-btn-pill" type="button" id="btn-wdt-rescue" onclick="triggerWatchdogRescue()">
+              <span>Soft-Reset Rescue (RTS)</span>
+            </button>
+          </p>
+          <table class="ds-table" aria-label="Consolidated dream journal">
+            <thead>
+              <tr>
+                <th>Trigger</th>
+                <th>Privacy-Safe Summary</th>
+                <th>ΔL1 · Hash</th>
+              </tr>
+            </thead>
+            <tbody id="dream-tbody"></tbody>
+          </table>
+        </article>
+      </section>
+
       <!-- 3. OUTBOUND OTA_1 PACKET REGISTER & SQLITE WAL EPISODIC MEMORY -->
       <section class="telemetry-split" aria-labelledby="telemetry-title">
         <article>
@@ -585,13 +646,29 @@
       mood_pct: 71.0,
       emotion: "happy",
       stage: 1,
-      stage_name: "Mochi-Sprout",
+      stage_name: "Mochi Spore",
       xp: 120,
       distance_cm: 65.0,
       reflex_zone: "ambient_idle",
       lip_aperture: 0.0,
       hardware: { usb_connected: true, lan_reachable: true },
       actuators: { servo_action: "self.Otto.updown", led_rgb: [252, 168, 73], brightness: 85, volume: 75 },
+      genome: { curiosity: 0.5, affection: 0.5, playfulness: 0.5, resilience: 0.5, chronotype_shift: 0.0 },
+      expressed: { curiosity: 0.5, affection: 0.5, playfulness: 0.5, resilience: 0.5 },
+      phenotype: {
+        continuous: {
+          stage: 1, eye_scale: 0.92, pupil_scale: 0.85, catchlights: 1,
+          saccade_amp_px: 0.5, saccade_period_s: 1.6, blush_scale: 0.75,
+          blush_coral: false, brow_curve_px: 0.0, cyber_ring: false,
+          cyber_omega: 0.0, cyber_alpha: 0.0, breath_period_s: 4.2
+        },
+        quantized: { stage: 1, eye_q: 0.92, catch: 1, blush_q: 0.75, brackets: false, star: false },
+        hash: "8753fc94"
+      },
+      dreams: [
+        { trigger: "quiet_hours", summary: "Đêm yên tĩnh: Mochi nghỉ ngơi sâu và cân bằng lại nhịp sinh học.", delta_l1: 0.0, phenotype_hash: "8753fc94" }
+      ],
+      watchdog: { mode: "observe", state: "MONITORING", port_present: true, fw_version: "2.5.3", rescues_last_hour: 0 },
       packets: [
         { ts: "09:42:10", source: "workspace:git_commit", raw_json: '{"type":"llm","emotion":"delicious","text":"happy"}' },
         { ts: "09:42:10", source: "mcp:self.Otto.updown", raw_json: '{"type":"mcp","payload":{"jsonrpc":"2.0","method":"tools/call","params":{"name":"self.Otto.updown"}}}' },
@@ -775,6 +852,30 @@
       } catch (_) {}
     }
 
+    async function triggerDream(dryRun) {
+      try {
+        const res = await fetch("/api/dream", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({dry_run: Boolean(dryRun)})
+        });
+        if (res.ok) {
+          await fetchStatus();
+        }
+      } catch (_) {}
+    }
+
+    async function triggerWatchdogRescue() {
+      try {
+        await fetch("/api/watchdog/rescue", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({confirm: true, force: false})
+        });
+        await fetchStatus();
+      } catch (_) {}
+    }
+
     document.getElementById("btn-probe-hw").addEventListener("click", async () => {
       try { await fetch("/api/hardware"); } catch (_) {}
       await fetchStatus();
@@ -816,7 +917,7 @@
       lipOverride = st.lip_aperture || 0;
 
       const gifEl = document.getElementById("mochi-gif");
-      const targetSrc = `../../themes/procedural-mochi/${emo}.gif`;
+      const targetSrc = `../../themes/procedural-mochi/${emo}.gif?v=canonical8`;
       if (gifEl && gifEl.getAttribute("src") !== targetSrc) {
         gifEl.setAttribute("src", targetSrc);
       }
@@ -845,7 +946,7 @@
           `Valence ${vSign}${st.valence.toFixed(3)} · Arousal ${aSign}${st.arousal.toFixed(3)}`;
       }
 
-      const cleanStage = String(st.stage_name || "Mochi-Sprout").replace(/^Stage\s*\d+:\s*/i, "");
+      const cleanStage = String(st.stage_name || "Mochi Spore").replace(/^Stage\s*\d+:\s*/i, "");
       const shortZone = String(st.reflex_zone || "ambient_idle").replace(/^ambient_/, "");
       document.getElementById("stage-chip").textContent = `Stage ${st.stage ?? 1} (${cleanStage}) · ${st.xp ?? 120} XP`;
       document.getElementById("emo-readout").textContent = `${emo}`;
@@ -878,40 +979,141 @@
         document.getElementById("act-screen").textContent = `Backlight: ${a.brightness ?? 85}% · Vol ${a.volume ?? 75}%`;
       }
 
+      /* EVO-01 / EVO-02 Genome & Phenotype UI update (textContent only) */
+      if (st.genome) {
+        const gm = st.genome;
+        ["curiosity", "affection", "playfulness", "resilience"].forEach((trait) => {
+          const pct = Math.max(0, Math.min(100, (Number(gm[trait] ?? 0.5)) * 100));
+          const barEl = document.getElementById(`bar-${trait}`);
+          const valEl = document.getElementById(`val-${trait}`);
+          if (barEl) barEl.style.width = `${pct.toFixed(1)}%`;
+          if (valEl) valEl.textContent = `${pct.toFixed(1)}%`;
+        });
+        const cShift = Number(gm.chronotype_shift ?? 0);
+        const cSign = cShift >= 0 ? "+" : "";
+        const phHash = (st.phenotype && st.phenotype.hash) ? st.phenotype.hash : "8753fc94";
+        const gReadout = document.getElementById("genome-readout");
+        if (gReadout) {
+          gReadout.textContent = `Chronotype ${cSign}${cShift.toFixed(1)}h · Phenotype #${phHash}`;
+        }
+        const moltChip = document.getElementById("molt-chip");
+        if (moltChip) {
+          moltChip.textContent = (st.stage ?? 1) > 1
+            ? `Molt Available: Stage ${st.stage} (#${phHash})`
+            : `Device Molt: Synced (Stage 1 #${phHash})`;
+        }
+      }
+
+      if (st.watchdog) {
+        const w = st.watchdog;
+        const wReadout = document.getElementById("wdt-readout");
+        const wChip = document.getElementById("wdt-chip");
+        if (wReadout) {
+          wReadout.textContent = `WDT: ${String(w.mode || "observe").toUpperCase()} · ${w.state || "MONITORING"} · ${w.rescues_last_hour ?? 0} rescues/1h`;
+        }
+        if (wChip) {
+          wChip.textContent = `USB Supervisor: ${w.state || "MONITORING"} (v${w.fw_version || "2.5.3"})`;
+        }
+      }
+
+      /* XSS-safe table rendering using createElement + textContent (verifies V-18) */
       const pktTbody = document.getElementById("packet-tbody");
-      pktTbody.innerHTML = (st.packets || []).slice(0, 6).map((p) => {
-        const rawType = String((p.parsed && p.parsed.type) || p.source || "json");
-        const pType = rawType.startsWith("mcp") ? "mcp" : rawType;
-        const bodyStr = String(p.raw_json || JSON.stringify(p.parsed || {}));
-        return `<tr>
-          <td class="mono">${pType}</td>
-          <td><code>${bodyStr.length > 84 ? bodyStr.slice(0, 84) + "…" : bodyStr}</code></td>
-          <td class="mono">${p.ts || ""}</td>
-        </tr>`;
-      }).join("");
+      if (pktTbody) {
+        pktTbody.replaceChildren();
+        (st.packets || []).slice(0, 6).forEach((p) => {
+          const rawType = String((p.parsed && p.parsed.type) || p.source || "json");
+          const pType = rawType.startsWith("mcp") ? "mcp" : rawType;
+          const bodyStr = String(p.raw_json || JSON.stringify(p.parsed || {}));
+          const tr = document.createElement("tr");
+          const tdType = document.createElement("td");
+          tdType.className = "mono";
+          tdType.textContent = pType;
+          const tdBody = document.createElement("td");
+          const codeEl = document.createElement("code");
+          codeEl.textContent = bodyStr.length > 84 ? bodyStr.slice(0, 84) + "…" : bodyStr;
+          tdBody.appendChild(codeEl);
+          const tdTs = document.createElement("td");
+          tdTs.className = "mono";
+          tdTs.textContent = String(p.ts || "");
+          tr.append(tdType, tdBody, tdTs);
+          pktTbody.appendChild(tr);
+        });
+      }
 
       const memTbody = document.getElementById("memory-tbody");
-      memTbody.innerHTML = (st.memories || []).slice(0, 6).map((m) => {
-        const evName = String(m.event_type || "").replace(/^set_emotion:/, "emo:");
-        return `<tr>
-          <td class="mono">${evName}</td>
-          <td>${m.detail}</td>
-          <td class="mono">${m.emotion || "neutral"}</td>
-        </tr>`;
-      }).join("");
+      if (memTbody) {
+        memTbody.replaceChildren();
+        (st.memories || []).slice(0, 6).forEach((m) => {
+          const evName = String(m.event_type || "").replace(/^set_emotion:/, "emo:");
+          const tr = document.createElement("tr");
+          const tdEv = document.createElement("td");
+          tdEv.className = "mono";
+          tdEv.textContent = evName;
+          const tdDet = document.createElement("td");
+          tdDet.textContent = String(m.detail || "");
+          const tdEmo = document.createElement("td");
+          tdEmo.className = "mono";
+          tdEmo.textContent = String(m.emotion || "neutral");
+          tr.append(tdEv, tdDet, tdEmo);
+          memTbody.appendChild(tr);
+        });
+      }
+
+      const dreamTbody = document.getElementById("dream-tbody");
+      if (dreamTbody) {
+        dreamTbody.replaceChildren();
+        (st.dreams || []).slice(0, 5).forEach((d) => {
+          const tr = document.createElement("tr");
+          const tdTrig = document.createElement("td");
+          tdTrig.className = "mono";
+          tdTrig.textContent = String(d.trigger || "manual");
+          const tdSum = document.createElement("td");
+          tdSum.textContent = String(d.summary || "");
+          const tdDelta = document.createElement("td");
+          tdDelta.className = "mono";
+          tdDelta.textContent = `${Number(d.delta_l1 ?? 0).toFixed(3)} · #${d.phenotype_hash || "8753fc94"}`;
+          tr.append(tdTrig, tdSum, tdDelta);
+          dreamTbody.appendChild(tr);
+        });
+      }
 
       if (viewMode === 2) {
         document.getElementById("hud-img").src = `/api/hud.png?t=${Date.now()}`;
       }
     }
 
-    /* 60fps Second-Order Differential Spring Renderer on 240x320 ST7789 Canvas */
+    /* 60fps Second-Order Differential Spring + 100% Canonical Mochi Scanline Vector Renderer on 240x320 ST7789 Canvas */
     const canvas = document.getElementById("lcd-canvas");
     const ctx = canvas.getContext("2d");
+    const reducedMotionQuery = window.matchMedia
+      ? window.matchMedia("(prefers-reduced-motion: reduce)")
+      : { matches: false };
+
+    const MOCHI_PALETTE_HEX = [
+      "#000000",
+      "#eafcff",
+      "#b8e6f8",
+      "#e080e4",
+      "#eee46e",
+      "#e6312e",
+      "#7644a8",
+      "#4c1a24"
+    ];
+    let mochiVectors = null;
+    async function fetchMochiVectors() {
+      try {
+        const res = await fetch("/api/mochi-vectors");
+        if (res.ok) {
+          mochiVectors = await res.json();
+        }
+      } catch (_) {}
+    }
 
     function renderLoop(now) {
       const dt = Math.min(0.05, Math.max(0.001, (now - lastFrameTs) / 1000));
       lastFrameTs = now;
+      const tSec = now / 1000.0;
+      const reduceMotion = Boolean(reducedMotionQuery.matches);
       fpsSmoothed = fpsSmoothed * 0.92 + (1 / dt) * 0.08;
       document.getElementById("fps-counter").textContent = `${fpsSmoothed.toFixed(1)} fps · 10-DOF`;
 
@@ -926,6 +1128,13 @@
         springV[i] += acc * dt;
         springX[i] += springV[i] * dt;
       }
+
+      const ph = (currentState && currentState.phenotype && currentState.phenotype.continuous) || {
+        stage: 1, eye_scale: 1.0, pupil_scale: 1.0, catchlights: 1,
+        saccade_amp_px: 0.5, saccade_period_s: 1.6, blush_scale: 1.0,
+        blush_coral: false, brow_curve_px: 0.0, cyber_ring: false,
+        cyber_omega: 0.8, cyber_alpha: 0.5, breath_period_s: 4.2
+      };
 
       /* Pure #000000 OLED Framebuffer */
       ctx.fillStyle = "#000000";
@@ -944,98 +1153,92 @@
       ctx.fillStyle = "#fca849";
       ctx.font = "500 10px ui-monospace, SFMono-Regular, Menlo, monospace";
       const shortStage = currentState
-        ? String(currentState.stage_name || "Mochi-Sprout").replace(/^Stage\s*\d+:\s*/i, "")
-        : "Mochi-Sprout";
-      const stgTxt = currentState ? `S${currentState.stage ?? 1}:${shortStage}` : "S1:Mochi-Sprout";
+        ? String(currentState.stage_name || "Mochi Spore").replace(/^Stage\s*\d+:\s*/i, "")
+        : "Mochi Spore";
+      const stgTxt = currentState ? `S${currentState.stage ?? 1}:${shortStage}` : "S1:Mochi Spore";
       ctx.fillText(stgTxt, 10, 17);
       ctx.fillStyle = "#f4f4f5";
       const eTxt = currentState ? `E:${Math.round(currentState.energy ?? 92)}% B:${Math.round(currentState.bond ?? 64)}%` : "E:92% B:64%";
       ctx.fillText(eTxt, 140, 17);
 
-      /* Mochi-21 Procedural Face (10-DOF Spring State) */
-      const [gx, gy, lOpen, rOpen, lBrow, rBrow, mSmile, mOpen, blush, tilt] = springX;
-      ctx.save();
-      ctx.translate(120 + gx * 0.6, 152 + gy * 0.6);
-      ctx.rotate((tilt * Math.PI) / 180);
+      /* Mochi-21 Canonical Vector Face (10-DOF Spring State + EVO-02 Phenotype) */
+      const [gx, gy, lOpen, rOpen, , , , mOpen, , tilt] = springX;
+      const breathPeriod = Math.max(2.0, Number(ph.breath_period_s || 4.2));
+      const breathScale = reduceMotion ? 1.0 : (1.0 + 0.012 * Math.sin((2.0 * Math.PI * tSec) / breathPeriod));
 
-      /* Squircle Mochi Body Contour */
-      ctx.fillStyle = "#09090b";
-      ctx.strokeStyle = "#27272a";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.roundRect(-86, -78, 172, 156, 48);
-      ctx.fill();
-      ctx.stroke();
-
-      /* Warm Amber Blush Cheeks */
-      if (blush > 0.05) {
-        ctx.fillStyle = `rgba(252, 168, 73, ${Math.min(0.65, blush * 0.55)})`;
-        ctx.beginPath();
-        ctx.ellipse(-54, 22, 16, 9, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(54, 22, 16, 9, 0, 0, Math.PI * 2);
-        ctx.fill();
+      let sacX = 0.0;
+      let sacY = 0.0;
+      if (!reduceMotion) {
+        const sacPeriod = Math.max(0.6, Number(ph.saccade_period_s || 1.6));
+        const sacBucket = Math.floor(tSec / sacPeriod);
+        const sacAmp = Number(ph.saccade_amp_px || 0.5);
+        sacX = Math.sin(sacBucket * 12.9898) * sacAmp;
+        sacY = Math.cos(sacBucket * 78.233) * sacAmp * 0.6;
       }
 
-      /* Left & Right Eyes */
-      function drawEye(cx, cy, openVal, browTilt) {
-        const h = Math.max(3, 34 * Math.max(0.08, openVal));
-        const w = 28;
-        ctx.fillStyle = "#f4f4f5";
-        ctx.beginPath();
-        ctx.roundRect(cx - w / 2, cy - h / 2, w, h, Math.min(14, h / 2));
-        ctx.fill();
+      const emo = (currentState && currentState.emotion) || "happy";
+      const emoFrames = (mochiVectors && mochiVectors.emotions && (mochiVectors.emotions[emo] || mochiVectors.emotions.neutral)) || null;
+      const paletteHex = (mochiVectors && mochiVectors.palette) || MOCHI_PALETTE_HEX;
+      const blushPad = Math.round((Number(ph.blush_scale || 1.0) - 1.0) * 10.0);
+      const eyeScaleY = breathScale * (0.95 + 0.05 * Math.max(0.2, (lOpen + rOpen) * 0.5));
+      const lipShift = mOpen > 0.25 ? Math.round((mOpen - 0.25) * 8.0) : 0;
 
-        if (openVal > 0.35) {
-          ctx.fillStyle = "#09090b";
-          ctx.beginPath();
-          ctx.arc(cx + gx * 0.25, cy + gy * 0.25, 6.5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#f4f4f5";
-          ctx.beginPath();
-          ctx.arc(cx - 4 + gx * 0.15, cy - 5 + gy * 0.15, 3.2, 0, Math.PI * 2);
-          ctx.fill();
+      ctx.save();
+      ctx.translate(120 + gx * 0.42 + sacX, 158 + gy * 0.42 + sacY);
+      ctx.rotate((tilt * 0.32 * Math.PI) / 180);
+      ctx.scale(breathScale, eyeScaleY);
+
+      if (emoFrames && emoFrames.length > 0) {
+        const posterIdx = (emo === "relaxed" || emo === "delicious") ? 1 : ((emo === "thinking" || emo === "winking") ? 2 : 3);
+        const fIdx = reduceMotion ? (posterIdx % emoFrames.length) : (Math.floor(tSec * 12.5) % emoFrames.length);
+        const spans = emoFrames[fIdx];
+        let lastColor = -1;
+        for (let i = 0; i < spans.length; i++) {
+          const sp = spans[i];
+          const ySrc = sp[0];
+          let x0 = sp[1];
+          let wSpan = sp[2];
+          const colIdx = sp[3];
+          if (blushPad !== 0 && colIdx === 3 && ySrc >= 55 && ySrc <= 125 && (x0 < 85 || x0 + wSpan > 155)) {
+            x0 = Math.max(0, x0 - blushPad);
+            wSpan = Math.min(240 - x0, wSpan + blushPad * 2);
+          }
+          let dyLip = 0;
+          if (lipShift > 0 && ySrc >= 88 && x0 >= 80 && x0 + wSpan <= 160) {
+            dyLip = lipShift;
+          }
+          if (colIdx !== lastColor) {
+            ctx.fillStyle = paletteHex[colIdx] || "#eafcff";
+            lastColor = colIdx;
+          }
+          ctx.fillRect(x0 - 120, ySrc - 73 + dyLip, wSpan, 1.25);
         }
+      } else {
+        const gifEl = document.getElementById("mochi-gif");
+        if (gifEl && gifEl.complete && gifEl.naturalWidth > 0) {
+          ctx.drawImage(gifEl, -120, -120, 240, 240);
+        }
+      }
 
-        /* Eyebrow */
+      /* Stage 4 Cyber-Mochi Spirit HUD Brackets & Rotating Ring */
+      if (ph.cyber_ring) {
+        const rot = reduceMotion ? 0.0 : tSec * Number(ph.cyber_omega || 0.8);
         ctx.save();
-        ctx.translate(cx, cy - h / 2 - 10);
-        ctx.rotate(browTilt);
-        ctx.strokeStyle = "#d4d4d8";
-        ctx.lineWidth = 3.2;
-        ctx.lineCap = "round";
+        ctx.strokeStyle = `rgba(184, 230, 248, ${Number(ph.cyber_alpha || 0.55)})`;
+        ctx.lineWidth = 1.2;
+        const bx0 = -114, by0 = -77, bx1 = 113, by1 = 77, arm = 7;
         ctx.beginPath();
-        ctx.moveTo(-13, 0);
-        ctx.lineTo(13, 0);
+        ctx.moveTo(bx0, by0 + arm); ctx.lineTo(bx0, by0); ctx.lineTo(bx0 + arm, by0);
+        ctx.moveTo(bx1 - arm, by0); ctx.lineTo(bx1, by0); ctx.lineTo(bx1, by0 + arm);
+        ctx.moveTo(bx0, by1 - arm); ctx.lineTo(bx0, by1); ctx.lineTo(bx0 + arm, by1);
+        ctx.moveTo(bx1 - arm, by1); ctx.lineTo(bx1, by1); ctx.lineTo(bx1, by1 - arm);
+        ctx.stroke();
+        ctx.rotate(rot);
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.arc(0, 0, 104, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
-      }
-
-      drawEye(-38 + gx * 0.35, -8 + gy * 0.35, lOpen, lBrow);
-      drawEye(38 + gx * 0.35, -8 + gy * 0.35, rOpen, rBrow);
-
-      /* Mouth (Smile curvature + Lip-Sync Aperture) */
-      const my = 32 + gy * 0.25;
-      const mx = gx * 0.25;
-      if (mOpen > 0.22) {
-        const mw = 24 + mOpen * 16;
-        const mh = 6 + mOpen * 22;
-        ctx.fillStyle = "#fca849";
-        ctx.strokeStyle = "#f4f4f5";
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.roundRect(mx - mw / 2, my - mh / 2, mw, mh, Math.min(12, mh / 2));
-        ctx.fill();
-        ctx.stroke();
-      } else {
-        ctx.strokeStyle = "#f4f4f5";
-        ctx.lineWidth = 3.5;
-        ctx.lineCap = "round";
-        ctx.beginPath();
-        ctx.moveTo(mx - 18, my);
-        ctx.quadraticCurveTo(mx, my + mSmile * 18, mx + 18, my);
-        ctx.stroke();
       }
       ctx.restore();
 
@@ -1050,7 +1253,11 @@
       requestAnimationFrame(renderLoop);
     }
 
+    fetchMochiVectors();
     fetchStatus();
+    setInterval(() => {
+      if (!document.hidden) fetchStatus();
+    }, 5000);
     requestAnimationFrame(renderLoop);
   </script>
 </body>

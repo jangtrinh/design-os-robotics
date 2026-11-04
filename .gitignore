@@ -7,6 +7,7 @@ __pycache__/
 .env.*
 
 # Private device profiles, NVS dumps, runtime SQLite DBs & third-party reference snapshots
+.brv/
 reference/
 profiles/robot-*/
 profiles/*/full-flash-*.bin
@@ -24,6 +25,7 @@ profiles/*/unpacked-assets/emoji_*.gif
 # Theme images are built locally (tools/cook-procedural-avatar.py) from the user's own device dump; not tracked
 themes/*.bin
 themes/*-preview/
+themes/procedural-mochi-evo/
 
 # Raw extracted firmware audio & personal voice samples
 voices/extracted-firmware-ogg/*.ogg

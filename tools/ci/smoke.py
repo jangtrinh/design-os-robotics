@@ -37,6 +37,10 @@ OVERRIDES = {
 # Extra cases that exercise a script beyond --help: (label, argv relative to the repo copy, accepted exit codes, text that must appear)
 EXTRA = [
     ("engine status", ["tools/mochi-soul-engine/engine.py", "status"], {0}, "minutes_since_interaction"),
+    ("engine genome", ["tools/mochi-soul-engine/engine.py", "genome"], {0}, "affection"),
+    ("engine dream dry-run", ["tools/mochi-soul-engine/engine.py", "dream", "--dry-run"], {0}, "dream_key"),
+    ("serial supervisor selftest", ["tools/mochi-soul-engine/serial_supervisor.py", "--selftest"], {0}, "PASS"),
+    ("cook avatar budget-only", ["tools/cook-procedural-avatar.py", "--budget-only"], {0, 2}, ""),
 ]
 
 
@@ -65,8 +69,16 @@ def main() -> int:
     cases = build_cases()
     with tempfile.TemporaryDirectory() as tmp:
         work = Path(tmp) / "repo"
-        shutil.copytree(ROOT, work, ignore=shutil.ignore_patterns(".git", "__pycache__"))
+        shutil.copytree(
+            ROOT,
+            work,
+            ignore=shutil.ignore_patterns(
+                ".git", "__pycache__", ".brv", "robot-*", "unpacked-assets", "*.bin", "*.db*"
+            ),
+        )
         env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1", HOME=tmp)
+        for k in ("ROBOT_PROFILE_DIR", "MOCHI_SOUL_DB", "ESPPORT", "MOCHI_WDT_RESCUE"):
+            env.pop(k, None)
         for label, argv, ok_codes, needle in cases:
             try:
                 p = subprocess.run([PY, *argv], cwd=work, env=env, text=True, timeout=120,

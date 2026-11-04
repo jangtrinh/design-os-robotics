@@ -19,31 +19,96 @@ Also packs:
 from __future__ import annotations
 
 import argparse
+import hashlib
+import importlib.util
 import io
 import json
-import math
 import os
 import shutil
 import struct
 import sys
 from pathlib import Path
+from typing import Any, NamedTuple
+
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "themes" / "procedural-mochi"
 ARTIFACT_DIR = Path(os.environ["ARTIFACT_DIR"]) if os.environ.get("ARTIFACT_DIR") else None
 
-# 8-Color Flat Indexed Palette (Zero Dithering -> Maximum LZW Run-Length Compression)
-PALETTE = [
-    0, 0, 0,         # 0: Pure Black (#000000) - Background & Boolean Eyelid Masks
-    255, 255, 255,   # 1: Pure White (#FFFFFF) - Eyes & Mouth
-    70, 230, 255,    # 2: Cyber Cyan (#46E6FF) - Tears, Zzz, Sweat, Tech Accents
-    255, 110, 160,   # 3: Sakura Pink (#FF6EA0) - Blush Cheeks & Tongue
-    255, 216, 77,    # 4: Starlight Gold (#FFD84D) - Sparkles, Stars, Question Marks
-    255, 70, 90,     # 5: Coral Red (#FF465A) - Hearts & Anger Vein
-    168, 244, 255,   # 6: Ice Blue (#A8F4FF) - Eye Specular Glint & Shades Glint
-    34, 38, 52,      # 7: Dark Slate (#222634) - Sunglasses Frame & Subtle Accents
-] + [0, 0, 0] * 248
+
+class Morph(NamedTuple):
+    stage: int = 1
+    eye_q: float = 1.0
+    catch: int = 1
+    blush_q: float = 1.0
+    brackets: bool = False
+    star: bool = False
+
+    @property
+    def is_identity(self) -> bool:
+        return (
+            self.stage == 1
+            and self.eye_q == 1.0
+            and self.catch == 1
+            and self.blush_q == 1.0
+            and not self.brackets
+            and not self.star
+        )
+
+
+IDENTITY_MORPH = Morph()
+
+
+def _load_soul_engine() -> Any:
+    p = ROOT / "tools" / "mochi-soul-engine" / "engine.py"
+    spec = importlib.util.spec_from_file_location("mochi_soul_engine", p)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load soul engine from {p}")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def morph_from_stage_and_genome(stage: int, genome_dict: dict[str, Any] | None = None) -> tuple[Morph, dict[str, Any]]:
+    eng = _load_soul_engine()
+    params = eng.phenotype_params(stage=stage, genome=genome_dict or {}, quantize=True)
+    morph = Morph(
+        stage=int(params["stage"]),
+        eye_q=float(params["eye_q"]),
+        catch=int(params["catch"]),
+        blush_q=float(params["blush_q"]),
+        brackets=bool(params["brackets"]),
+        star=bool(params["star"]),
+    )
+    return morph, params
+
+def _load_canonical_vectors() -> Any:
+    if "mochi_canonical_vectors" in sys.modules:
+        return sys.modules["mochi_canonical_vectors"]
+    p = ROOT / "tools" / "mochi_canonical_vectors.py"
+    spec = importlib.util.spec_from_file_location("mochi_canonical_vectors", p)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load canonical vectors from {p}")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+_VEC_MOD = _load_canonical_vectors()
+
+# 8-Color Canonical Mochi Anime Indexed Palette (24 bytes = 8 RGB triplets -> 3-bit LZW Global Color Table)
+#   0: #000000 Pure Black        (Background & Eyelid/Mouth Cutouts)
+#   1: #EAFCFF Crisp Mochi White (Primary Eyes, Brows, Mouth, Teeth & Visor)
+#   2: #B8E6F8 Mochi Ice-Blue    (Eye Bottom Shading, Tears, Sweat, Smoke & Rain)
+#   3: #E080E4 Mochi Orchid-Pink (Cheek Blushes, Floating Hearts & Tongue Highlights)
+#   4: #EEE46E Mochi Bee Gold    (Flying Bee Body, Stars, Sparkles & Yellow-Green Gradient)
+#   5: #E6312E Mochi Bright Red  (3D Heart Eyes, Open Mouth Tongue & Subway Ring)
+#   6: #7644A8 Mochi Deep Violet (Rage Flames, Blush Upper Rim, Gloom Lines & Visor Trim)
+#   7: #4C1A24 Mochi Dark Maroon (Inner Mouth Cavity & Textured Tongue Shadow)
+PALETTE: list[int] = list(_VEC_MOD.MOCHI_PALETTE_8)
 
 ALL_21_EMOTIONS = [
     "neutral", "happy", "laughing", "funny", "sad",
@@ -53,16 +118,17 @@ ALL_21_EMOTIONS = [
     "confused",
 ]
 
-
-def draw_heart(d: ImageDraw.ImageDraw, cx: int, cy: int, size: int, color: int = 5) -> None:
-    r = max(2, int(size * 0.55))
-    d.ellipse([cx - size, cy - r, cx + 1, cy + r], fill=color)
-    d.ellipse([cx - 1, cy - r, cx + size, cy + r], fill=color)
-    d.polygon([(cx - size, cy + r // 3), (cx + size, cy + r // 3), (cx, cy + int(size * 1.35))], fill=color)
+POSTER_FRAME_IDX: dict[str, int] = {
+    "relaxed": 1,
+    "delicious": 1,
+    "thinking": 2,
+    "winking": 2,
+    "surprised": 3,
+}
 
 
 def draw_star(d: ImageDraw.ImageDraw, cx: int, cy: int, r_out: int, color: int = 4) -> None:
-    r_in = max(2, r_out // 3)
+    r_in = max(1, r_out // 3)
     pts = [
         (cx, cy - r_out), (cx + r_in, cy - r_in),
         (cx + r_out, cy), (cx + r_in, cy + r_in),
@@ -72,440 +138,191 @@ def draw_star(d: ImageDraw.ImageDraw, cx: int, cy: int, r_out: int, color: int =
     d.polygon(pts, fill=color)
 
 
-def draw_anger_vein(d: ImageDraw.ImageDraw, cx: int, cy: int, s: int, color: int = 5) -> None:
-    g = max(3, s // 3)
-    d.line([(cx - s, cy - g), (cx - g, cy - g), (cx - g, cy - s)], fill=color, width=3)
-    d.line([(cx + s, cy - g), (cx + g, cy - g), (cx + g, cy - s)], fill=color, width=3)
-    d.line([(cx - s, cy + g), (cx - g, cy + g), (cx - g, cy + s)], fill=color, width=3)
-    d.line([(cx + s, cy + g), (cx + g, cy + g), (cx + g, cy + s)], fill=color, width=3)
+def render_emotion_frame(
+    emotion: str,
+    frame_idx: int,
+    num_frames: int = 10,
+    w: int = 240,
+    h: int = 320,
+    morph: Morph = IDENTITY_MORPH,
+) -> Image.Image:
+    """Render a 240x240 indexed-palette frame for `emotion` from the 100% authentic Mochi scanline vectors."""
+    _ = (w, h)
+    all_vecs = _VEC_MOD.decode_all_emotion_scanlines()
+    emo_frames = all_vecs.get(emotion) or all_vecs["neutral"]
+    total_src = len(emo_frames)
+    if num_frames <= 1 or num_frames == total_src:
+        src_idx = frame_idx % total_src
+    else:
+        src_idx = int(round((frame_idx % num_frames) * (total_src - 1) / float(num_frames - 1))) % total_src
 
+    spans = emo_frames[src_idx]
+    out_w, out_h = 240, 240
+    y_off = (out_h - int(_VEC_MOD.FACE_SRC_H)) // 2
+    buf = bytearray(out_w * out_h)
 
-def draw_z(d: ImageDraw.ImageDraw, cx: int, cy: int, sz: int, color: int = 2) -> None:
-    pts = [(cx - sz, cy - sz), (cx + sz, cy - sz), (cx - sz, cy + sz), (cx + sz, cy + sz)]
-    d.line(pts, fill=color, width=3)
+    blush_pad = 0
+    if not morph.is_identity and morph.blush_q != 1.0:
+        blush_pad = max(-4, min(6, round((morph.blush_q - 1.0) * 12.0)))
+    eye_thicken = (not morph.is_identity) and (morph.eye_q != 1.0)
 
+    for y_src, x0, span_w, color in spans:
+        ry = y_src + y_off
+        if ry < 0 or ry >= out_h:
+            continue
+        nx0 = x0
+        nx1 = min(out_w, x0 + span_w)
+        if blush_pad != 0 and color == 3 and 55 <= y_src <= 125 and (x0 < 85 or nx1 > 155):
+            nx0 = max(0, nx0 - blush_pad)
+            nx1 = min(out_w, nx1 + blush_pad)
+        if nx1 <= nx0:
+            continue
+        row_base = ry * out_w
+        span_len = nx1 - nx0
+        buf[row_base + nx0 : row_base + nx1] = bytes([color]) * span_len
+        if eye_thicken and color in (1, 2) and 34 <= y_src <= 104 and ry > 0:
+            up_base = (ry - 1) * out_w
+            for x_pos in range(nx0, nx1):
+                if buf[up_base + x_pos] == 0:
+                    buf[up_base + x_pos] = color
 
-def draw_question_mark(d: ImageDraw.ImageDraw, cx: int, cy: int, scale: float = 1.0, color: int = 4) -> None:
-    r = int(9 * scale)
-    d.arc([cx - r, cy - r * 2, cx + r, cy], start=180, end=45, fill=color, width=3)
-    d.line([(cx + r // 2, cy - r // 2), (cx, cy + 2), (cx, cy + int(6 * scale))], fill=color, width=3)
-    d.ellipse([cx - 2, cy + int(10 * scale), cx + 2, cy + int(14 * scale)], fill=color)
-
-
-def draw_sweat_drop(d: ImageDraw.ImageDraw, cx: int, cy: int, sz: int = 10, color: int = 2) -> None:
-    d.polygon([(cx, cy - sz), (cx - sz // 2, cy + 2), (cx + sz // 2, cy + 2)], fill=color)
-    d.ellipse([cx - sz // 2, cy - 2, cx + sz // 2, cy + sz - 2], fill=color)
-
-
-def draw_w_mouth(d: ImageDraw.ImageDraw, cx: int, cy: int, w_half: int = 24, h: int = 11, color: int = 1) -> None:
-    d.arc([cx - w_half, cy - h, cx, cy + h], start=0, end=180, fill=color, width=4)
-    d.arc([cx, cy - h, cx + w_half, cy + h], start=0, end=180, fill=color, width=4)
-
-
-def draw_std_eye(d: ImageDraw.ImageDraw, cx: int, cy: int, ew: int = 54, eh: int = 62, glint_dx: int = 0, glint_dy: int = 0) -> None:
-    d.rounded_rectangle([cx - ew // 2, cy - eh // 2, cx + ew // 2, cy + eh // 2], radius=min(24, eh // 2), fill=1)
-    if eh > 26:
-        gx0 = cx - ew // 2 + 9 + glint_dx
-        gy0 = cy - eh // 2 + 9 + glint_dy
-        d.rounded_rectangle([gx0, gy0, gx0 + 11, gy0 + 14], radius=4, fill=6)
-
-
-def draw_crescent_eye(d: ImageDraw.ImageDraw, cx: int, cy: int, ew: int = 56, eh: int = 60) -> None:
-    d.rounded_rectangle([cx - ew // 2, cy - eh // 2, cx + ew // 2, cy + eh // 2], radius=26, fill=1)
-    d.ellipse([cx - ew // 2 - 6, cy - 2, cx + ew // 2 + 6, cy + eh // 2 + 28], fill=0)
-
-
-def render_emotion_frame(emotion: str, frame_idx: int, num_frames: int = 16, w: int = 240, h: int = 320) -> Image.Image:
-    t = frame_idx / float(num_frames)
-    tau = 2.0 * math.pi * t
-    img = Image.new("P", (w, h), 0)
+    img = Image.frombytes("P", (out_w, out_h), bytes(buf))
     img.putpalette(PALETTE)
-    d = ImageDraw.Draw(img)
 
-    cx_l, cx_r = 66, 174
-    cy_base = 136
+    if not morph.is_identity:
+        d = ImageDraw.Draw(img)
+        if morph.catch >= 2:
+            for y_src, x0, span_w, color in spans:
+                if color == 2 and span_w >= 14 and 38 <= y_src <= 92:
+                    gx = x0 + 4 + (src_idx % 2)
+                    gy = y_off + y_src - 2
+                    if 0 <= gx < out_w - 2 and 0 <= gy < out_h - 2:
+                        d.rectangle([gx, gy, gx + 1, gy + 1], fill=1)
+                    break
+        if morph.brackets:
+            bx0, by0, bx1, by1 = 6, y_off - 4, 233, y_off + int(_VEC_MOD.FACE_SRC_H) + 3
+            arm = 9
+            for sx, sy, dx, dy in (
+                (bx0, by0, arm, arm),
+                (bx1, by0, -arm, arm),
+                (bx0, by1, arm, -arm),
+                (bx1, by1, -arm, -arm),
+            ):
+                d.line([(sx, sy), (sx + dx, sy)], fill=2, width=2)
+                d.line([(sx, sy), (sx, sy + dy)], fill=2, width=2)
+        if morph.star:
+            draw_star(d, 222, y_off + 8 + (src_idx % 3), 5 + (src_idx % 2), color=4)
 
-    if emotion == "neutral":
-        by = int(round(3.5 * math.sin(tau)))
-        gx = int(round(5.0 * math.sin(tau)))
-        blink = max(0.08, 1.0 - math.exp(-((t - 0.5) * 11.5) ** 2))
-        eh = max(6, int(round(64 * blink)))
-        ey = cy_base + by
-        for ex in (cx_l + gx, cx_r + gx):
-            draw_std_eye(d, ex, ey, 54, eh)
-        d.ellipse([22 + gx, ey + 34, 52 + gx, ey + 50], fill=3)
-        d.ellipse([188 + gx, ey + 34, 218 + gx, ey + 50], fill=3)
-        draw_w_mouth(d, 120 + gx, ey + 44, 25, 11)
-
-    elif emotion == "happy":
-        by = int(round(-4.0 * abs(math.sin(tau))))
-        gx = int(round(3.0 * math.sin(tau)))
-        ey = cy_base + by
-        for ex in (cx_l + gx, cx_r + gx):
-            draw_crescent_eye(d, ex, ey, 56, 60)
-        d.ellipse([20 + gx, ey + 24, 54 + gx, ey + 44], fill=3)
-        d.ellipse([186 + gx, ey + 24, 220 + gx, ey + 44], fill=3)
-        my = ey + 34
-        mh = 24 + int(round(4.0 * math.sin(tau)))
-        d.chord([92 + gx, my - 12, 148 + gx, my + mh], start=0, end=180, fill=1)
-        d.chord([102 + gx, my + 2, 138 + gx, my + mh], start=0, end=180, fill=3)
-
-    elif emotion == "laughing":
-        by = int(round(-8.0 * abs(math.sin(tau * 2.0))))
-        ey = cy_base + by
-        # Tightly squeezed '> <' laughing chevrons
-        d.line([(cx_l - 22, ey - 18), (cx_l + 18, ey), (cx_l - 22, ey + 18)], fill=1, width=8)
-        d.line([(cx_r + 22, ey - 18), (cx_r - 18, ey), (cx_r + 22, ey + 18)], fill=1, width=8)
-        d.ellipse([18, ey + 22, 54, ey + 42], fill=3)
-        d.ellipse([186, ey + 22, 222, ey + 42], fill=3)
-        my = ey + 30
-        mw = 36 + int(round(4.0 * math.sin(tau * 2.0)))
-        d.chord([120 - mw, my - 14, 120 + mw, my + 34], start=0, end=180, fill=1)
-        d.chord([120 - mw + 10, my + 6, 120 + mw - 10, my + 34], start=0, end=180, fill=3)
-        # Side laughing tear droplets + stars
-        draw_star(d, 34, 64, 10 + int(round(3 * math.sin(tau))), color=4)
-        draw_star(d, 206, 64, 10 + int(round(3 * math.cos(tau))), color=4)
-
-    elif emotion == "funny":
-        # Goofy asymmetric bounce: Big left eye, small right eye, goofy crooked grin
-        by = int(round(5.0 * math.sin(tau * 2.0)))
-        gx = int(round(6.0 * math.cos(tau)))
-        ey = cy_base + by
-        draw_std_eye(d, cx_l + gx, ey - 4, 64, 70, glint_dx=int(4 * math.sin(tau)), glint_dy=int(4 * math.cos(tau)))
-        draw_std_eye(d, cx_r + gx, ey + 6, 38, 42, glint_dx=-int(4 * math.sin(tau)))
-        d.ellipse([18 + gx, ey + 34, 48 + gx, ey + 50], fill=3)
-        d.ellipse([190 + gx, ey + 30, 220 + gx, ey + 46], fill=3)
-        # Goofy lopsided buck-tooth smile
-        my = ey + 44
-        d.arc([88 + gx, my - 14, 152 + gx, my + 16], start=10, end=170, fill=1, width=5)
-        d.rectangle([114 + gx, my + 1, 126 + gx, my + 11], fill=1)
-        draw_star(d, 198, 58, 11 + int(round(3 * math.sin(tau))), color=4)
-
-    elif emotion == "sad":
-        by = 8 + int(round(2.5 * math.sin(tau)))
-        ey = cy_base + by
-        ew, eh = 54, 58
-        draw_std_eye(d, cx_l, ey, ew, eh, glint_dy=8)
-        d.polygon([(cx_l - 34, ey - 34), (cx_l + 34, ey - 34), (cx_l - 34, ey + 4)], fill=0)
-        draw_std_eye(d, cx_r, ey, ew, eh, glint_dy=8)
-        d.polygon([(cx_r - 34, ey - 34), (cx_r + 34, ey - 34), (cx_r + 34, ey + 4)], fill=0)
-        tear_y = ey + 16 + int(round(32.0 * t))
-        d.ellipse([cx_l - 28, tear_y, cx_l - 16, tear_y + 16], fill=2)
-        d.arc([96, ey + 48, 144, ey + 72], start=195, end=345, fill=1, width=5)
-
-    elif emotion == "angry":
-        gx = 2 if (frame_idx % 2 == 0) else -2
-        by = int(round(2.0 * math.sin(tau * 2.0)))
-        ey = cy_base + by
-        ew, eh = 56, 58
-        for side, cx in ((-1, cx_l + gx), (1, cx_r + gx)):
-            d.rounded_rectangle([cx - ew // 2, ey - eh // 2, cx + ew // 2, ey + eh // 2], radius=20, fill=1)
-            if side == -1:
-                d.polygon([(cx - 34, ey - 34), (cx + 34, ey - 34), (cx + 34, ey + 8)], fill=0)
-            else:
-                d.polygon([(cx - 34, ey - 34), (cx + 34, ey - 34), (cx - 34, ey + 8)], fill=0)
-        d.arc([90 + gx, ey + 44, 150 + gx, ey + 70], start=190, end=350, fill=1, width=6)
-        vein_size = 13 + (3 if (frame_idx // 2) % 2 == 0 else 0)
-        draw_anger_vein(d, 202, 68, vein_size, color=5)
-
-    elif emotion == "crying":
-        # Streaming waterfall tears + wailing mouth
-        by = 6 + int(round(3.0 * math.sin(tau * 2.0)))
-        ey = cy_base + by
-        # Waterfall cyan streams under both eyes
-        for ex in (cx_l, cx_r):
-            d.rectangle([ex - 18, ey + 6, ex + 18, ey + 95], fill=2)
-            # Animated white wave ripples inside the tear stream
-            for k in range(3):
-                ry = ey + 14 + int(round(((t + k / 3.0) % 1.0) * 72))
-                d.line([(ex - 12, ry), (ex + 12, ry)], fill=6, width=3)
-            # Squeezed shut crying eye arch on top
-            d.arc([ex - 28, ey - 16, ex + 28, ey + 20], start=180, end=360, fill=1, width=7)
-        # Wailing open mouth
-        mw = 22 + int(round(4 * math.sin(tau * 2.0)))
-        d.rounded_rectangle([120 - mw, ey + 38, 120 + mw, ey + 68], radius=12, fill=1)
-        d.rounded_rectangle([120 - mw + 5, ey + 46, 120 + mw - 5, ey + 66], radius=8, fill=5)
-
-    elif emotion == "loving":
-        # Giant pulsing heart eyes ❤️ ❤️ + floating mini hearts
-        by = int(round(3.5 * math.sin(tau)))
-        ey = cy_base + by
-        h_sz = 26 + int(round(4.0 * abs(math.sin(tau))))
-        draw_heart(d, cx_l, ey - 6, h_sz, color=5)
-        draw_heart(d, cx_r, ey - 6, h_sz, color=5)
-        d.ellipse([18, ey + 28, 54, ey + 46], fill=3)
-        d.ellipse([186, ey + 28, 222, ey + 46], fill=3)
-        draw_w_mouth(d, 120, ey + 40, 26, 12, color=1)
-        # Floating mini hearts
-        draw_heart(d, 42, 68 - int(round(16 * t)), 8, color=3)
-        draw_heart(d, 198, 74 - int(round(16 * ((t + 0.5) % 1.0))), 9, color=5)
-
-    elif emotion == "embarrassed":
-        # Shy averted gaze + diagonal pink blush slashes + sweat drop + wavy mouth
-        gx = -10 + int(round(2.0 * math.sin(tau)))
-        by = int(round(2.0 * math.cos(tau)))
-        ey = cy_base + 4 + by
-        for ex in (cx_l + gx, cx_r + gx):
-            draw_std_eye(d, ex, ey, 50, 52)
-            # Slightly raised shy lower lid
-            d.rectangle([ex - 28, ey + 18, ex + 28, ey + 30], fill=0)
-        # Large pink blush cheeks + diagonal blush lines across nose
-        d.ellipse([16, ey + 22, 62, ey + 46], fill=3)
-        d.ellipse([178, ey + 22, 224, ey + 46], fill=3)
-        for bx_slash in range(86, 156, 14):
-            d.line([(bx_slash, ey + 28), (bx_slash - 6, ey + 38)], fill=3, width=3)
-        # Wavy shy mouth
-        my = ey + 48
-        d.arc([92, my - 6, 112, my + 8], start=0, end=180, fill=1, width=4)
-        d.arc([110, my - 6, 130, my + 8], start=180, end=360, fill=1, width=4)
-        d.arc([128, my - 6, 148, my + 8], start=0, end=180, fill=1, width=4)
-        draw_sweat_drop(d, 210, 74 + int(round(10 * t)), sz=13, color=2)
-
-    elif emotion == "surprised":
-        # Wide tall O O eyes + raised high brows + 'o' mouth + '!' mark
-        by = int(round(-4.0 * abs(math.sin(tau))))
-        ey = cy_base + by
-        for ex in (cx_l, cx_r):
-            d.ellipse([ex - 30, ey - 36, ex + 30, ey + 36], fill=1)
-            d.ellipse([ex - 8, ey - 10, ex + 8, ey + 10], fill=6)
-            d.arc([ex - 26, ey - 54, ex + 26, ey - 34], start=200, end=340, fill=1, width=4)
-        r_m = 13 + int(round(3.0 * math.sin(tau)))
-        d.ellipse([120 - r_m, ey + 44 - r_m, 120 + r_m, ey + 44 + r_m], fill=1)
-        d.ellipse([120 - r_m + 5, ey + 44 - r_m + 5, 120 + r_m - 5, ey + 44 + r_m - 5], fill=0)
-
-    elif emotion == "shocked":
-        # Cyber-shocked hollow ringing eyes + jitter + lightning shock lines
-        gx = 3 if (frame_idx % 2 == 0) else -3
-        ey = cy_base
-        for ex in (cx_l + gx, cx_r + gx):
-            r_sh = 28 + (2 if frame_idx % 4 < 2 else -2)
-            d.ellipse([ex - r_sh, ey - r_sh - 4, ex + r_sh, ey + r_sh + 4], fill=1)
-            d.ellipse([ex - r_sh + 9, ey - r_sh + 5, ex + r_sh - 9, ey + r_sh - 5], fill=0)
-            d.ellipse([ex - 5, ey - 5, ex + 5, ey + 5], fill=2)
-        # Tall gasping mouth
-        d.rounded_rectangle([104 + gx, ey + 38, 136 + gx, ey + 74], radius=14, fill=1)
-        d.rounded_rectangle([109 + gx, ey + 43, 131 + gx, ey + 69], radius=10, fill=0)
-        # Top shock rays
-        for rx_s, ang_dx in ((96, -8), (120, 0), (144, 8)):
-            d.line([(rx_s, 44), (rx_s + ang_dx, 68)], fill=4, width=4)
-
-    elif emotion == "thinking":
-        # Asymmetric inquisitive eyes looking up-right + chin-ponder mouth + thought bubbles + '?'
-        by = int(round(2.5 * math.sin(tau)))
-        ey = cy_base + by
-        # Left eye: narrowed squint
-        draw_std_eye(d, cx_l + 6, ey + 4, 52, 42, glint_dx=8, glint_dy=-4)
-        d.rectangle([cx_l - 24, ey - 22, cx_l + 36, ey - 4], fill=0)
-        # Right eye: wide inquisitive with raised brow
-        draw_std_eye(d, cx_r + 6, ey - 4, 54, 64, glint_dx=8, glint_dy=-6)
-        d.arc([cx_r - 22, ey - 52, cx_r + 32, ey - 32], start=195, end=345, fill=1, width=4)
-        # Sideways pondering mouth
-        d.line([(104, ey + 48), (138, ey + 44)], fill=1, width=5)
-        # Floating thought bubbles + '?'
-        d.ellipse([164, 78, 172, 86], fill=6)
-        d.ellipse([178, 62, 190, 74], fill=6)
-        draw_question_mark(d, 206, 52 + int(round(4 * math.sin(tau))), scale=1.2, color=4)
-
-    elif emotion == "winking":
-        by = int(round(-4.0 * abs(math.sin(tau))))
-        ey = cy_base + by
-        # Left eye: big sparkly open eye
-        draw_std_eye(d, cx_l, ey, 54, 64)
-        # Right eye: bold '<' wink chevron
-        d.line([(cx_r + 22, ey - 18), (cx_r - 18, ey), (cx_r + 22, ey + 18)], fill=1, width=8)
-        d.ellipse([20, ey + 30, 52, ey + 46], fill=3)
-        d.ellipse([188, ey + 30, 220, ey + 46], fill=3)
-        draw_w_mouth(d, 120, ey + 40, 26, 12)
-        draw_star(d, 206, 66, 11 + int(round(3 * math.sin(tau))), color=4)
-
-    elif emotion == "cool":
-        # Cyber Deal-With-It Sunglasses with animated diagonal lens glint!
-        by = int(round(3.0 * math.sin(tau)))
-        ey = cy_base + by
-        # Glowing cyan eyes behind dark shades
-        draw_std_eye(d, cx_l, ey, 52, 54)
-        draw_std_eye(d, cx_r, ey, 52, 54)
-        # Sunglasses bridge & lenses
-        d.rectangle([14, ey - 24, 226, ey - 16], fill=1)
-        d.polygon([(22, ey - 22), (110, ey - 22), (102, ey + 18), (30, ey + 18)], fill=7, outline=1)
-        d.polygon([(130, ey - 22), (218, ey - 22), (210, ey + 18), (138, ey + 18)], fill=7, outline=1)
-        # Sweeping specular glint across the lenses
-        glint_x = int(round(t * 70))
-        for lx0 in (32, 140):
-            gx_s = lx0 + (glint_x % 52)
-            d.line([(gx_s, ey - 16), (gx_s - 12, ey + 12)], fill=6, width=5)
-        # Confident cool half-smirk
-        d.arc([96, ey + 32, 152, ey + 56], start=10, end=155, fill=1, width=5)
-
-    elif emotion == "relaxed":
-        # Peaceful downward-curving serene closed eyes (︶ ︶) + gentle breathing
-        by = int(round(4.0 * math.sin(tau)))
-        ey = cy_base + by
-        d.arc([cx_l - 26, ey - 18, cx_l + 26, ey + 16], start=15, end=165, fill=1, width=6)
-        d.arc([cx_r - 26, ey - 18, cx_r + 26, ey + 16], start=15, end=165, fill=1, width=6)
-        d.ellipse([20, ey + 22, 52, ey + 38], fill=3)
-        d.ellipse([188, ey + 22, 220, ey + 38], fill=3)
-        d.arc([98, ey + 30, 142, ey + 50], start=15, end=165, fill=1, width=4)
-        draw_star(d, 198, 66 - int(round(6 * math.sin(tau))), 8, color=6)
-
-    elif emotion == "delicious":
-        # Yummy crescent eyes + 'w' mouth + pink tongue licking side-to-side!
-        by = int(round(-3.5 * abs(math.sin(tau))))
-        ey = cy_base + by
-        draw_crescent_eye(d, cx_l, ey, 56, 58)
-        draw_crescent_eye(d, cx_r, ey, 56, 58)
-        d.ellipse([18, ey + 24, 52, ey + 42], fill=3)
-        d.ellipse([188, ey + 24, 222, ey + 42], fill=3)
-        my = ey + 38
-        # Licking pink tongue moving along the smile
-        tx = 134 + int(round(8.0 * math.sin(tau)))
-        d.ellipse([tx - 10, my - 2, tx + 12, my + 18], fill=3)
-        draw_w_mouth(d, 120, my, 26, 12, color=1)
-        draw_star(d, 40, 68, 9, color=4)
-
-    elif emotion == "kissy":
-        # Wink + puckered '3' kissy lips + flying heart ❤️
-        by = int(round(3.0 * math.sin(tau)))
-        ey = cy_base + by
-        draw_crescent_eye(d, cx_l, ey, 54, 56)
-        d.line([(cx_r + 22, ey - 16), (cx_r - 16, ey), (cx_r + 22, ey + 16)], fill=1, width=7)
-        d.ellipse([20, ey + 26, 54, ey + 44], fill=3)
-        d.ellipse([186, ey + 26, 220, ey + 44], fill=3)
-        # Puckered '3' kissy mouth
-        my = ey + 42
-        d.arc([110, my - 12, 128, my + 2], start=270, end=110, fill=1, width=4)
-        d.arc([110, my - 2, 128, my + 12], start=250, end=90, fill=1, width=4)
-        # Flying kiss heart
-        hx = 148 + int(round(48.0 * t))
-        hy = my - 10 - int(round(46.0 * t))
-        draw_heart(d, hx, hy, size=8 + int(round(6.0 * t)), color=5)
-
-    elif emotion == "confident":
-        # Smug half-lidded eyes + proud smirk + golden sparkle
-        by = int(round(-3.0 * abs(math.sin(tau))))
-        gx = int(round(4.0 * math.sin(tau)))
-        ey = cy_base + by
-        for ex in (cx_l + gx, cx_r + gx):
-            draw_std_eye(d, ex, ey, 54, 58, glint_dx=6)
-            # Smug flat upper lid covering top 32%
-            d.rectangle([ex - 30, ey - 32, ex + 30, ey - 10], fill=0)
-            d.line([(ex - 28, ey - 10), (ex + 28, ey - 10)], fill=6, width=3)
-        # Confident tilted smirk
-        d.arc([94 + gx, ey + 30, 152 + gx, ey + 54], start=15, end=155, fill=1, width=5)
-        draw_star(d, 202, 62, 11 + int(round(3 * math.sin(tau))), color=4)
-
-    elif emotion == "sleepy":
-        by = int(round(4.0 * math.sin(tau)))
-        ey = cy_base + 6 + by
-        ew, eh = 54, 48
-        for ex in (cx_l, cx_r):
-            d.rounded_rectangle([ex - ew // 2, ey - eh // 2, ex + ew // 2, ey + eh // 2], radius=20, fill=1)
-            d.rectangle([ex - ew // 2 - 4, ey - eh // 2 - 4, ex + ew // 2 + 4, ey + 4], fill=0)
-            d.line([(ex - ew // 2, ey + 4), (ex + ew // 2, ey + 4)], fill=6, width=3)
-        d.ellipse([24, ey + 24, 52, ey + 38], fill=3)
-        d.ellipse([188, ey + 24, 216, ey + 38], fill=3)
-        yr = 7 + int(round(4.0 * (0.5 + 0.5 * math.sin(tau))))
-        my = ey + 38
-        d.ellipse([120 - yr, my - yr, 120 + yr, my + yr], fill=1)
-        if yr > 8:
-            d.ellipse([120 - yr + 3, my - yr + 3, 120 + yr - 3, my + yr - 3], fill=3)
-        for idx_z, (bx, by_z, bsz) in enumerate([(156, 86, 6), (178, 66, 9), (204, 44, 12)]):
-            dy_z = int(round(8.0 * ((t + idx_z * 0.33) % 1.0)))
-            draw_z(d, bx, by_z - dy_z, bsz, color=2)
-
-    elif emotion == "silly":
-        # Playful cross-eyed / derp look + big pink tongue sticking straight out (:P)
-        by = int(round(-5.0 * abs(math.sin(tau * 2.0))))
-        ey = cy_base + by
-        # Left eye looking inward right, Right eye looking inward left
-        draw_std_eye(d, cx_l + 6, ey, 54, 60, glint_dx=18, glint_dy=4)
-        draw_std_eye(d, cx_r - 6, ey, 54, 60, glint_dx=-18, glint_dy=4)
-        d.ellipse([20, ey + 28, 52, ey + 44], fill=3)
-        d.ellipse([188, ey + 28, 220, ey + 44], fill=3)
-        my = ey + 40
-        # Big silly pink tongue sticking down
-        th = 24 + int(round(4.0 * math.sin(tau * 2.0)))
-        d.rounded_rectangle([106, my, 134, my + th], radius=12, fill=3)
-        d.line([(120, my + 2), (120, my + th - 6)], fill=5, width=2)
-        draw_w_mouth(d, 120, my - 2, 26, 11, color=1)
-
-    elif emotion == "confused":
-        # One eye raised high, one squinted low + wavy squiggle mouth + '? ?' marks
-        by = int(round(3.0 * math.sin(tau)))
-        gx = int(round(4.0 * math.cos(tau)))
-        ey = cy_base + by
-        draw_std_eye(d, cx_l + gx, ey - 8, 56, 64, glint_dy=-4)
-        draw_std_eye(d, cx_r + gx, ey + 8, 50, 38, glint_dy=4)
-        d.polygon([(cx_r + gx - 30, ey - 18), (cx_r + gx + 30, ey - 18), (cx_r + gx + 30, ey + 2)], fill=0)
-        # Wavy confused mouth
-        my = ey + 46
-        d.arc([92, my - 6, 112, my + 8], start=180, end=360, fill=1, width=4)
-        d.arc([110, my - 6, 130, my + 8], start=0, end=180, fill=1, width=4)
-        d.arc([128, my - 6, 148, my + 8], start=180, end=360, fill=1, width=4)
-        draw_question_mark(d, 42, 60 + int(round(4 * math.sin(tau))), scale=1.0, color=2)
-        draw_question_mark(d, 198, 54 + int(round(4 * math.cos(tau))), scale=1.2, color=4)
-
-    return img.crop((0, 16, 240, 256))
+    return img
 
 
-def build_all_21_procedural_gifs() -> dict[str, bytes]:
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    if ARTIFACT_DIR:
-        ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+def build_all_21_procedural_gifs(
+    morph: Morph = IDENTITY_MORPH,
+    out_dir: Path | None = None,
+    write_files: bool = True,
+    quiet: bool = False,
+) -> dict[str, bytes]:
+    target_dir = out_dir if out_dir is not None else OUT_DIR
+    if write_files:
+        target_dir.mkdir(parents=True, exist_ok=True)
+        if ARTIFACT_DIR:
+            ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
     gif_bytes_by_emotion: dict[str, bytes] = {}
     poster_frames: dict[str, Image.Image] = {}
 
     for emo in ALL_21_EMOTIONS:
-        frames = [render_emotion_frame(emo, i, num_frames=16) for i in range(16)]
-        poster_frames[emo] = frames[3].convert("RGB")
+        raw_frames = [render_emotion_frame(emo, i, num_frames=10, morph=morph) for i in range(10)]
+        p_idx = POSTER_FRAME_IDX.get(emo, 3)
+        poster_frames[emo] = raw_frames[p_idx].convert("RGB")
+        dedup_frames: list[Image.Image] = []
+        durations: list[int] = []
+        prev_bytes: bytes | None = None
+        for frm in raw_frames:
+            fb = frm.tobytes()
+            if fb == prev_bytes and durations:
+                durations[-1] += 80
+            else:
+                dedup_frames.append(frm)
+                durations.append(80)
+                prev_bytes = fb
+        if len(dedup_frames) == 1:
+            dedup_frames.append(dedup_frames[0].copy())
+            durations = [400, 400]
         buf = io.BytesIO()
-        frames[0].save(
+        dedup_frames[0].save(
             buf,
             format="GIF",
             save_all=True,
-            append_images=frames[1:],
-            duration=65,
+            append_images=dedup_frames[1:],
+            duration=durations,
             loop=0,
-            optimize=True,
+            optimize=False,
         )
         raw = buf.getvalue()
         gif_bytes_by_emotion[emo] = raw
-        out_file = OUT_DIR / f"{emo}.gif"
-        out_file.write_bytes(raw)
+        if write_files:
+            out_file = target_dir / f"{emo}.gif"
+            out_file.write_bytes(raw)
+            if ARTIFACT_DIR:
+                shutil.copyfile(out_file, ARTIFACT_DIR / f"procedural_{emo}.gif")
+            if not quiet:
+                print(f"  [GIF] {emo:13s}: {len(raw):6,d} bytes ({len(raw)/1024:5.2f} KB) -> {out_file.name}")
+
+    if write_files:
+        # Build 21-panel Master Contact Sheet (7 cols x 3 rows, scaled 50% per cell -> 120x120 each)
+        cw, ch = 120, 120
+        cols, rows = 7, 3
+        pad = 8
+        label_h = 20
+        grid_w = pad + cols * (cw + pad)
+        grid_h = pad + rows * (ch + label_h + pad)
+        sheet = Image.new("RGB", (grid_w, grid_h), (14, 16, 24))
+        draw_s = ImageDraw.Draw(sheet)
+
+        for idx, emo in enumerate(ALL_21_EMOTIONS):
+            c = idx % cols
+            r = idx // cols
+            x0 = pad + c * (cw + pad)
+            y0 = pad + r * (ch + label_h + pad)
+            thumb = poster_frames[emo].resize((cw, ch), Image.Resampling.NEAREST)
+            draw_s.rounded_rectangle([x0 - 1, y0 - 1, x0 + cw, y0 + ch], radius=6, outline=(70, 230, 255), width=1)
+            sheet.paste(thumb, (x0, y0))
+            kb = len(gif_bytes_by_emotion[emo]) / 1024.0
+            draw_s.text((x0 + 4, y0 + ch + 3), f"{idx+1}.{emo} ({kb:.0f}K)", fill=(210, 230, 255))
+
+        sheet_path = target_dir / "procedural_mochi_21_preview.png"
+        sheet.save(sheet_path, format="PNG", optimize=True)
         if ARTIFACT_DIR:
-            shutil.copyfile(out_file, ARTIFACT_DIR / f"procedural_{emo}.gif")
-        print(f"  [GIF] {emo:13s}: {len(raw):6,d} bytes ({len(raw)/1024:5.2f} KB) -> {out_file.name}")
-
-    # Build 21-panel Master Contact Sheet (7 cols x 3 rows, scaled 50% per cell -> 120x160 each)
-    cw, ch = 120, 160
-    cols, rows = 7, 3
-    pad = 8
-    label_h = 20
-    grid_w = pad + cols * (cw + pad)
-    grid_h = pad + rows * (ch + label_h + pad)
-    sheet = Image.new("RGB", (grid_w, grid_h), (14, 16, 24))
-    draw_s = ImageDraw.Draw(sheet)
-
-    for idx, emo in enumerate(ALL_21_EMOTIONS):
-        c = idx % cols
-        r = idx // cols
-        x0 = pad + c * (cw + pad)
-        y0 = pad + r * (ch + label_h + pad)
-        thumb = poster_frames[emo].resize((cw, ch), Image.Resampling.NEAREST)
-        draw_s.rounded_rectangle([x0 - 1, y0 - 1, x0 + cw, y0 + ch], radius=6, outline=(70, 230, 255), width=1)
-        sheet.paste(thumb, (x0, y0))
-        kb = len(gif_bytes_by_emotion[emo]) / 1024.0
-        draw_s.text((x0 + 4, y0 + ch + 3), f"{idx+1}.{emo} ({kb:.0f}K)", fill=(210, 230, 255))
-
-    sheet_path = OUT_DIR / "procedural_mochi_21_preview.png"
-    sheet.save(sheet_path, format="PNG", optimize=True)
-    if ARTIFACT_DIR:
-        shutil.copyfile(sheet_path, ARTIFACT_DIR / "procedural_mochi_21_preview.png")
-    print(f"  [PNG] 21-Panel Master Sheet: {sheet_path} ({sheet_path.stat().st_size:,d} bytes)")
+            shutil.copyfile(sheet_path, ARTIFACT_DIR / "procedural_mochi_21_preview.png")
+        docs_mochi_dir = ROOT / "docs" / "assets" / "mochi"
+        if target_dir.resolve() == OUT_DIR.resolve() and docs_mochi_dir.is_dir():
+            shutil.copyfile(sheet_path, docs_mochi_dir / "procedural_mochi_21_preview.png")
+            for doc_emo in ("angry", "cool", "happy", "loving", "neutral", "shocked", "sleepy", "thinking"):
+                src_gif = target_dir / f"{doc_emo}.gif"
+                if src_gif.is_file():
+                    shutil.copyfile(src_gif, docs_mochi_dir / f"{doc_emo}.gif")
+        if not quiet:
+            print(f"  [PNG] 21-Panel Master Sheet: {sheet_path} ({sheet_path.stat().st_size:,d} bytes)")
     return gif_bytes_by_emotion
 
 
-def pack_mmap_assets_21(gif_bytes_by_emotion: dict[str, bytes], out_bin_path: Path, base_bin: Path) -> None:
+DEFAULT_WAKE_COMMANDS = [
+    {"command": "HEY J", "text": "Hey J", "action": "wake"},
+    {"command": "HEY JAY", "text": "Hey J", "action": "wake"},
+    {"command": "HELLO J", "text": "Hello J", "action": "wake"},
+    {"command": "HELLO JAY", "text": "Hello J", "action": "wake"},
+    {"command": "HI J", "text": "Hi J", "action": "wake"},
+    {"command": "HI JAY", "text": "Hi J", "action": "wake"},
+]
+
+
+def compute_mmap_assets_21_bytes(
+    gif_bytes_by_emotion: dict[str, bytes],
+    base_bin: Path,
+    srmodels_bin: Path | None = None,
+    dedup_identical: bool = False,
+    quiet: bool = False,
+) -> tuple[bytes, int]:
     d_base = base_bin.read_bytes()
     nf, _, _ = struct.unpack("<III", d_base[:12])
     tend = 12 + nf * 44
@@ -518,12 +335,37 @@ def pack_mmap_assets_21(gif_bytes_by_emotion: dict[str, bytes], out_bin_path: Pa
         base_files[name] = (d_base[tend + off + 2 : tend + off + 2 + sz], w, h)
         ordered_names.append(name)
 
+    if srmodels_bin is None:
+        for candidate in (
+            base_bin.parent.parent / "unpacked-assets" / "srmodels_mn6_en.bin",
+            ROOT / "unpacked-assets" / "srmodels_mn6_en.bin",
+        ):
+            if candidate.is_file():
+                srmodels_bin = candidate
+                break
+
     idx_obj = json.loads(base_files["index.json"][0].decode("utf-8"))
     idx_obj["hide_subtitle"] = True
     idx_obj["skin"]["light"]["text_color"] = "#ffffff"
     idx_obj["skin"]["light"]["background_color"] = "#000000"
     idx_obj["skin"]["dark"]["text_color"] = "#ffffff"
     idx_obj["skin"]["dark"]["background_color"] = "#000000"
+
+    if srmodels_bin is not None and srmodels_bin.is_file():
+        srmodels_payload = srmodels_bin.read_bytes()
+        idx_obj["multinet_model"] = {
+            "language": "en",
+            "duration": 3000,
+            "threshold": 0.45,
+            "commands": DEFAULT_WAKE_COMMANDS,
+        }
+        if not quiet:
+            print(
+                f"  [SR]  Embedded MultiNet6 English wake model from {srmodels_bin.name} "
+                f"({len(srmodels_payload):,d} bytes, commands={[c['command'] for c in DEFAULT_WAKE_COMMANDS]})"
+            )
+    else:
+        srmodels_payload = base_files["srmodels.bin"][0]
 
     file_to_emotion = {}
     for item in idx_obj["emoji_collection"]:
@@ -545,6 +387,8 @@ def pack_mmap_assets_21(gif_bytes_by_emotion: dict[str, bytes], out_bin_path: Pa
             out_entries.append((name, gif_bytes_by_emotion[emo], 240, 240))
         elif name == "index.json":
             out_entries.append(("index.json", new_index_bytes, 0, 0))
+        elif name == "srmodels.bin":
+            out_entries.append(("srmodels.bin", srmodels_payload, 0, 0))
         elif name in ("background_dark.raw", "background_light.raw"):
             out_entries.append((name, black_raw_320, 0, 0))
         else:
@@ -568,8 +412,15 @@ def pack_mmap_assets_21(gif_bytes_by_emotion: dict[str, bytes], out_bin_path: Pa
     table_buf = bytearray()
     data_buf = bytearray()
     cur_off = 0
+    seen_offsets: dict[bytes, int] = {}
     for name, payload, w, h in out_entries:
         name_b = name.encode("utf-8")[:31].ljust(32, b"\x00")
+        if dedup_identical:
+            digest = hashlib.sha1(payload).digest()
+            if digest in seen_offsets:
+                table_buf += name_b + struct.pack("<IIHH", len(payload), seen_offsets[digest], w, h)
+                continue
+            seen_offsets[digest] = cur_off
         table_buf += name_b + struct.pack("<IIHH", len(payload), cur_off, w, h)
         data_buf += b"ZZ" + payload
         cur_off += 2 + len(payload)
@@ -577,8 +428,82 @@ def pack_mmap_assets_21(gif_bytes_by_emotion: dict[str, bytes], out_bin_path: Pa
     body = bytes(table_buf + data_buf)
     checksum = sum(body) & 0xFFFF
     header = struct.pack("<III", len(out_entries), checksum, len(body))
-    out_bin_path.write_bytes(header + body)
-    print(f"  [BIN] Packed {out_bin_path} ({len(header) + len(body):,d} bytes, checksum=0x{checksum:04x})")
+    return header + body, checksum
+
+
+def pack_mmap_assets_21(
+    gif_bytes_by_emotion: dict[str, bytes],
+    out_bin_path: Path,
+    base_bin: Path,
+    srmodels_bin: Path | None = None,
+    dedup_identical: bool = False,
+) -> tuple[int, int]:
+    full_bytes, checksum = compute_mmap_assets_21_bytes(
+        gif_bytes_by_emotion,
+        base_bin,
+        srmodels_bin=srmodels_bin,
+        dedup_identical=dedup_identical,
+    )
+    out_bin_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = out_bin_path.with_suffix(out_bin_path.suffix + ".tmp")
+    tmp_path.write_bytes(full_bytes)
+    os.replace(tmp_path, out_bin_path)
+    print(f"  [BIN] Packed {out_bin_path} ({len(full_bytes):,d} bytes, checksum=0x{checksum:04x})")
+    return len(full_bytes), checksum
+
+
+def _load_genome_arg(raw: str | None) -> dict[str, Any]:
+    if not raw:
+        return {}
+    if raw == "-":
+        data = json.loads(sys.stdin.read() or "{}")
+    else:
+        p = Path(raw)
+        data = json.loads(p.read_text(encoding="utf-8")) if p.is_file() else json.loads(raw)
+    if isinstance(data, dict) and isinstance(data.get("genome"), dict):
+        return dict(data["genome"])
+    return dict(data) if isinstance(data, dict) else {}
+
+
+def _degrade_steps(morph: Morph) -> list[tuple[str, Morph]]:
+    steps: list[tuple[str, Morph]] = []
+    cur = morph
+    if cur.star:
+        cur = cur._replace(star=False)
+        steps.append(("star->False", cur))
+    if cur.brackets:
+        cur = cur._replace(brackets=False)
+        steps.append(("brackets->False", cur))
+    if cur.blush_q != 1.0:
+        cur = cur._replace(blush_q=1.0)
+        steps.append(("blush_q->1.0", cur))
+    if cur.eye_q != 1.0:
+        cur = cur._replace(eye_q=1.0)
+        steps.append(("eye_q->1.0", cur))
+    if cur.catch != 1:
+        cur = cur._replace(catch=1)
+        steps.append(("catch->1", cur))
+    return steps
+
+
+DEFAULT_BASE_BIN = ROOT / "profiles/example-esp32s3-n16r8/partitions/08-assets-0xAA0000.bin"
+
+
+def _resolve_base_bin(base_bin: Path) -> Path:
+    if base_bin.is_file():
+        return base_bin
+    if base_bin != DEFAULT_BASE_BIN:
+        return base_bin
+    candidates: list[Path] = []
+    env_prof = os.environ.get("ROBOT_PROFILE_DIR", "").strip()
+    if env_prof:
+        candidates.append(Path(env_prof) / "partitions" / "08-assets-0xAA0000.bin")
+    candidates.extend(sorted((ROOT / "profiles").glob("robot-*/partitions/08-assets-0xAA0000.bin")))
+    candidates.append(ROOT / "themes" / "procedural-mochi-fullvien-240x320.bin")
+    for cand in candidates:
+        if cand.is_file():
+            return cand
+    return base_bin
 
 
 def main() -> int:
@@ -590,18 +515,160 @@ def main() -> int:
     ap.add_argument(
         "--base-bin",
         type=Path,
-        default=ROOT / "profiles/example-esp32s3-n16r8/partitions/08-assets-0xAA0000.bin",
+        default=DEFAULT_BASE_BIN,
         help="your own dump of the device assets partition (read only; not shipped in this repo)",
     )
+    ap.add_argument(
+        "--srmodels-bin",
+        type=Path,
+        default=None,
+        help="optional MultiNet srmodels.bin override (auto-detects unpacked-assets/srmodels_mn6_en.bin when present)",
+    )
+    ap.add_argument(
+        "--stage",
+        type=int,
+        choices=[1, 2, 3, 4],
+        default=None,
+        help="optional evolutionary stage (1=Mochi Spore, 2=Mochi Sprout, 3=Mochi Companion, 4=Cyber-Mochi Spirit)",
+    )
+    ap.add_argument(
+        "--genome-json",
+        type=str,
+        default=None,
+        help="optional path to genome JSON file, '-' for stdin, or inline JSON string",
+    )
+    ap.add_argument(
+        "--out-dir",
+        type=Path,
+        default=None,
+        help="override output directory for the 21 GIFs and preview sheet",
+    )
+    ap.add_argument(
+        "--out-bin",
+        type=Path,
+        default=None,
+        help="override output path for the packed esp_mmap_assets .bin",
+    )
+    ap.add_argument(
+        "--partition-bytes",
+        type=int,
+        default=5_636_096,
+        help="0xAA0000 assets partition byte size (default: 5,636,096)",
+    )
+    ap.add_argument(
+        "--reserve-bytes",
+        type=int,
+        default=16_384,
+        help="mandatory safety reserve inside the assets partition (default: 16,384)",
+    )
+    ap.add_argument(
+        "--budget-only",
+        action="store_true",
+        help="verify GIF + mmap partition budget without writing the output .bin",
+    )
+    ap.add_argument(
+        "--dedup-identical",
+        action="store_true",
+        help="deduplicate identical GIF payloads in the mmap assets data table",
+    )
     args = ap.parse_args()
+    args.base_bin = _resolve_base_bin(args.base_bin)
     if not args.base_bin.is_file():
         print(f"error: base assets dump not found: {args.base_bin}", file=sys.stderr)
         return 2
-    print("=== Cooking ALL 21 Procedural Code-Drawn Mochi Emotions (240x320) ===")
-    gifs = build_all_21_procedural_gifs()
+
+    evo_mode = args.stage is not None or args.genome_json is not None
+    genome_dict = _load_genome_arg(args.genome_json)
+    stage_val = int(args.stage) if args.stage is not None else int(genome_dict.get("stage", 1))
+    if evo_mode:
+        morph, phenotype_manifest = morph_from_stage_and_genome(stage_val, genome_dict)
+        phash = str(phenotype_manifest["hash"])
+        out_dir = args.out_dir or (ROOT / "themes" / "procedural-mochi-evo" / f"s{morph.stage}-{phash}")
+        out_bin = args.out_bin or (ROOT / "themes" / f"procedural-mochi-evo-s{morph.stage}-{phash}.bin")
+    else:
+        morph = IDENTITY_MORPH
+        phenotype_manifest = {
+            "stage": 1,
+            "stage_name": "Mochi Spore",
+            "eye_scale": 1.0,
+            "catchlights": 1,
+            "blush_width_scale": 1.0,
+            "cyber_brackets": False,
+            "star_glint": False,
+            "hash": "identity",
+        }
+        out_dir = args.out_dir or OUT_DIR
+        out_bin = args.out_bin or (ROOT / "themes" / "procedural-mochi-fullvien-240x320.bin")
+
+    max_bytes = int(args.partition_bytes) - int(args.reserve_bytes)
+    write_gifs = not args.budget_only or (args.out_dir is not None) or evo_mode
+    print(
+        f"=== Cooking ALL 21 Procedural Code-Drawn Mochi Emotions (240x320, stage={morph.stage}, "
+        f"hash={phenotype_manifest['hash']}) ==="
+    )
+    gifs = build_all_21_procedural_gifs(morph=morph, out_dir=out_dir, write_files=write_gifs)
     total_21 = sum(len(v) for v in gifs.values())
     print(f"  [SUM] Total for ALL 21 unique procedural emotions: {total_21:,d} bytes ({total_21/1024:.2f} KB)")
-    pack_mmap_assets_21(gifs, ROOT / "themes" / "procedural-mochi-fullvien-240x320.bin", args.base_bin)
+
+    full_bytes, checksum = compute_mmap_assets_21_bytes(
+        gifs,
+        args.base_bin,
+        srmodels_bin=args.srmodels_bin,
+        dedup_identical=args.dedup_identical,
+    )
+    degraded_steps_applied: list[str] = []
+    if len(full_bytes) > max_bytes:
+        for step_label, next_morph in _degrade_steps(morph):
+            print(
+                f"  [BUDGET] {len(full_bytes):,d} B > max {max_bytes:,d} B; degrading {step_label} ...",
+                file=sys.stderr,
+            )
+            degraded_steps_applied.append(step_label)
+            morph = next_morph
+            gifs = build_all_21_procedural_gifs(morph=morph, out_dir=out_dir, write_files=write_gifs, quiet=True)
+            full_bytes, checksum = compute_mmap_assets_21_bytes(
+                gifs,
+                args.base_bin,
+                srmodels_bin=args.srmodels_bin,
+                dedup_identical=args.dedup_identical,
+                quiet=True,
+            )
+            if len(full_bytes) <= max_bytes:
+                break
+
+    total_bin = len(full_bytes)
+    headroom = max_bytes - total_bin
+    print(
+        f"  [BUDGET] total_bin={total_bin:,d} B | max_allowed={max_bytes:,d} B "
+        f"(partition={args.partition_bytes:,d} B, reserve={args.reserve_bytes:,d} B) | "
+        f"headroom={headroom:+,d} B | degraded={degraded_steps_applied}"
+    )
+
+    if evo_mode and write_gifs:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        manifest_out = dict(phenotype_manifest)
+        manifest_out["total_21_gif_bytes"] = sum(len(v) for v in gifs.values())
+        manifest_out["total_bin_bytes"] = total_bin
+        manifest_out["max_allowed_bytes"] = max_bytes
+        manifest_out["degraded_steps"] = degraded_steps_applied
+        (out_dir / "phenotype.json").write_text(json.dumps(manifest_out, indent=2) + "\n", encoding="utf-8")
+
+    if total_bin > max_bytes:
+        print(
+            f"error: packed binary ({total_bin:,d} B) exceeds partition budget ({max_bytes:,d} B) "
+            f"even after full degradation ({degraded_steps_applied}); refusing to write {out_bin}",
+            file=sys.stderr,
+        )
+        return 3
+
+    if args.budget_only:
+        return 0
+
+    out_bin.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = out_bin.with_suffix(out_bin.suffix + ".tmp")
+    tmp_path.write_bytes(full_bytes)
+    os.replace(tmp_path, out_bin)
+    print(f"  [BIN] Packed {out_bin} ({total_bin:,d} bytes, checksum=0x{checksum:04x})")
     return 0
 
 

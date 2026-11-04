@@ -222,16 +222,18 @@ class MochiProactiveBridge:
     _FACE_THUMB_CACHE: dict[str, Image.Image] = {}
     _HUD_PALETTE = [
         0, 0, 0,          # 0: Pure Black (#000000)
-        255, 255, 255,    # 1: Crisp White (#FFFFFF)
-        70, 230, 255,     # 2: Cyan Neon (#46E6FF)
-        255, 110, 165,    # 3: Soft Rose Pink (#FF6EA5)
-        255, 220, 60,     # 4: Warm Amber Gold (#FFDC3C)
-        255, 75, 85,      # 5: Coral Red (#FF4B55 — matches cook-procedural-avatar.py index 5!)
-        90, 245, 145,     # 6: Mint Green (#5AF591 — matches cook-procedural-avatar.py index 6!)
+        234, 252, 255,    # 1: Crisp Mochi White (#EAFCFF)
+        184, 230, 248,    # 2: Mochi Ice-Blue / Cyan (#B8E6F8)
+        224, 128, 228,    # 3: Mochi Orchid-Pink (#E080E4)
+        238, 228, 110,    # 4: Mochi Bee Gold (#EEE46E)
+        230, 49, 46,      # 5: Mochi Bright Red (#E6312E)
+        90, 245, 145,     # 6: Mint Green (#5AF591 — HUD ENERGY bar)
         18, 24, 36,       # 7: Dark Panel Fill (#121824)
         45, 58, 80,       # 8: Panel Outline (#2D3A50)
         200, 215, 235,    # 9: Soft Label Text (#C8D7EB)
-    ] + [0, 0, 0] * 246
+        118, 68, 168,     # 10: Mochi Deep Violet (#7644A8 — remapped from face index 6)
+        76, 26, 36,       # 11: Mochi Dark Maroon (#4C1A24 — remapped from face index 7)
+    ] + [0, 0, 0] * 244
 
     @classmethod
     def render_hud_card_png(cls, state: SoulState, recent_memory: str = "Fed Spec-02 notes (+XP)") -> bytes:
@@ -252,8 +254,11 @@ class MochiProactiveBridge:
 
         # 2. Mini Mochi Face Viewport (y = 36..152) with cached 112x112 palette thumbnail
         if state.emotion not in cls._FACE_THUMB_CACHE:
-            face_frame = render_emotion_frame(state.emotion, frame_idx=3, num_frames=16)
-            cls._FACE_THUMB_CACHE[state.emotion] = face_frame.resize((112, 112), Image.Resampling.NEAREST)
+            p_idx = 1 if state.emotion in ("relaxed", "delicious") else (2 if state.emotion in ("thinking", "winking") else 3)
+            face_frame = render_emotion_frame(state.emotion, frame_idx=p_idx, num_frames=10)
+            lut = [10 if i == 6 else (11 if i == 7 else i) for i in range(256)]
+            remapped = face_frame.point(lut)
+            cls._FACE_THUMB_CACHE[state.emotion] = remapped.resize((112, 112), Image.Resampling.NEAREST)
         card.paste(cls._FACE_THUMB_CACHE[state.emotion], (64, 36))
         d.rounded_rectangle([62, 34, 178, 150], radius=10, outline=8, width=1)
         d.text((82, 154), f"[{state.emotion.upper()}]", fill=3)

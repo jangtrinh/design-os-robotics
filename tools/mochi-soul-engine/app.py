@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-FileCopyrightText: 2026 Jang Trinh
 """
-Spec 05 — Mochi-Soul Live Companion Studio, Local OTA/MCP Protocol Hub & Workspace Symbiosis Runtime.
+Spec 05 + EVO-01..03 — Mochi-Soul Live Companion Studio, Self-Evolution Hub,
+Autonomous Dream Consolidation, Single-Owner Serial Supervisor & Local OTA/MCP Runtime.
 
 Unifies:
-  - Spec 01: Procedural Mochi-21 Vector Avatar (cook-procedural-avatar.py, 244.71 KB, checksum 0x5867)
-  - Spec 02: 4D Biological Homeostasis Engine & SQLite WAL Persistence (engine.py)
-  - Spec 03: Xiaozhi ota_1 (v2.5.3) Proactive Bridge & 240x320 HUD Card Renderer (bridge.py)
-  - Spec 04: 60fps 12-DOF Second-Order Spring Physics, 16kHz Lip-Sync & HC-SR04 Reflex (reflex_60fps.py)
-  - Hardware Telemetry: Non-intrusive ~HUPCL USB-JTAG & ARP/ICMP LAN probe (robotctl.py)
+  - Spec 01 + EVO-02: Procedural Mochi-21 Vector Avatar & Morphological Evolution (`cook-procedural-avatar.py`)
+  - Spec 02 + EVO-01/03: 4D Homeostasis, Relative-Share Personality Genome & Dream Consolidation (`engine.py`)
+  - Spec 03: Xiaozhi ota_1 (v2.5.3) Proactive Bridge & 240x320 HUD Card Renderer (`bridge.py`)
+  - Spec 04: 60fps 12-DOF Second-Order Spring Physics, 16kHz Lip-Sync & HC-SR04 Reflex (`reflex_60fps.py`)
+  - EVO-03b: Single-Owner USB-JTAG Serial Supervisor & Watchdog Auto-Rescue FSM (`serial_supervisor.py`)
 
 Fixed Localhost Port Contract: port 4185 on localhost
 """
@@ -16,6 +18,7 @@ Fixed Localhost Port Contract: port 4185 on localhost
 from __future__ import annotations
 
 import argparse
+import datetime
 import http.server
 import importlib.util
 import json
@@ -23,14 +26,15 @@ import math
 import mimetypes
 import os
 import socketserver
-import sqlite3
 import sys
 import threading
 import time
+import urllib.parse
 import urllib.request
 from collections import deque
 from pathlib import Path
 from statistics import mean, median
+from typing import Optional
 
 THIS_DIR = Path(__file__).resolve().parent
 ROOT = THIS_DIR.parent.parent
@@ -39,7 +43,9 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import bridge  # noqa: E402
 import engine  # noqa: E402
+import mochi_canonical_vectors  # noqa: E402
 import reflex_60fps  # noqa: E402
+import serial_supervisor  # noqa: E402
 
 bridge.FirmwareProtocolValidator.VALID_MCP_TOOLS.update(
     {
@@ -51,7 +57,7 @@ bridge.FirmwareProtocolValidator.VALID_MCP_TOOLS.update(
     }
 )
 
-# Load robotctl.py for non-intrusive hardware probes
+# Load robotctl.py for non-intrusive LAN/profile probes
 _rctl_spec = importlib.util.spec_from_file_location("robotctl", ROOT / "tools/robotctl.py")
 assert _rctl_spec and _rctl_spec.loader
 robotctl = importlib.util.module_from_spec(_rctl_spec)
@@ -128,24 +134,26 @@ WORKSPACE_SYMBIOSIS_TABLE: dict[str, dict] = {
 
 class MochiCompanionApp:
     """
-    Thread-safe unified runtime coupling Spec 02 (4D Homeostasis), Spec 03 (Proactive Bridge & HUD),
-    Spec 04 (60fps Spring Physics, Lip-Sync & HC-SR04 Reflex), and live robotctl.py telemetry.
+    Thread-safe unified runtime coupling Spec 02 (4D Homeostasis + EVO-01 Genome + EVO-03 Dreams),
+    Spec 03 (Proactive Bridge & HUD), Spec 04 (60fps Spring Physics, Lip-Sync & HC-SR04 Reflex),
+    and EVO-03b (`SerialSupervisor` Watchdog Rescue FSM).
     """
 
     def __init__(
         self,
         base_http_url: str = f"http://{LOCAL_HOST}:{DEFAULT_PORT}",
         in_memory_db: bool = False,
+        db_path: Path | str | None = None,
+        wdt_rescue_mode: Optional[str] = None,
+        start_background_threads: bool = False,
     ):
         self.lock = threading.RLock()
         self.base_http_url = base_http_url.rstrip("/")
-        self.soul = engine.MochiSoulEngine(in_memory=in_memory_db)
-        self.soul.conn.close()
-        self.soul.conn = sqlite3.connect(self.soul.db_path, check_same_thread=False)
-        self.soul.conn.execute("PRAGMA journal_mode=WAL;")
-        self.soul.conn.execute("PRAGMA synchronous=NORMAL;")
-        self.soul._init_schema()
-        self.soul.state = self.soul._load_or_create_state()
+        self.soul = engine.MochiSoulEngine(
+            db_path=db_path,
+            in_memory=in_memory_db,
+            mode="live" if start_background_threads else "sim",
+        )
         self.bridge = bridge.MochiProactiveBridge(base_http_url=self.base_http_url)
         self.spring = reflex_60fps.SpringFaceController(omega0=22.0, zeta=0.65, dt=1.0 / 60.0)
         self.lipsync = reflex_60fps.AudioRmsLipSync()
@@ -167,10 +175,104 @@ class MochiCompanionApp:
         self.hardware_cache: dict = {}
         self.hardware_cache_ts: float = 0.0
 
+        self.supervisor = serial_supervisor.SerialSupervisor(
+            mode=wdt_rescue_mode,
+            on_hardware_event=self._record_hardware_event,
+            on_voice_wake=self._on_serial_voice_wake,
+            enabled=start_background_threads,
+        )
+
         # Sync initial emotion into spring controller
         self.spring.set_emotion(self.soul.state.emotion)
         for _ in range(15):
             self.spring.step_60hz()
+
+        self._ticker_stop = threading.Event()
+        self._ticker_thread: Optional[threading.Thread] = None
+        if start_background_threads:
+            self._catch_up_downtime_and_missed_dreams()
+            self.supervisor.start()
+            self._ticker_thread = threading.Thread(
+                target=self._run_minute_ticker, name="mochi-soul-ticker", daemon=True
+            )
+            self._ticker_thread.start()
+
+    def close(self) -> None:
+        self._ticker_stop.set()
+        self.supervisor.stop()
+
+    def _record_hardware_event(self, ev: serial_supervisor.HardwareEventRecord) -> None:
+        with self.lock:
+            self.soul.conn.execute(
+                "INSERT INTO hardware_events "
+                "(wall_ts, kind, signature, uptime_ms, fw_version, rescue_mode, note) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    ev.wall_ts,
+                    ev.kind,
+                    ev.signature,
+                    ev.uptime_ms,
+                    ev.fw_version,
+                    ev.rescue_mode,
+                    ev.note,
+                ),
+            )
+            self.soul.conn.commit()
+
+    def _on_serial_voice_wake(self) -> None:
+        with self.lock:
+            emo = self.soul.apply_event(
+                "wink_greet",
+                detail="Wake-word detected on USB-JTAG stream",
+                source="serial",
+            )
+            self.spring.set_emotion(emo)
+            self.spring.step_60hz()
+
+    def _catch_up_downtime_and_missed_dreams(self) -> None:
+        now_i = int(time.time())
+        with self.lock:
+            last_ts = self.soul.state.last_tick_wall_ts
+            if last_ts is not None and now_i > last_ts:
+                gap_min = (now_i - last_ts) // 60
+                replay_steps = min(gap_min, 2880)
+                start_ts = now_i - replay_steps * 60
+                for step_i in range(replay_steps):
+                    t_step = start_ts + (step_i + 1) * 60
+                    dt = datetime.datetime.fromtimestamp(t_step)
+                    hour_f = dt.hour + dt.minute / 60.0
+                    self.soul.step_minute(persist=False, hour_override=hour_f)
+                if gap_min > replay_steps:
+                    self.soul.state.minutes_since_interaction += int(gap_min - replay_steps)
+
+            self.soul.state.last_tick_wall_ts = now_i
+            self.soul.save_state(commit=True)
+
+            # Check missed_night dream trigger on startup
+            last_night_key = self.soul._dream_key(
+                "missed_night",
+                float(now_i),
+                self.soul.genome.last_consolidated_memory_id,
+                self.soul.genome.genome_rev,
+            )
+            row = self.soul.conn.execute(
+                "SELECT id FROM dream_journal WHERE dream_key = ?", (last_night_key,)
+            ).fetchone()
+            if not row and self.soul.genome.last_dream_wall_ts is not None:
+                if (now_i - self.soul.genome.last_dream_wall_ts) >= 18 * 3600:
+                    self.soul.consolidate_dreams("missed_night", now_ts=float(now_i))
+
+    def _run_minute_ticker(self) -> None:
+        while not self._ticker_stop.wait(timeout=60.0):
+            now_ts = time.time()
+            dt = datetime.datetime.fromtimestamp(now_ts)
+            hour_f = dt.hour + dt.minute / 60.0
+            with self.lock:
+                self.soul.step_minute(persist=False, hour_override=hour_f)
+                self.soul.state.last_tick_wall_ts = int(now_ts)
+                self.soul.save_state(commit=True)
+                self.soul.maybe_auto_dream(now_ts=now_ts)
+                self.spring.set_emotion(self.soul.state.emotion)
 
     def _emit_and_validate(self, raw_json: str, source: str) -> dict:
         t0 = time.perf_counter()
@@ -216,31 +318,15 @@ class MochiCompanionApp:
         t0 = time.perf_counter()
         with self.lock:
             if emotion_override and emotion_override in engine.ALL_21_EMOTIONS:
-                self.soul.state.emotion = emotion_override
-                self.soul.state.transient_emotion = emotion_override
-                self.soul.state.transient_ttl_minutes = 5
-                self.soul.state.xp += 10
-                self.soul.state.stage, self.soul.state.stage_name = self.soul.compute_stage(
-                    self.soul.state.xp, self.soul.state.bond
+                emo = self.soul.apply_emotion_override(
+                    emotion_override, detail=detail or f"Switched face to {emotion_override}"
                 )
-                self.soul.conn.execute(
-                    "INSERT INTO episodic_memories "
-                    "(sim_minute, event_type, detail, emotion_after, energy, hunger, bond) "
-                    "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (
-                        self.soul.state.sim_minute,
-                        f"set_emotion:{emotion_override}",
-                        detail or f"Switched face to {emotion_override}",
-                        emotion_override,
-                        self.soul.state.energy,
-                        self.soul.state.hunger,
-                        self.soul.state.bond,
-                    ),
-                )
-                self.soul.save_state()
-                emo = emotion_override
             else:
-                emo = self.soul.apply_event(event_type, detail=detail or f"Interaction: {event_type}")
+                emo = self.soul.apply_event(
+                    event_type,
+                    detail=detail or f"Interaction: {event_type}",
+                    source="user",
+                )
 
             self.spring.set_emotion(emo)
             pose = self.spring.step_60hz()
@@ -248,7 +334,7 @@ class MochiCompanionApp:
             pkt_llm = self.bridge.build_llm_emotion(emo)
             pkt_alert = self.bridge.build_alert(
                 status=f"Mochi · {emo.upper()}",
-                message=detail or f"Triggered {event_type} -> {emo}",
+                message=engine.sanitize_detail(detail or f"Triggered {event_type} -> {emo}"),
                 emotion=emo,
             )
             e1 = self._emit_and_validate(pkt_llm, f"interact:{event_type}")
@@ -267,7 +353,8 @@ class MochiCompanionApp:
         t0 = time.perf_counter()
         with self.lock:
             spec = WORKSPACE_SYMBIOSIS_TABLE.get(ws_event, WORKSPACE_SYMBIOSIS_TABLE["git_commit"])
-            self.soul.apply_event(spec["care_event"], detail=detail or spec["subtitle"])
+            clean_sub = engine.sanitize_detail(detail or spec["subtitle"])
+            self.soul.apply_event(spec["care_event"], detail=clean_sub, source="workspace")
             self.soul.state.energy = engine.clamp(
                 self.soul.state.energy + spec["energy_bonus"], 0.0, 100.0
             )
@@ -281,11 +368,11 @@ class MochiCompanionApp:
 
             p_notify = self.bridge.build_notify(
                 audio_path=f"sounds/{ws_event}.p3",
-                subtitles=[(0, detail or spec["subtitle"])],
+                subtitles=[(0, clean_sub)],
             )
             p_alert = self.bridge.build_alert(
                 status=spec["status"],
-                message=detail or spec["subtitle"],
+                message=clean_sub,
                 emotion=spec["emotion"],
             )
             p_servo = self.build_mcp_call(spec["servo_tool"], spec["servo_args"])
@@ -412,10 +499,6 @@ class MochiCompanionApp:
             }
 
     def build_ota_discovery_response(self, host_header: str = f"{LOCAL_HOST}:{DEFAULT_PORT}") -> dict:
-        """
-        Exact Xiaozhi v2.5.3 (ota_1 @ 0x4202be10) OTA & WebSocket control-plane discovery response.
-        Allows zero-reflash local protocol hijack by pointing NVS ota_url to the local hub /ota endpoint.
-        """
         now_ms = int(time.time() * 1000)
         return {
             "server_time": {
@@ -433,17 +516,31 @@ class MochiCompanionApp:
         }
 
     def probe_hardware_summary(self, force: bool = False) -> dict:
+        """
+        Hardware probe executed OUTSIDE `self.lock` so slow LAN/USB checks never block
+        `/api/interact` or SQLite transactions (verifies V-08).
+        Uses `SerialSupervisor.snapshot()` when active so the serial port has a single owner.
+        """
         now = time.time()
-        if not force and self.hardware_cache and (now - self.hardware_cache_ts) < 15.0:
-            return self.hardware_cache
+        cached = self.hardware_cache
+        if not force and cached and (now - self.hardware_cache_ts) < 15.0:
+            return cached
         try:
-            usb = robotctl.probe_usb_and_serial(robotctl.DEFAULT_PORT, listen_sec=0.08)
+            sup_snap = self.supervisor.snapshot()
+            if self.supervisor.enabled and sup_snap["mode"] != "off":
+                usb_connected = bool(sup_snap["port_present"])
+                uptime_str = f"WDT:{sup_snap['state']}"
+            else:
+                usb = robotctl.probe_usb_and_serial(robotctl.DEFAULT_PORT, listen_sec=0.05)
+                usb_connected = bool(usb.get("connected"))
+                uptime_str = usb.get("app_state") or "idle / ready"
+
             lan = robotctl.probe_lan_network()
             audit = robotctl.audit_profile_and_theme(robotctl.DEFAULT_NVS, robotctl.DEFAULT_THEME)
             summary = {
-                "usb_connected": bool(usb.get("connected")),
+                "usb_connected": usb_connected,
                 "usb_port": "USB-JTAG",
-                "uptime_str": usb.get("app_state") or "idle / ready",
+                "uptime_str": uptime_str,
                 "lan_reachable": bool(lan.get("online")),
                 "lan_ip": "Wi-Fi LAN",
                 "lan_rtt_ms": None,
@@ -479,7 +576,7 @@ class MochiCompanionApp:
                 {
                     "time": f"{h_i:02d}:{m_i:02d}",
                     "event_type": ev,
-                    "detail": det,
+                    "detail": engine.sanitize_detail(det),
                     "emotion": emo,
                     "energy": round(en, 1),
                     "satiety": round(100.0 - hu, 1),
@@ -488,11 +585,110 @@ class MochiCompanionApp:
             )
         return rows
 
+    def get_genome_dict(self) -> dict:
+        with self.lock:
+            return self.soul.get_genome_payload()
+
+    def handle_genome_mutation(self, body: dict) -> tuple[int, dict]:
+        if os.environ.get("MOCHI_DEV") != "1":
+            return 403, {"error": "Forbidden: MOCHI_DEV=1 required for /api/genome mutations"}
+        action = body.get("action")
+        now_i = int(time.time())
+        with self.lock:
+            old_g = self.soul.genome
+            before_json = json.dumps(
+                {
+                    "curiosity": round(old_g.curiosity, 4),
+                    "affection": round(old_g.affection, 4),
+                    "playfulness": round(old_g.playfulness, 4),
+                    "resilience": round(old_g.resilience, 4),
+                    "chronotype_shift": round(old_g.chronotype_shift, 4),
+                },
+                sort_keys=True,
+            )
+            if action == "reset":
+                new_g = engine.PersonalityGenome(
+                    genome_rev=old_g.genome_rev + 1,
+                    last_consolidated_memory_id=old_g.last_consolidated_memory_id,
+                    last_dream_wall_ts=old_g.last_dream_wall_ts,
+                    updated_wall_ts=now_i,
+                )
+            elif action == "set" and isinstance(body.get("genome"), dict):
+                gm = body["genome"]
+                new_g = engine.PersonalityGenome(
+                    curiosity=engine.clamp(float(gm.get("curiosity", old_g.curiosity)), 0.02, 0.98),
+                    affection=engine.clamp(float(gm.get("affection", old_g.affection)), 0.02, 0.98),
+                    playfulness=engine.clamp(float(gm.get("playfulness", old_g.playfulness)), 0.02, 0.98),
+                    resilience=engine.clamp(float(gm.get("resilience", old_g.resilience)), 0.02, 0.98),
+                    chronotype_shift=engine.clamp(
+                        float(gm.get("chronotype_shift", old_g.chronotype_shift)), -3.0, 3.0
+                    ),
+                    base_curiosity=old_g.base_curiosity,
+                    base_affection=old_g.base_affection,
+                    base_playfulness=old_g.base_playfulness,
+                    base_resilience=old_g.base_resilience,
+                    genome_rev=old_g.genome_rev + 1,
+                    last_consolidated_memory_id=old_g.last_consolidated_memory_id,
+                    last_dream_wall_ts=old_g.last_dream_wall_ts,
+                    updated_wall_ts=now_i,
+                )
+            else:
+                return 400, {"error": "Invalid action; expected 'reset' or 'set'"}
+
+            self.soul._save_genome(new_g, commit=False)
+            self.soul.genome = new_g
+            after_json = json.dumps(
+                {
+                    "curiosity": round(new_g.curiosity, 4),
+                    "affection": round(new_g.affection, 4),
+                    "playfulness": round(new_g.playfulness, 4),
+                    "resilience": round(new_g.resilience, 4),
+                    "chronotype_shift": round(new_g.chronotype_shift, 4),
+                },
+                sort_keys=True,
+            )
+            ph_hash = engine.phenotype_params(self.soul.state.stage, new_g, quantize=False)["hash"]
+            self.soul.conn.execute(
+                """
+                INSERT INTO dream_journal (
+                    dream_key, trigger, wall_ts, sim_minute,
+                    mem_from_id, mem_to_id, mem_count,
+                    genome_before, genome_after, delta_l1,
+                    stage, milestone, summary, phenotype_hash
+                ) VALUES (?, 'operator_override', ?, ?, ?, ?, 0, ?, ?, 0.0, ?, 'operator_override', ?, ?)
+                """,
+                (
+                    f"override:{now_i}:r{new_g.genome_rev}",
+                    now_i,
+                    self.soul.state.sim_minute,
+                    new_g.last_consolidated_memory_id,
+                    new_g.last_consolidated_memory_id,
+                    before_json,
+                    after_json,
+                    self.soul.state.stage,
+                    f"Operator override ({action})",
+                    ph_hash,
+                ),
+            )
+            self.soul.conn.commit()
+            return 200, self.soul.get_genome_payload()
+
+    def get_dreams_list(self, limit: int = 10) -> list[dict]:
+        with self.lock:
+            return self.soul.get_recent_dreams(limit=limit)
+
+    def trigger_dream(self, dry_run: bool = False) -> dict:
+        with self.lock:
+            return self.soul.consolidate_dreams(trigger="manual", dry_run=dry_run)
+
     def get_state_dict(self) -> dict:
+        hw = self.probe_hardware_summary(force=False)
+        wdt = self.supervisor.snapshot()
         with self.lock:
             s = self.soul.state
             satiety = engine.clamp(100.0 - s.hunger, 0.0, 100.0)
             mood_pct = engine.clamp((s.valence + 1.0) * 50.0, 0.0, 100.0)
+            genome_payload = self.soul.get_genome_payload()
             return {
                 "sim_minute": s.sim_minute,
                 "energy": round(s.energy, 1),
@@ -513,7 +709,12 @@ class MochiCompanionApp:
                 "actuators": dict(self.actuators),
                 "memories": self.get_recent_memories(6),
                 "packets": list(self.packet_log)[:10],
-                "hardware": self.probe_hardware_summary(force=False),
+                "hardware": hw,
+                "genome": genome_payload["genome"],
+                "expressed": genome_payload["expressed"],
+                "phenotype": genome_payload["phenotype"],
+                "dreams": self.soul.get_recent_dreams(5),
+                "watchdog": wdt,
             }
 
 
@@ -557,6 +758,34 @@ class MochiCompanionRequestHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _check_post_security_guards(self) -> Optional[tuple[int, str]]:
+        """
+        Localhost CSRF & DNS Rebinding Guard (verifies V-17):
+          1. Content-Type must be application/json (-> 415)
+          2. Host header must be localhost / 127.0.0.1 (-> 403)
+          3. Origin header (if present) must be http://localhost or http://127.0.0.1 (-> 403)
+        """
+        ctype = (self.headers.get("Content-Type") or "").split(";", 1)[0].strip().lower()
+        if ctype != "application/json":
+            return 415, "Unsupported Media Type: Content-Type must be application/json"
+
+        host_hdr = (self.headers.get("Host") or "").strip().lower()
+        host_only = host_hdr.split(":", 1)[0] if not host_hdr.startswith("[") else host_hdr
+        if host_only not in ("localhost", "127.0.0.1", "[::1]"):
+            return 403, "Forbidden: untrusted Host header"
+
+        origin_hdr = (self.headers.get("Origin") or "").strip().lower()
+        if origin_hdr:
+            parsed = urllib.parse.urlparse(origin_hdr)
+            if parsed.scheme not in ("http", "https") or parsed.hostname not in (
+                "localhost",
+                "127.0.0.1",
+                "::1",
+            ):
+                return 403, "Forbidden: untrusted Origin header"
+
+        return None
+
     def _read_json_body(self) -> dict:
         length = int(self.headers.get("Content-Length", "0"))
         if length <= 0:
@@ -565,7 +794,10 @@ class MochiCompanionRequestHandler(http.server.BaseHTTPRequestHandler):
         return json.loads(raw.decode("utf-8"))
 
     def do_GET(self) -> None:
-        path = self.path.split("?", 1)[0]
+        parsed_url = urllib.parse.urlparse(self.path)
+        path = parsed_url.path
+        qs = urllib.parse.parse_qs(parsed_url.query)
+
         if path in ("/", "/index.html", "/studio.html"):
             body = (THIS_DIR / "studio.html").read_text(encoding="utf-8").encode("utf-8")
             self.send_response(200)
@@ -583,8 +815,37 @@ class MochiCompanionRequestHandler(http.server.BaseHTTPRequestHandler):
         elif path.startswith("/themes/procedural-mochi/"):
             rel = path[len("/themes/procedural-mochi/") :]
             self._send_static_file(ROOT / "themes" / "procedural-mochi", rel)
-        elif path == "/api/status":
+        elif path in ("/api/status", "/api/state"):
             self._send_json(self.server.app.get_state_dict())
+        elif path == "/api/genome":
+            self._send_json(self.server.app.get_genome_dict())
+        elif path == "/api/dream":
+            limit_s = (qs.get("limit") or ["10"])[0]
+            try:
+                limit_i = int(limit_s)
+            except ValueError:
+                limit_i = 10
+            self._send_json({"dreams": self.server.app.get_dreams_list(limit=limit_i)})
+        elif path == "/api/watchdog":
+            self._send_json(self.server.app.supervisor.snapshot())
+        elif path == "/api/mochi-vectors":
+            self._send_json(
+                {
+                    "palette": [
+                        "#000000",
+                        "#eafcff",
+                        "#b8e6f8",
+                        "#e080e4",
+                        "#eee46e",
+                        "#e6312e",
+                        "#7644a8",
+                        "#4c1a24",
+                    ],
+                    "src_w": mochi_canonical_vectors.FACE_SRC_W,
+                    "src_h": mochi_canonical_vectors.FACE_SRC_H,
+                    "emotions": mochi_canonical_vectors.decode_all_emotion_scanlines(),
+                }
+            )
         elif path == "/api/hardware":
             self._send_json(self.server.app.probe_hardware_summary(force=True))
         elif path == "/api/hud.png":
@@ -607,8 +868,19 @@ class MochiCompanionRequestHandler(http.server.BaseHTTPRequestHandler):
             self._send_json({"error": f"Not found: {path}"}, status=404)
 
     def do_POST(self) -> None:
+        guard_err = self._check_post_security_guards()
+        if guard_err is not None:
+            status_code, msg = guard_err
+            self._send_json({"error": msg}, status=status_code)
+            return
+
         path = self.path.split("?", 1)[0]
-        body = self._read_json_body()
+        try:
+            body = self._read_json_body()
+        except Exception:
+            self._send_json({"error": "Invalid JSON request body"}, status=400)
+            return
+
         if path == "/api/interact":
             ev = body.get("event_type", "chat_hello")
             emo = body.get("emotion")
@@ -630,6 +902,21 @@ class MochiCompanionRequestHandler(http.server.BaseHTTPRequestHandler):
             tool = body.get("tool", "self.Otto.stop")
             args = body.get("arguments", {})
             self._send_json(self.server.app.handle_mcp_dispatch(tool, arguments=args))
+        elif path == "/api/genome":
+            status_code, payload = self.server.app.handle_genome_mutation(body)
+            self._send_json(payload, status=status_code)
+        elif path == "/api/dream":
+            dry_run = bool(body.get("dry_run", False))
+            self._send_json(self.server.app.trigger_dream(dry_run=dry_run))
+        elif path == "/api/watchdog/rescue":
+            status_code, payload = self.server.app.supervisor.request_manual_rescue(
+                confirm=bool(body.get("confirm", False)),
+                force=bool(body.get("force", False)),
+            )
+            self._send_json(payload, status=status_code)
+        elif path == "/api/serial/yield":
+            secs = float(body.get("seconds", 120.0))
+            self._send_json(self.server.app.supervisor.request_yield(seconds=secs))
         elif path == "/ota":
             host = self.headers.get("Host", f"{LOCAL_HOST}:{DEFAULT_PORT}")
             self._send_json(self.server.app.build_ota_discovery_response(host))
@@ -645,6 +932,7 @@ def run_benchmark() -> dict:
     app = MochiCompanionApp(
         base_http_url=f"http://{LOCAL_HOST}:{DEFAULT_PORT}",
         in_memory_db=True,
+        start_background_threads=False,
     )
     app.probe_hardware_summary(force=True)
 
@@ -697,7 +985,7 @@ def run_benchmark() -> dict:
             t0 = time.perf_counter()
             with urllib.request.urlopen(f"{base}/api/status", timeout=2.0) as r:
                 body = json.loads(r.read().decode("utf-8"))
-                if r.status == 200 and "energy" in body:
+                if r.status == 200 and "energy" in body and "genome" in body:
                     http_200_count += 1
             json_rtts_ms.append((time.perf_counter() - t0) * 1000.0)
             http_total += 1
@@ -821,13 +1109,25 @@ def run_benchmark() -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Mochi-Soul Live Companion Studio & Local OTA/MCP Hub"
+        description="Mochi-Soul Live Companion Studio, Self-Evolution Hub & Local OTA/MCP Runtime"
     )
     parser.add_argument(
         "--port",
         type=int,
         default=DEFAULT_PORT,
         help="HTTP server port (default: 4185)",
+    )
+    parser.add_argument(
+        "--db",
+        type=str,
+        default=None,
+        help="Path to SQLite database",
+    )
+    parser.add_argument(
+        "--wdt-rescue",
+        choices=("off", "observe", "auto"),
+        default=None,
+        help="Watchdog rescue mode (default: observe, or MOCHI_WDT_RESCUE env)",
     )
     parser.add_argument(
         "--benchmark",
@@ -846,7 +1146,13 @@ def main() -> None:
         rep = run_benchmark()
         sys.exit(0 if rep["all_passed"] else 1)
 
-    app = MochiCompanionApp(base_http_url=f"http://{LOCAL_HOST}:{args.port}")
+    is_oneshot = bool(args.event)
+    app = MochiCompanionApp(
+        base_http_url=f"http://{LOCAL_HOST}:{args.port}",
+        db_path=args.db,
+        wdt_rescue_mode=args.wdt_rescue,
+        start_background_threads=not is_oneshot,
+    )
     if args.event:
         out = app.handle_workspace_event(args.event)
         print(json.dumps(out, indent=2, ensure_ascii=False))
@@ -858,6 +1164,7 @@ def main() -> None:
         srv.serve_forever()
     except KeyboardInterrupt:
         print("\nShutting down Mochi-Soul Studio.")
+        app.close()
         srv.server_close()
 
 
