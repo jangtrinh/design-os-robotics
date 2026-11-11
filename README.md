@@ -14,7 +14,7 @@
   <a href="https://morluto.github.io/design-os-robotics/"><img src="https://img.shields.io/badge/docs-GitHub_Pages-18181b?style=flat-square" alt="GitHub Pages" /></a>
 </p>
 
-**Open-source host tools, a 217.67 KB canonical Mochi-21 vector avatar pack, an autonomous self-evolving soul engine (`EVO-01..03`), and a no-reset health probe for ESP32-S3 voice robots.**
+**FREE + source-available (PolyForm Shield 1.0.0) host tools, a 217.67 KB canonical Mochi-21 vector avatar pack, an autonomous self-evolving soul engine (`EVO-01..03`), and a no-reset health probe for ESP32-S3 voice robots.**
 
 Built for **RoBot.5320** (`xingzhi-cube-1.54tft-wifi v2.5.3` + 6-servo Otto quadruped) and compatible with any **Xiaozhi ESP32-S3** board using a `240×320` ST7789 display and the `esp_mmap_assets` (`0xAA0000`) partition format.
 
@@ -162,6 +162,42 @@ Photos of the physical RB5320XZ78AI build, taken by the repository owner. The ne
 <td align="center" width="33%"><a href="./docs/assets/hardware/real/06-wifi-setup.webp"><img src="./docs/assets/hardware/real/06-wifi-setup-thumb.webp" alt="design:os by Jang. Real hardware: the board held in a hand, the screen showing the Wi-Fi setup page titled Chế độ cấu hình Wi-Fi; the network name and setup address are covered by a black bar" width="240"></a><br><sub>design:os by Jang · Wi-Fi setup screen (details covered)</sub></td>
 </tr>
 </table>
+
+## 3D-printable companion housing (`MC-RB5320-R03`) & product film
+
+A 6-part tool-free 3D-printable unibody housing engineered for the `RB5320XZ78AI` companion platform (`86.0 × 48.1 × 104.0 mm`). Features continuous superellipse curvature, 11° twin hook-hinges with 0.25 mm elastic cantilever snaps, 3 living-hinge rear tactile buttons, 132 parametric Apple-style micro-apertures, and an open-floor 50 mm USB-C pass-through weighted desk dock.
+
+<a href="./docs/assets/housing/motion-16x9.mp4"><img src="./docs/assets/housing/film-poster-16x9.webp" alt="design:os by Jang" width="100%"></a>
+
+[Watch 12-shot 3D product film (EN, 1080p30 MP4)](./docs/assets/housing/motion-16x9.mp4) · [Xem bản Tiếng Việt (VI, 1080p30 MP4)](./docs/assets/housing/motion-16x9.vi.mp4)
+
+Music track: Edge of Motion by Aetheric — Source: https://freetouse.com/music
+
+<table>
+<tr>
+<td align="center" width="33%"><a href="./docs/assets/housing/01-hero-docked.webp"><img src="./docs/assets/housing/01-hero-docked-thumb.webp" alt="design:os by Jang" width="240"></a><br><sub>design:os by Jang · Hero docked view</sub></td>
+<td align="center" width="33%"><a href="./docs/assets/housing/02-exploded-core.webp"><img src="./docs/assets/housing/02-exploded-core-thumb.webp" alt="design:os by Jang" width="240"></a><br><sub>design:os by Jang · Exploded core stack</sub></td>
+<td align="center" width="33%"><a href="./docs/assets/housing/03-six-parts-catalog.webp"><img src="./docs/assets/housing/03-six-parts-catalog-thumb.webp" alt="design:os by Jang" width="240"></a><br><sub>design:os by Jang · 6-part printable catalog</sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><a href="./docs/assets/housing/04-rear-132-apertures.webp"><img src="./docs/assets/housing/04-rear-132-apertures-thumb.webp" alt="design:os by Jang" width="240"></a><br><sub>design:os by Jang · Rear 132 micro-apertures</sub></td>
+<td align="center" width="33%"><a href="./docs/assets/housing/05-side-cutaway.webp"><img src="./docs/assets/housing/05-side-cutaway-thumb.webp" alt="design:os by Jang" width="240"></a><br><sub>design:os by Jang · Internal side cutaway</sub></td>
+<td align="center" width="33%"><a href="./docs/assets/housing/06-front-bezel.webp"><img src="./docs/assets/housing/06-front-bezel-thumb.webp" alt="design:os by Jang" width="240"></a><br><sub>design:os by Jang · Front architectural bezel</sub></td>
+</tr>
+</table>
+
+### 6-Part Printable STL Set
+
+| Part ID | File | Dimensions (mm) | Min Wall (mm) | Print Up | Digital Gate |
+|---|---|---|---|---|---|
+| `shell_front` | [`shell_front.stl`](./hardware/mc-rb5320-r03/stl/shell_front.stl) | 86.0 × 24.8 × 104.0 | 1.91 mm | `+y` | **PASS** |
+| `shell_rear` | [`shell_rear.stl`](./hardware/mc-rb5320-r03/stl/shell_rear.stl) | 86.0 × 28.0 × 103.97 | 1.82 mm | `-y` | **PASS** |
+| `btn_vol_up` | [`btn_vol_up.stl`](./hardware/mc-rb5320-r03/stl/btn_vol_up.stl) | 8.8 × 24.4 × 8.1 | 2.60 mm | `+z` | **PASS** |
+| `btn_ptt` | [`btn_ptt.stl`](./hardware/mc-rb5320-r03/stl/btn_ptt.stl) | 11.0 × 24.7 × 8.1 | 2.30 mm | `+z` | **PASS** |
+| `btn_vol_dn` | [`btn_vol_dn.stl`](./hardware/mc-rb5320-r03/stl/btn_vol_dn.stl) | 8.9 × 24.4 × 8.1 | 2.60 mm | `+z` | **PASS** |
+| `desk_stand` | [`desk_stand.stl`](./hardware/mc-rb5320-r03/stl/desk_stand.stl) | 96.0 × 64.0 × 45.0 | 4.15 mm | `+z` | **PASS** |
+
+All 6 parts passed automated digital production gates (`6/6 PASS`). Physical prototype trials are pending coupon testing and thermal validation. Full specifications, receipts, and geometry metrics are documented in [`hardware/mc-rb5320-r03/README.md`](./hardware/mc-rb5320-r03/README.md).
 
 ## How it works
 

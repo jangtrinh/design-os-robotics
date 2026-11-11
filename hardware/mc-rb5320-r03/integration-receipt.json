@@ -1,0 +1,35 @@
+{
+  "scene": "hardware/mc-rb5320-r03/mochi-rb5320-companion.blend",
+  "scene_sha256": "a5b433597e55b15c500c3ff3041e36e6ccf55c30eb9b51de941913403f4749d7",
+  "printable_parts": 6,
+  "electronics_modules": 10,
+  "total_bvh_overlaps": 0,
+  "cable_plug_overlaps": 0,
+  "verified_probes": [
+    "PROBE_USBC_TP4056",
+    "PROBE_USBC_S3_1",
+    "PROBE_USBC_S3_2",
+    "PROBE_DOCK_REAR_EXIT",
+    "PROBE_TRS_35MM"
+  ],
+  "button_kinematics": {
+    "MC_Btn_Left": {
+      "stroke_mm": -0.8,
+      "tactile_switch_hits": 13,
+      "clashes": 0,
+      "status": "PASS_ACTUATED"
+    },
+    "MC_Btn_Center": {
+      "stroke_mm": -0.8,
+      "tactile_switch_hits": 16,
+      "clashes": 0,
+      "status": "PASS_ACTUATED"
+    },
+    "MC_Btn_Right": {
+      "stroke_mm": -0.8,
+      "tactile_switch_hits": 12,
+      "clashes": 0,
+      "status": "PASS_ACTUATED"
+    }
+  }
+}

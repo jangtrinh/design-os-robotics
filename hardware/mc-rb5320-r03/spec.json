@@ -1,0 +1,271 @@
+{
+  "schema_version": 1,
+  "units": "mm",
+  "project": "Mochi-Soul Desktop Companion Housing (MC-RB5320-R03) \u2014 100% Pure 3D-Printable Zero-Screw Snap-Hinge Slim Flush-Screen Unibody",
+  "print_volume_mm": [
+    256.0,
+    256.0,
+    256.0
+  ],
+  "brim_margin_mm": 5.0,
+  "fasteners": [],
+  "load_cases": [
+    {
+      "id": "LC01_toolfree_snaphinge_retention",
+      "description": "100% tool-free printed assembly (top hook-hinge + twin elastic side cantilever snap latches + internal TFT & PCB snap cradles) holding 0.28 kg RB5320XZ78AI stack with zero screws, zero inserts, and zero acrylic dependencies."
+    },
+    {
+      "id": "LC02_dock_usbc_and_3button_click",
+      "description": "Docked companion with 3x bottom USB-C cables routed through the 50 mm open dock floor & rear U-channel + repeated 8 N finger press across 0.80 mm travel on the 3 captive rear buttons."
+    }
+  ],
+  "physical_evidence": [
+    "FDM PETG/PLA+ snap-hinge deflection & 50-cycle latch fatigue coupon test (0.25 mm engagement clearance)",
+    "Physical RB5320XZ78AI drop-in snap-cradle fit check (flush ST7789 screen frame + 18650 cradle + 3x rear button click verification with 3x USB-C cables inserted)",
+    "2-hour continuous Wi-Fi + ST7789 + MAX98357A + TP4056 1A charging passive chimney thermal soak (< 45 C 18650 cell skin limit)",
+    "INMP441 centered upper acoustic pinhole wake-word SNR and rear 21-dot speaker rosette frequency response check"
+  ],
+  "required_checks": [
+    "non_manifold_edges",
+    "non_contiguous_edges",
+    "self_intersection_pairs",
+    "signed_volume_positive",
+    "shells",
+    "bbox_dims_mm",
+    "scale_applied",
+    "wall_thickness_screen",
+    "overhang_area_pct"
+  ],
+  "parts": [
+    {
+      "id": "shell_front",
+      "object": "MC_Shell_Front",
+      "target_dims_mm": [
+        86.0,
+        24.8,
+        104.0
+      ],
+      "tol_mm": 0.3,
+      "material": "PETG / Matte PLA+ / ASA (Space Black #18181b \u2014 2.1 mm slim shell + integral snap latches)",
+      "process": "FDM 0.4 mm nozzle / 0.16 mm layer (100% tool-free, zero supports)",
+      "orientation_up": "+y",
+      "min_wall_mm": 1.8,
+      "max_overhang_deg": 45.0,
+      "max_overhang_area_pct": 35.0,
+      "expected_shells": 1,
+      "features": [
+        {
+          "id": "mic_intake_center",
+          "type": "hole",
+          "axis": "y",
+          "center_mm": [
+            0.0,
+            -19.0,
+            99.5
+          ],
+          "diameter_mm": 2.0,
+          "tol_mm": 0.2
+        },
+        {
+          "id": "front_chin_intake_c",
+          "type": "hole",
+          "axis": "y",
+          "center_mm": [
+            0.0,
+            -19.0,
+            15.2
+          ],
+          "diameter_mm": 1.9,
+          "tol_mm": 0.2
+        }
+      ]
+    },
+    {
+      "id": "shell_rear",
+      "object": "MC_Shell_Rear",
+      "target_dims_mm": [
+        86.0,
+        28.0,
+        104.0
+      ],
+      "tol_mm": 0.3,
+      "material": "PETG / Matte PLA+ / ASA (Space Black #18181b \u2014 2.2 mm slim shell, zero screw holes)",
+      "process": "FDM 0.4 mm nozzle / 0.16 mm layer (100% tool-free, zero supports)",
+      "orientation_up": "-y",
+      "min_wall_mm": 1.8,
+      "max_overhang_deg": 45.0,
+      "max_overhang_area_pct": 35.0,
+      "expected_shells": 1,
+      "features": [
+        {
+          "id": "iem_jack_bore",
+          "type": "hole",
+          "axis": "z",
+          "center_mm": [
+            -25.0,
+            12.8,
+            103.5
+          ],
+          "diameter_mm": 7.0,
+          "tol_mm": 0.25
+        },
+        {
+          "id": "thermal_exhaust_top_c",
+          "type": "hole",
+          "axis": "z",
+          "center_mm": [
+            4.0,
+            11.4,
+            104.5
+          ],
+          "diameter_mm": 2.2,
+          "tol_mm": 0.2
+        },
+        {
+          "id": "ws2812_status_bore",
+          "type": "hole",
+          "axis": "y",
+          "center_mm": [
+            0.0,
+            26.5,
+            31.2
+          ],
+          "diameter_mm": 2.2,
+          "tol_mm": 0.2
+        },
+        {
+          "id": "thermal_intake_l",
+          "type": "hole",
+          "axis": "y",
+          "center_mm": [
+            -18.0,
+            26.5,
+            42.8
+          ],
+          "diameter_mm": 1.83,
+          "tol_mm": 0.2
+        },
+        {
+          "id": "thermal_intake_r",
+          "type": "hole",
+          "axis": "y",
+          "center_mm": [
+            18.0,
+            26.5,
+            42.8
+          ],
+          "diameter_mm": 1.83,
+          "tol_mm": 0.2
+        },
+        {
+          "id": "speaker_bore_l",
+          "type": "hole",
+          "axis": "y",
+          "center_mm": [
+            -4.7,
+            26.5,
+            76.0
+          ],
+          "diameter_mm": 2.26,
+          "tol_mm": 0.2
+        },
+        {
+          "id": "speaker_bore_c",
+          "type": "hole",
+          "axis": "y",
+          "center_mm": [
+            0.0,
+            26.5,
+            76.0
+          ],
+          "diameter_mm": 2.5,
+          "tol_mm": 0.2
+        },
+        {
+          "id": "speaker_bore_r",
+          "type": "hole",
+          "axis": "y",
+          "center_mm": [
+            4.7,
+            26.5,
+            76.0
+          ],
+          "diameter_mm": 2.26,
+          "tol_mm": 0.2
+        }
+      ]
+    },
+    {
+      "id": "btn_vol_up",
+      "object": "MC_Btn_Left",
+      "target_dims_mm": [
+        8.8,
+        24.4,
+        8.1
+      ],
+      "tol_mm": 0.2,
+      "material": "PETG / Matte PLA+ (Space Black #18181b)",
+      "process": "FDM 0.4 mm nozzle / 0.12 mm layer (flat Z bed, 0% overhang)",
+      "orientation_up": "+z",
+      "min_wall_mm": 1.8,
+      "max_overhang_deg": 45.0,
+      "max_overhang_area_pct": 25.0,
+      "expected_shells": 1,
+      "features": []
+    },
+    {
+      "id": "btn_ptt",
+      "object": "MC_Btn_Center",
+      "target_dims_mm": [
+        11.0,
+        24.7,
+        8.1
+      ],
+      "tol_mm": 0.2,
+      "material": "PETG / Matte PLA+ (Action Orange #fca849 \u2014 Push-to-Talk)",
+      "process": "FDM 0.4 mm nozzle / 0.12 mm layer (flat Z bed, 0% overhang)",
+      "orientation_up": "+z",
+      "min_wall_mm": 1.8,
+      "max_overhang_deg": 45.0,
+      "max_overhang_area_pct": 25.0,
+      "expected_shells": 1,
+      "features": []
+    },
+    {
+      "id": "btn_vol_dn",
+      "object": "MC_Btn_Right",
+      "target_dims_mm": [
+        8.9,
+        24.4,
+        8.1
+      ],
+      "tol_mm": 0.2,
+      "material": "PETG / Matte PLA+ (Space Black #18181b)",
+      "process": "FDM 0.4 mm nozzle / 0.12 mm layer (flat Z bed, 0% overhang)",
+      "orientation_up": "+z",
+      "min_wall_mm": 1.8,
+      "max_overhang_deg": 45.0,
+      "max_overhang_area_pct": 25.0,
+      "expected_shells": 1,
+      "features": []
+    },
+    {
+      "id": "desk_stand",
+      "object": "MC_Desk_Stand",
+      "target_dims_mm": [
+        96.0,
+        64.0,
+        45.0
+      ],
+      "tol_mm": 0.25,
+      "material": "PETG / Matte PLA+ (Deep Space Graphite #121215 \u2014 zero screws)",
+      "process": "FDM 0.4 mm nozzle / 0.20 mm layer",
+      "orientation_up": "+z",
+      "min_wall_mm": 1.8,
+      "max_overhang_deg": 45.0,
+      "max_overhang_area_pct": 35.0,
+      "expected_shells": 1,
+      "features": []
+    }
+  ]
+}

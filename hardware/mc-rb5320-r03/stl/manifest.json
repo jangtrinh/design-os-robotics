@@ -1,0 +1,92 @@
+{
+  "units": "mm",
+  "generated_by": "scripts/production-gate.py",
+  "parts": [
+    {
+      "file": "hardware/mc-rb5320-r03/stl/shell_front.stl",
+      "triangles": 15872,
+      "sha256": "a06820c9e8dc30dbceddfcebec73467e9e79143150b66232b5d52a3262a7d02e",
+      "id": "shell_front",
+      "object": "MC_Shell_Front",
+      "dims_mm": [
+        86.0,
+        24.8,
+        104.0
+      ],
+      "units": "mm",
+      "status": "UNRELEASED_DIGITAL_CHECK_ONLY"
+    },
+    {
+      "file": "hardware/mc-rb5320-r03/stl/shell_rear.stl",
+      "triangles": 37546,
+      "sha256": "bc0a2747d064408f301a9b24134f7d381dbecec5c5b1c4dc614f87811d9ee413",
+      "id": "shell_rear",
+      "object": "MC_Shell_Rear",
+      "dims_mm": [
+        86.0,
+        28.0,
+        103.969
+      ],
+      "units": "mm",
+      "status": "UNRELEASED_DIGITAL_CHECK_ONLY"
+    },
+    {
+      "file": "hardware/mc-rb5320-r03/stl/btn_vol_up.stl",
+      "triangles": 162,
+      "sha256": "5d0ff35686e4d78bc758a6da24ff571f930ad4b4fafee8c489bd77a09de5c9c8",
+      "id": "btn_vol_up",
+      "object": "MC_Btn_Left",
+      "dims_mm": [
+        8.8,
+        24.4,
+        8.1
+      ],
+      "units": "mm",
+      "status": "UNRELEASED_DIGITAL_CHECK_ONLY"
+    },
+    {
+      "file": "hardware/mc-rb5320-r03/stl/btn_ptt.stl",
+      "triangles": 162,
+      "sha256": "08162f5afe4f5c5c975569dbbc5bd289af6c0a3d586120715d07a0b27a1a3572",
+      "id": "btn_ptt",
+      "object": "MC_Btn_Center",
+      "dims_mm": [
+        11.0,
+        24.7,
+        8.1
+      ],
+      "units": "mm",
+      "status": "UNRELEASED_DIGITAL_CHECK_ONLY"
+    },
+    {
+      "file": "hardware/mc-rb5320-r03/stl/btn_vol_dn.stl",
+      "triangles": 162,
+      "sha256": "ad8090ed36d196a30fd901accce7dcb83875a2b1cb72cc832346f6d136da7261",
+      "id": "btn_vol_dn",
+      "object": "MC_Btn_Right",
+      "dims_mm": [
+        8.9,
+        24.4,
+        8.1
+      ],
+      "units": "mm",
+      "status": "UNRELEASED_DIGITAL_CHECK_ONLY"
+    },
+    {
+      "file": "hardware/mc-rb5320-r03/stl/desk_stand.stl",
+      "triangles": 3488,
+      "sha256": "b4d871e49fa33e19fb3a65c0177e0d81cd6c4a761d19b3ff07b1854f38068139",
+      "id": "desk_stand",
+      "object": "MC_Desk_Stand",
+      "dims_mm": [
+        96.0,
+        64.0,
+        45.0
+      ],
+      "units": "mm",
+      "status": "UNRELEASED_DIGITAL_CHECK_ONLY"
+    }
+  ],
+  "status": "NOT_MANUFACTURING_APPROVED",
+  "prohibited_claim": "A watertight STL that matches its declared dimensions does not establish load capability, assembly fit, print success or heat endurance."
+}
