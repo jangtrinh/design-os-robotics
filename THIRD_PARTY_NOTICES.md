@@ -1,6 +1,6 @@
 # Third-party notices
 
-This repository includes two third-party items, a typeface and a JavaScript library, and hardware images that are the owner's own material (see the last two sections).
+This repository includes three third-party items, a typeface, a JavaScript library, and a soundtrack, and hardware images that are the owner's own material (see the last sections).
 
 ## Be Vietnam Pro
 
@@ -43,3 +43,10 @@ THE SOFTWARE.
 ## Real hardware photos
 
 The six photos in `docs/assets/hardware/real/` were taken by the repository owner, Jang Trịnh, of his own build. They are his own material and are covered by the PolyForm Shield 1.0.0 licence of this repository. Network names, setup addresses, serial prints and QR codes are blurred or covered by a solid bar. Third-party silkscreen art and logos (a ring logo, a ribbed oval emblem, a poster, a lion drawing and a few small symbols, on the board edges and in the line-art drawings shown on the screen), the embossed brand marks on a cable plug and a bottle, and the module model text are blurred in every photo where they appear. Generic board labels such as pin names, part numbers and the SPI, PWR ON and PCM labels stay visible. Photo 05 (back of the board) shows no such art, and the files carry no metadata.
+
+## Product film soundtrack ("Edge of Motion" by Aetheric)
+
+"Edge of Motion" by Aetheric (2025), Free To Use (https://freetouse.com/music).
+
+Used in `docs/assets/housing/motion-16x9.mp4` and `docs/assets/housing/motion-16x9.vi.mp4`. Provenance and license details are recorded in [`docs/assets/housing/AUDIO-PROVENANCE.md`](docs/assets/housing/AUDIO-PROVENANCE.md).
+

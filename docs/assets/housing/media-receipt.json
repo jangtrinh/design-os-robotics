@@ -1,0 +1,98 @@
+{
+  "contract": "ROB-AD §7",
+  "generator": "export_film.mjs (seek-capture + ffmpeg)",
+  "timestamp": "2026-11-11T11:32:36.346Z",
+  "blend_sha256": "a5b433597e55b15c500c3ff3041e36e6ccf55c30eb9b51de941913403f4749d7",
+  "spec_sha256": "fbaaabd5da10a17178a5a3dda386970ab97e1868cce546027e8a3223d03ca62c",
+  "duration_s": 36,
+  "fps": 30,
+  "total_frames": 1080,
+  "pose_rate_hz": 30,
+  "distinct_states_rendered": 1080,
+  "distinct_3d_sequence_frames": 990,
+  "frame_range": "0..1079",
+  "resolution": "1920x1080",
+  "pixel_format": "yuv420p",
+  "audio_streams": 1,
+  "outputs": {
+    "en": {
+      "file": "motion-16x9.mp4",
+      "sha256": "ae753193f7457cccf647a84115a83b275449d926475900b9d16ba0f4656a28ab",
+      "size_bytes": 16474097,
+      "meta": {
+        "codec": "h264",
+        "width": 1920,
+        "height": 1080,
+        "fps": "30/1",
+        "duration_s": 36,
+        "pix_fmt": "yuv420p",
+        "audio_streams": 1,
+        "audio_codec": "aac",
+        "audio_sample_rate": 48000,
+        "audio_channels": 2,
+        "audio_duration_s": 36,
+        "integrated_lufs": -13.9,
+        "loudness_range_lu": 1.5,
+        "decoded_frame_count": 1080,
+        "unique_decoded_frame_hashes": 1080
+      },
+      "export_time_s": 99.9
+    },
+    "vi": {
+      "file": "motion-16x9.vi.mp4",
+      "sha256": "0a6969c813fdfcd867194742023cadfc9b8424dc219e9d0c455de7dd19f26d2c",
+      "size_bytes": 16468021,
+      "meta": {
+        "codec": "h264",
+        "width": 1920,
+        "height": 1080,
+        "fps": "30/1",
+        "duration_s": 36,
+        "pix_fmt": "yuv420p",
+        "audio_streams": 1,
+        "audio_codec": "aac",
+        "audio_sample_rate": 48000,
+        "audio_channels": 2,
+        "audio_duration_s": 36,
+        "integrated_lufs": -13.9,
+        "loudness_range_lu": 1.5,
+        "decoded_frame_count": 1080,
+        "unique_decoded_frame_hashes": 1080
+      },
+      "export_time_s": 96.6
+    }
+  },
+  "soundtrack": {
+    "title": "Edge of Motion",
+    "artist": "Aetheric",
+    "year": 2025,
+    "publisher": "Free To Use (freetouse.com)",
+    "source_file": "film/assets/audio/aetheric-edge-of-motion.mp3",
+    "source_sha256": "b80b79b586adc0c9bad8d418767f627d368505af33d1f83c780d93f88e72cc93",
+    "source_size_bytes": 3773336,
+    "integrated_lufs": -13.9,
+    "loudness_range_lu": 1.5,
+    "target_lufs": -14,
+    "true_peak_dbtp": -1.5,
+    "codec": "aac",
+    "sample_rate_hz": 48000,
+    "channels": 2,
+    "bitrate_kbps": 192,
+    "lead_trim_s": 0.35,
+    "fade_in_s": 0.35,
+    "fade_out_s": 2.5,
+    "post_copy_disclosure": "Music track: Edge of Motion by Aetheric — Source: https://freetouse.com/music"
+  },
+  "silent_archives": {
+    "en": {
+      "file": "motion-16x9.silent.mp4",
+      "sha256": "40324523e7039a6c1b47a79335883ef0ad4b81981ef04f437cee4b5a9caaecfa",
+      "size_bytes": 15538556
+    },
+    "vi": {
+      "file": "motion-16x9.vi.silent.mp4",
+      "sha256": "bbb7ba5eb629712fbdb37b09b4eb837410e669cfd12571bdd91f5054b5dcf715",
+      "size_bytes": 15532480
+    }
+  }
+}
