@@ -308,6 +308,12 @@ bash tools/ci/acceptance.sh
 
 ---
 
+## Author
+
+Built by [Jang Trịnh](https://www.jang.work/?utm_source=github&utm_medium=readme&utm_campaign=design-os-robotics). More projects, case studies and writing at [jang.work](https://www.jang.work/?utm_source=github&utm_medium=readme&utm_campaign=design-os-robotics).
+
+---
+
 ## License
 
 Released under the **[PolyForm Shield License 1.0.0](LICENSE)** (`SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0`). Free to inspect, run, modify, and use on your own robots; commercial redistribution that competes with the Licensor is restricted as defined in [`LICENSE`](LICENSE).
